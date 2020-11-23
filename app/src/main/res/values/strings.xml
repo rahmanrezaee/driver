@@ -1,0 +1,48 @@
+<resources>
+    <string name="app_name">TaxiAppProject</string>
+    <string name="login">Login</string>
+    <string name="forgot_text"><u>Forgot Password</u></string>
+    <string name="or">Or</string>
+    <string name="new_user">New User ?</string>
+    <string name="signup">SignUp!</string>
+    <string name="signup_text">Sign Up</string>
+    <string name="terms_condition_text">By clicking on Sign Up you are accepting our <font fgcolor='#F8D718'>Terms and Conditions</font> and <font fgcolor='#F8D718'>Privacy Policy</font></string>
+    <string name="upload_txt">Upload Photos</string>
+    <string name="driver_license">Driver License</string>
+    <string name="registration">Registration</string>
+    <string name="insurance">Insurance</string>
+    <string name="car">Car in ( 4 Pics)</string>
+    <string name="car_out">Car Out (4 Pics )</string>
+    <string name="forgot_password">Forgot Password</string>
+    <string name="enter_email">Enter Your Email Address</string>
+    <string name="email">Email</string>
+    <string name="forgot_password_text">Forgotten your password Don\'t worry just type in your registered email address and we will take it from there.</string>
+    <string name="submit">Submit</string>
+    <string name="change_password">Change Password</string>
+    <string name="old_password">Enter your old password</string>
+    <string name="new_password">Enter your new password</string>
+    <string name="confirm_password">Confirm your new password</string>
+    <string name="complete_ride">Complete Ride</string>
+    <string name="my_ride">My Rides</string>
+    <string name="my_profile">My Profile</string>
+    <string name="title_activity_home_screen">HomeScreen</string>
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+    <string name="nav_header_title">Android Studio</string>
+    <string name="nav_header_subtitle">android.studio@android.com</string>
+    <string name="nav_header_desc">Navigation header</string>
+    <string name="action_settings">Settings</string>
+
+    <string name="menu_home">Home</string>
+    <string name="menu_gallery">Gallery</string>
+    <string name="menu_slideshow">Slideshow</string>
+
+    <string name="home_second">Home Second</string>
+    <string name="logout">Logout</string>
+    <string name="dashboard">Dashboard</string>
+    <string name="title_activity_new_ride_request">Map</string>
+    <string name="new_ride_request">New Ride Request</string>
+    <string name="trip_tracking">Trip Tracking</string>
+    <string name="earning">Earning</string>
+    <string name="rate_card">Rate Card</string>
+</resources>
