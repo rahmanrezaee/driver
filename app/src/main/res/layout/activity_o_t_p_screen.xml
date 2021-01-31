@@ -1,0 +1,211 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            tools:context=".LoginScreen">
+
+            <TextView
+                android:id="@+id/otp_receive"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/card_view"
+                android:layout_marginTop="15dp"
+                android:layout_marginBottom="10dp"
+                android:gravity="center"
+                android:text="@string/otp_desc_2"
+                android:textColor="@android:color/black"
+                android:textSize="16sp" />
+
+            <TextView
+                android:id="@+id/otp_resend"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/otp_receive"
+                android:layout_marginBottom="10dp"
+                android:gravity="center"
+                android:onClick="onClick"
+                android:text="@string/resend"
+                android:textColor="@color/appColorPrimary"
+                android:textSize="16sp" />
+
+            <Button
+                android:id="@+id/verify_button"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/otp_resend"
+                android:layout_margin="20dp"
+                android:background="@drawable/button_background"
+                android:onClick="onClick"
+                android:text="@string/verify"
+                android:textColor="@android:color/black" />
+
+            <ImageView
+                android:id="@+id/imageView"
+                android:layout_width="match_parent"
+                android:layout_height="300dp"
+                android:layout_below="@+id/header_layout"
+                android:adjustViewBounds="true"
+                android:scaleType="centerCrop"
+                app:srcCompat="@drawable/login_background" />
+
+            <LinearLayout
+                android:id="@+id/header_layout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@color/appColorPrimary"
+                android:orientation="horizontal">
+
+                <ImageView
+                    android:id="@+id/back"
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:layout_gravity="center_vertical"
+                    android:src="@drawable/ic_chevron_left_black_24dp" />
+
+
+                <TextView
+                    android:id="@+id/login_head"
+                    android:layout_width="0dp"
+                    android:layout_height="50dp"
+                    android:layout_weight="1"
+                    android:background="@color/appColorPrimary"
+                    android:gravity="center"
+                    android:text="@string/otp_verification"
+                    android:textColor="@android:color/black"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
+
+                <ImageView
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:layout_gravity="center_vertical"
+                    android:src="@drawable/ic_chevron_left_black_24dp"
+                    android:visibility="invisible" />
+
+            </LinearLayout>
+
+            <androidx.cardview.widget.CardView
+                android:id="@+id/card_view"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="20dp"
+                android:layout_marginTop="260dp"
+                android:layout_marginRight="20dp"
+                app:cardCornerRadius="10dp"
+                app:cardElevation="5dp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintTop_toTopOf="@+id/imageView"
+                tools:layout_editor_absoluteX="43dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="15dp"
+                        android:gravity="center"
+                        android:padding="15dp"
+                        android:text="@string/otp_desc"
+                        android:textSize="15sp" />
+
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginLeft="30dp"
+                        android:layout_marginTop="20dp"
+                        android:layout_marginRight="30dp"
+                        android:layout_marginBottom="20dp"
+                        android:orientation="horizontal"
+                        android:weightSum="3">
+
+                        <EditText
+                            android:id="@+id/edit1"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_margin="5dp"
+                            android:layout_weight="0.5"
+                            android:background="@drawable/otp_verification_background"
+                            android:inputType="number"
+                            android:maxLength="1"
+                            android:padding="5dp"
+                            android:singleLine="true" />
+
+                        <EditText
+                            android:id="@+id/edit2"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_margin="5dp"
+                            android:layout_weight="0.5"
+                            android:background="@drawable/otp_verification_background"
+                            android:inputType="number"
+                            android:maxLength="1"
+                            android:padding="5dp"
+                            android:singleLine="true" />
+
+                        <EditText
+                            android:id="@+id/edit3"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_margin="5dp"
+                            android:layout_weight="0.5"
+                            android:background="@drawable/otp_verification_background"
+                            android:inputType="number"
+                            android:maxLength="1"
+                            android:padding="5dp"
+                            android:singleLine="true" />
+
+                        <EditText
+                            android:id="@+id/edit4"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_margin="5dp"
+                            android:layout_weight="0.5"
+                            android:background="@drawable/otp_verification_background"
+                            android:inputType="number"
+                            android:maxLength="1"
+                            android:padding="5dp"
+                            android:singleLine="true" />
+
+                        <EditText
+                            android:id="@+id/edit5"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_margin="5dp"
+                            android:layout_weight="0.5"
+                            android:background="@drawable/otp_verification_background"
+                            android:inputType="number"
+                            android:maxLength="1"
+                            android:padding="5dp"
+                            android:singleLine="true" />
+
+                        <EditText
+                            android:id="@+id/edit6"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_margin="5dp"
+                            android:layout_weight="0.5"
+                            android:background="@drawable/otp_verification_background"
+                            android:inputType="number"
+                            android:maxLength="1"
+                            android:padding="5dp"
+                            android:singleLine="true" />
+
+                    </LinearLayout>
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+        </RelativeLayout>
+    </ScrollView>
+</layout>

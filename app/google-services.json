@@ -1,0 +1,91 @@
+{
+  "project_info": {
+    "project_number": "209885936016",
+    "firebase_url": "https://taxiapp-db076-default-rtdb.firebaseio.com",
+    "project_id": "taxiapp-db076",
+    "storage_bucket": "taxiapp-db076.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:209885936016:android:24147741260e3d3eb55b15",
+        "android_client_info": {
+          "package_name": "com.development.passengerapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "209885936016-dej497cg2gkgtcvmklunkctdqrvm1mlb.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA0prCBSkMhl5LtbmmWMDBuKEHSblJMAKE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "209885936016-dej497cg2gkgtcvmklunkctdqrvm1mlb.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "209885936016-tar7vgvo93gqase1rp6btn3pvq3cvj65.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.webfume.passangerApp"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:209885936016:android:12de8816c993cddcb55b15",
+        "android_client_info": {
+          "package_name": "com.development.taxiappproject"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "209885936016-l00nptlav99v55ftrme0t4kj3s479vc6.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.development.taxiappproject",
+            "certificate_hash": "710ae9b1f53f66d5574e6e3b86df748579ba825e"
+          }
+        },
+        {
+          "client_id": "209885936016-dej497cg2gkgtcvmklunkctdqrvm1mlb.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA0prCBSkMhl5LtbmmWMDBuKEHSblJMAKE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "209885936016-dej497cg2gkgtcvmklunkctdqrvm1mlb.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "209885936016-tar7vgvo93gqase1rp6btn3pvq3cvj65.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.webfume.passangerApp"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
