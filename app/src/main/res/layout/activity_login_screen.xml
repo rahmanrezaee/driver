@@ -64,14 +64,15 @@
                     android:gravity="center"/>
 
                 <EditText
+                    android:id="@+id/phone_number"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="User name"
+                    android:hint="Phone Number"
+                    android:inputType="phone"
                     android:padding="10dp"
                     android:layout_margin="20dp"
                     android:singleLine="true"
                     android:background="@drawable/edit_text_drawable"/>
-
 
                 <TextView
                     android:id="@+id/forgot_password"
@@ -81,6 +82,7 @@
                     android:layout_marginRight="20dp"
                     android:gravity="right"
                     android:textSize="16sp"
+                    android:onClick="onClick"
                     android:layout_marginBottom="30dp"
                     android:textColor="@color/appColorSecondary"
                     android:text="@string/forgot_text"/>
@@ -90,7 +92,7 @@
         </androidx.cardview.widget.CardView>
 
         <Button
-            android:id="@+id/login_button"
+            android:id="@+id/login_btn"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/login"
@@ -107,7 +109,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:layout_below="@id/login_button"
+            android:layout_below="@id/login_btn"
             android:layout_marginLeft="20dp"
             android:layout_marginRight="20dp"
             android:layout_marginTop="30dp">
@@ -161,6 +163,7 @@
                 android:layout_height="wrap_content"
                 android:paddingRight="10dp"
                 android:textStyle="bold"
+                android:onClick="onClick"
                 android:layout_marginBottom="20dp"
                 android:textColor="@color/appColorSecondary"
                 android:text="@string/signup"/>

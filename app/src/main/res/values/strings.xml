@@ -1,7 +1,6 @@
 <resources>
     <string name="app_name">TaxiAppProject</string>
     <string name="login">Login</string>
-    <string name="forgot_text"><u>Forgot Password</u></string>
     <string name="or">Or</string>
     <string name="new_user">New User ?</string>
     <string name="signup">SignUp!</string>
@@ -11,6 +10,12 @@
     <string name="driver_license">Driver License</string>
     <string name="registration">Registration</string>
     <string name="insurance">Insurance</string>
+    <string name="verify">Verify</string>
+    <string name="forgot_text"><u>Forgot Password</u></string>
+    <string name="resend">Resend</string>
+    <string name="otp_desc_2">Didn\'t Receive an OTP?</string>
+    <string name="otp_desc">Enter the 4 Digit OTP received on your registered phone number to Verify your number</string>
+    <string name="otp_verification">OTP Verification</string>
     <string name="car">Car in ( 4 Pics)</string>
     <string name="car_out">Car Out (4 Pics )</string>
     <string name="forgot_password">Forgot Password</string>
@@ -45,4 +50,13 @@
     <string name="trip_tracking">Trip Tracking</string>
     <string name="earning">Earning</string>
     <string name="rate_card">Rate Card</string>
+    <string name="title_activity_login">LoginActivity</string>
+    <string name="prompt_email">Email</string>
+    <string name="prompt_password">Password</string>
+    <string name="action_sign_in">Sign in or register</string>
+    <string name="action_sign_in_short">Sign in</string>
+    <string name="welcome">"Welcome !"</string>
+    <string name="invalid_username">Not a valid username</string>
+    <string name="invalid_password">Password must be >5 characters</string>
+    <string name="login_failed">"Login failed"</string>
 </resources>

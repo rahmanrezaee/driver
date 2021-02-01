@@ -1,10 +1,22 @@
 package com.development.taxiappproject;
 
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.view.Menu;
 
+import com.android.volley.NetworkResponse;
+import com.android.volley.ParseError;
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyLog;
+import com.android.volley.toolbox.HttpHeaderParser;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.Volley;
 import com.development.taxiappproject.databinding.ActivityHomeScreenBinding;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
@@ -21,35 +33,39 @@ import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.UnsupportedEncodingException;
+import java.util.HashMap;
+import java.util.Map;
+
+import static com.development.taxiappproject.Const.ConstantValue.baseUrl;
+
 public class HomeScreen extends AppCompatActivity implements View.OnClickListener {
 
+    private static final String TAG = "MAHDI";
     private AppBarConfiguration mAppBarConfiguration;
     ActivityHomeScreenBinding screenBinding;
+    SharedPreferences sharedPreferences;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        screenBinding = DataBindingUtil.setContentView(this,R.layout.activity_home_screen);
+        sharedPreferences = getSharedPreferences(OTPScreen.MyPREFERENCES, Context.MODE_PRIVATE);
+        String userToken = sharedPreferences.getString("userToken", "defaultValue");
+        String firebaseToken = sharedPreferences.getString("firebaseToken", "defaultValue");
+
+        Log.i(TAG, "Mahdi: HomeScreen: 0 " + userToken);
+        Log.i(TAG, "Mahdi: HomeScreen: 1 " + firebaseToken);
+
+        getDashboardItem(userToken);
+
+        screenBinding = DataBindingUtil.setContentView(this, R.layout.activity_home_screen);
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-
-
-
-
-       /* DrawerLayout drawer = findViewById(R.id.drawer_layout);
-        NavigationView navigationView = findViewById(R.id.nav_view);
-        // Passing each menu ID as a set of Ids because each
-        // menu should be considered as top level destinations.
-        mAppBarConfiguration = new AppBarConfiguration.Builder(
-                R.id.nav_home, R.id.nav_gallery, R.id.nav_slideshow)
-                .setDrawerLayout(drawer)
-                .build();
-        NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment);
-        NavigationUI.setupActionBarWithNavController(this, navController, mAppBarConfiguration);
-        NavigationUI.setupWithNavController(navigationView, navController);
-*/
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, screenBinding.drawerLayout, screenBinding.appBar.toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         screenBinding.drawerLayout.addDrawerListener(toggle);
@@ -57,15 +73,12 @@ public class HomeScreen extends AppCompatActivity implements View.OnClickListene
         toggle.setDrawerIndicatorEnabled(false);
         toggle.syncState();
 
-        toggle.setToolbarNavigationClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-                if (drawer.isDrawerOpen(GravityCompat.START)) {
-                    drawer.closeDrawer(GravityCompat.START);
-                } else {
-                    drawer.openDrawer(GravityCompat.START);
-                }
+        toggle.setToolbarNavigationClickListener(view -> {
+            DrawerLayout drawer = findViewById(R.id.drawer_layout);
+            if (drawer.isDrawerOpen(GravityCompat.START)) {
+                drawer.closeDrawer(GravityCompat.START);
+            } else {
+                drawer.openDrawer(GravityCompat.START);
             }
         });
 
@@ -75,7 +88,54 @@ public class HomeScreen extends AppCompatActivity implements View.OnClickListene
         screenBinding.customNavigationDrawer.rateLayout.setOnClickListener(this);
     }
 
+    public void getDashboardItem(String userToken) {
 
+        RequestQueue requestQueue = Volley.newRequestQueue(HomeScreen.this);
+        String mURL = baseUrl + "/rides/dashboard";
+
+        Log.i(TAG, "Mahdi: HomeScreen: getDashboard: 1 " + userToken);
+
+        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, mURL,
+                null,
+                response -> {
+                    try {
+                        Log.i(TAG, "Mahdi: HomeScreen: getDashboard: res 0 " + response);
+                        JSONObject data = response.getJSONObject("data");
+
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                }, error -> {
+            Log.e("Mahdi", "Mahdi: HomeScreen: getDashboard: Error " + error.getMessage());
+        }) {
+            @Override
+            public String getBodyContentType() {
+                return "application/json; charset=utf-8";
+            }
+
+            @Override
+            public Map<String, String> getHeaders() {
+                Map<String, String> params = new HashMap<>();
+                params.put("token", userToken);
+                return params;
+            }
+
+            @Override
+            protected Response parseNetworkResponse(NetworkResponse response) {
+                try {
+                    Log.i(TAG, "Mahdi: HomeScreen: getDashboard: res 1 " + response.data);
+                    String jsonString = new String(response.data, HttpHeaderParser.parseCharset(response.headers));
+                    return Response.success(new JSONObject(jsonString), HttpHeaderParser.parseCacheHeaders(response));
+                } catch (UnsupportedEncodingException e) {
+                    return Response.error(new ParseError(e));
+                } catch (JSONException je) {
+                    return Response.error(new ParseError(je));
+                }
+            }
+        };
+
+        requestQueue.add(jsonObjectRequest);
+    }
 
     @Override
     public boolean onSupportNavigateUp() {
@@ -87,25 +147,25 @@ public class HomeScreen extends AppCompatActivity implements View.OnClickListene
 
     @Override
     public void onClick(View view) {
-        switch (view.getId()){
+        switch (view.getId()) {
 
             case R.id.profile_layout:
-                startActivity(new Intent(HomeScreen.this,MyProfile.class));
+                startActivity(new Intent(HomeScreen.this, MyProfile.class));
                 checkDrawer();
                 break;
 
             case R.id.rides_layout:
-                startActivity(new Intent(HomeScreen.this,MyRideScreen.class));
+                startActivity(new Intent(HomeScreen.this, MyRideScreen.class));
                 checkDrawer();
                 break;
 
             case R.id.earning_layout:
-                startActivity(new Intent(HomeScreen.this,EarningScreen.class));
+                startActivity(new Intent(HomeScreen.this, EarningScreen.class));
                 checkDrawer();
                 break;
 
             case R.id.rate_layout:
-                startActivity(new Intent(HomeScreen.this,RateCard.class));
+                startActivity(new Intent(HomeScreen.this, RateCard.class));
                 checkDrawer();
                 break;
         }
@@ -129,5 +189,4 @@ public class HomeScreen extends AppCompatActivity implements View.OnClickListene
             super.onBackPressed();
         }
     }
-
 }
