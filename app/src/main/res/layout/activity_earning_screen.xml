@@ -12,6 +12,14 @@
             android:layout_height="match_parent"
             tools:context=".LoginScreen">
 
+            <ProgressBar
+                android:id="@+id/earningScreen_progressBar"
+                style="@style/Spinner"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginTop="120dp"
+                android:visibility="gone" />
+
             <LinearLayout
                 android:id="@+id/header_layout"
                 android:layout_width="match_parent"
@@ -47,8 +55,6 @@
 
             </LinearLayout>
 
-
-
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/recycler_view"
                 android:layout_width="match_parent"
@@ -56,7 +62,6 @@
                 android:layout_marginTop="20dp"
                 android:layout_below="@id/header_layout"
                 />
-
 
             <Button
                 android:id="@+id/login_button"
