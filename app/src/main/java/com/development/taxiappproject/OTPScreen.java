@@ -1,11 +1,12 @@
 package com.development.taxiappproject;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.text.Editable;
@@ -13,21 +14,21 @@ import android.text.TextWatcher;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
 import com.android.volley.AuthFailureError;
 import com.android.volley.NetworkResponse;
+import com.android.volley.ParseError;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
+import com.android.volley.VolleyError;
 import com.android.volley.VolleyLog;
 import com.android.volley.toolbox.HttpHeaderParser;
-import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.FirebaseException;
 import com.google.firebase.FirebaseTooManyRequestsException;
@@ -35,21 +36,22 @@ import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException;
 import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.auth.GetTokenResult;
 import com.google.firebase.auth.PhoneAuthCredential;
 import com.google.firebase.auth.PhoneAuthOptions;
 import com.google.firebase.auth.PhoneAuthProvider;
+import com.google.gson.JsonObject;
 
 import org.jetbrains.annotations.NotNull;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.json.JSONTokener;
 
 import java.io.UnsupportedEncodingException;
-import java.util.Collection;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import static com.development.taxiappproject.Const.ConstantValue.baseUrl;
@@ -70,6 +72,7 @@ public class OTPScreen extends AppCompatActivity {
 
     String type;
     JSONObject jsonObject;
+    public static String MyPREFERENCES = "User info";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -205,6 +208,7 @@ public class OTPScreen extends AppCompatActivity {
                 PhoneAuthCredential credential = PhoneAuthProvider.getCredential(verificationId, code);
                 signInWithPhoneAuthCredential(credential);
             } catch (Exception e) {
+                p.hide();
                 Toast toast = Toast.makeText(this, "Verification Code is wrong", Toast.LENGTH_SHORT);
                 toast.setGravity(Gravity.CENTER, 0, 0);
                 toast.show();
@@ -216,38 +220,51 @@ public class OTPScreen extends AppCompatActivity {
 
         final String requestBody = jsonBody;
 
-        RequestQueue requestQueue = Volley.newRequestQueue(this);
+        RequestQueue requestQueue = Volley.newRequestQueue(OTPScreen.this);
         String mURL;
 
         if (type.equalsIgnoreCase("signUp")) {
             mURL = baseUrl + "/driver/signupFirebase";
         } else {
-            mURL = baseUrl + "/user/signinFirebase";
+            mURL = baseUrl + "/driver/signinFirebase";
         }
 
         Log.i(TAG, "Mahdi: OTPScreen: signUp: 1 " + jsonBody);
         Log.i(TAG, "Mahdi: OTPScreen: signUp: 2 " + idToken);
 
-        StringRequest stringRequest = new StringRequest(Request.Method.POST, mURL,
+        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.POST, mURL,
+                null,
                 response -> {
-                    Log.i(TAG, "Mahdi: OTPScreen: signUp: res " + response);
-                    p.hide();
+                    try {
+                        SharedPreferences sharedpreferences = getSharedPreferences(MyPREFERENCES, Context.MODE_PRIVATE);
 
-                    startActivity(new Intent(getApplicationContext(), HomeScreen.class));
-                },
-                error -> {
+                        Log.i(TAG, "Mahdi: OTPScreen: signUp: res 0 " + response);
+                        JSONObject data = response.getJSONObject("data");
+                        String userToken = data.getString("token");
+                        String firebaseToken = data.getString("firebaseToken");
+
+                        SharedPreferences.Editor editor = sharedpreferences.edit();
+
+                        editor.putString("firebaseToken", firebaseToken);
+                        editor.putString("userToken", userToken);
+                        editor.apply();
+
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
                     p.hide();
-                    Toast.makeText(getApplicationContext(), error.getMessage(), Toast.LENGTH_SHORT).show();
-                    Log.e("Mahdi", "Mahdi: OTPScreen: signUp: Error " + error.getMessage());
-                }
-        ) {
+                    startActivity(new Intent(getApplicationContext(), HomeScreen.class));
+                }, error -> {
+            p.hide();
+            Log.e("Mahdi", "Mahdi: OTPScreen: signUp: Error " + error.getMessage());
+        }) {
             @Override
             public String getBodyContentType() {
                 return "application/json; charset=utf-8";
             }
 
             @Override
-            public Map<String, String> getHeaders() throws AuthFailureError {
+            public Map<String, String> getHeaders() {
                 Map<String, String> params = new HashMap<>();
                 params.put("Content-Type", "application/json");
                 params.put("firebaseToken", idToken);
@@ -255,7 +272,7 @@ public class OTPScreen extends AppCompatActivity {
             }
 
             @Override
-            public byte[] getBody() throws AuthFailureError {
+            public byte[] getBody() {
                 try {
                     return requestBody == null ? null : requestBody.getBytes("utf-8");
                 } catch (UnsupportedEncodingException uee) {
@@ -265,20 +282,20 @@ public class OTPScreen extends AppCompatActivity {
             }
 
             @Override
-            protected Response<String> parseNetworkResponse(NetworkResponse response) {
-                String responseString = "";
-                if (response != null) {
-                    responseString = String.valueOf(response.statusCode);
-                    // can get more details such as response.headers
+            protected Response parseNetworkResponse(NetworkResponse response) {
+                try {
+                    Log.i(TAG, "Mahdi: OTPScreen: signUp: res 1 " + response.data);
+                    String jsonString = new String(response.data, HttpHeaderParser.parseCharset(response.headers));
+                    return Response.success(new JSONObject(jsonString), HttpHeaderParser.parseCacheHeaders(response));
+                } catch (UnsupportedEncodingException e) {
+                    return Response.error(new ParseError(e));
+                } catch (JSONException je) {
+                    return Response.error(new ParseError(je));
                 }
-                assert response != null;
-                return Response.success(responseString, HttpHeaderParser.parseCacheHeaders(response));
             }
         };
-        requestQueue.add(stringRequest);
-    }
 
-    public void signInToServer() {
+        requestQueue.add(jsonObjectRequest);
     }
 
     private void signInWithPhoneAuthCredential(PhoneAuthCredential credential) {
@@ -318,6 +335,7 @@ public class OTPScreen extends AppCompatActivity {
 //                            updateUI(STATE_SIGNIN_SUCCESS, user);
                             // [END_EXCLUDE]
                         } else {
+                            p.hide();
                             if (task.getException() instanceof FirebaseAuthInvalidCredentialsException) {
                                 Toast.makeText(getApplicationContext(), "Your code is not correct!", Toast.LENGTH_SHORT).show();
                                 // The verification code entered was invalid
@@ -479,3 +497,105 @@ public class OTPScreen extends AppCompatActivity {
         });
     }
 }
+
+//                NetworkResponse responseString = null;
+//                JSONObject jsonObject1;
+//                if (response != null) {
+//                    try {
+//                        jsonObject1 = new JSONObject(Objects.requireNonNull(response).toString());
+//                        Log.i(TAG, "Mahdi: OTPScreen: signUp: res 00 " + jsonObject1.toString());
+//                    } catch (JSONException e) {
+//                        e.printStackTrace();
+//                    }
+//                    try {
+//                        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT) {
+//                            JSONArray array = new JSONArray(response);
+//                            Log.i(TAG, "Mahdi: OTPScreen: signUp: res 0 " + array);
+//                        }
+//                    } catch (JSONException e) {
+//                        e.printStackTrace();
+//                    }
+//                    responseString = response;
+//                    Log.i(TAG, "Mahdi: OTPScreen: signUp: res 1 " + Arrays.toString(response.data));
+//                    Log.i(TAG, "Mahdi: OTPScreen: signUp: res 2 " + response);
+//
+//                    // can get more details such as response.headers
+//                }
+//                assert response != null;
+//                return Response.success(responseString.toString(), HttpHeaderParser.parseCacheHeaders(response));
+
+
+//        StringRequest stringRequest = new StringRequest(Request.Method.POST, mURL,
+//                response -> {
+//                    Log.i(TAG, "Mahdi: OTPScreen: signUp: res " + response);
+//                    p.hide();
+//
+//                    startActivity(new Intent(getApplicationContext(), HomeScreen.class));
+//                },
+//                error -> {
+//                    p.hide();
+//                    Toast.makeText(getApplicationContext(), error.getMessage(), Toast.LENGTH_SHORT).show();
+//                    Log.e("Mahdi", "Mahdi: OTPScreen: signUp: Error " + error.getMessage());
+//                }
+//        ) {
+//            @Override
+//            public String getBodyContentType() {
+//                return "application/json; charset=utf-8";
+//            }
+//
+//            @Override
+//            public Map<String, String> getHeaders() throws AuthFailureError {
+//                Map<String, String> params = new HashMap<>();
+//                params.put("Content-Type", "application/json");
+//                params.put("firebaseToken", idToken);
+//                return params;
+//            }
+//
+//            @Override
+//            public byte[] getBody() throws AuthFailureError {
+//                try {
+//                    return requestBody == null ? null : requestBody.getBytes("utf-8");
+//                } catch (UnsupportedEncodingException uee) {
+//                    VolleyLog.wtf("Unsupported Encoding while trying to get the bytes of %s using %s", requestBody, "utf-8");
+//                    return null;
+//                }
+//            }
+//
+//            @Override
+//            protected Response parseNetworkResponse(NetworkResponse response) {
+//                try {
+//                    String jsonString = new String(response.data, HttpHeaderParser.parseCharset(response.headers));
+//                    return Response.success(new JSONObject(jsonString), HttpHeaderParser.parseCacheHeaders(response));
+//                } catch (UnsupportedEncodingException e) {
+//                    return Response.error(new ParseError(e));
+//                } catch (JSONException je) {
+//                    return Response.error(new ParseError(je));
+//                }
+////                NetworkResponse responseString = null;
+////                JSONObject jsonObject1;
+////                if (response != null) {
+////                    try {
+////                        jsonObject1 = new JSONObject(Objects.requireNonNull(response).toString());
+////                        Log.i(TAG, "Mahdi: OTPScreen: signUp: res 00 " + jsonObject1.toString());
+////                    } catch (JSONException e) {
+////                        e.printStackTrace();
+////                    }
+////                    try {
+////                        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT) {
+////                            JSONArray array = new JSONArray(response);
+////                            Log.i(TAG, "Mahdi: OTPScreen: signUp: res 0 " + array);
+////                        }
+////                    } catch (JSONException e) {
+////                        e.printStackTrace();
+////                    }
+////                    responseString = response;
+////                    Log.i(TAG, "Mahdi: OTPScreen: signUp: res 1 " + Arrays.toString(response.data));
+////                    Log.i(TAG, "Mahdi: OTPScreen: signUp: res 2 " + response);
+////
+////                    // can get more details such as response.headers
+////                }
+////                assert response != null;
+////                return Response.success(responseString.toString(), HttpHeaderParser.parseCacheHeaders(response));
+//            }
+//        };
+//        requestQueue.add(stringRequest);
