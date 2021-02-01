@@ -81,7 +81,6 @@ public class HomeScreen extends AppCompatActivity implements View.OnClickListene
                 drawer.openDrawer(GravityCompat.START);
             }
         });
-
         screenBinding.customNavigationDrawer.profileLayout.setOnClickListener(this);
         screenBinding.customNavigationDrawer.ridesLayout.setOnClickListener(this);
         screenBinding.customNavigationDrawer.earningLayout.setOnClickListener(this);
@@ -89,7 +88,6 @@ public class HomeScreen extends AppCompatActivity implements View.OnClickListene
     }
 
     public void getDashboardItem(String userToken) {
-
         RequestQueue requestQueue = Volley.newRequestQueue(HomeScreen.this);
         String mURL = baseUrl + "/rides/dashboard";
 
@@ -133,7 +131,6 @@ public class HomeScreen extends AppCompatActivity implements View.OnClickListene
                 }
             }
         };
-
         requestQueue.add(jsonObjectRequest);
     }
 

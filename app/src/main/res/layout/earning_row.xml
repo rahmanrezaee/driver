@@ -42,6 +42,7 @@
 
 
                     <TextView
+                        android:id="@+id/earningItem_time_txt"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginRight="10dp"
@@ -69,6 +70,7 @@
 
 
                     <TextView
+                        android:id="@+id/earningItem_fare_txt"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginRight="10dp"
@@ -97,6 +99,7 @@
 
 
                     <TextView
+                        android:id="@+id/earningItem_miles_txt"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginRight="10dp"
@@ -124,6 +127,7 @@
 
 
                     <TextView
+                        android:id="@+id/earningItem_payToAdmin_txt"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginRight="10dp"

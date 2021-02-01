@@ -9,9 +9,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import android.os.Bundle;
 
 import com.development.taxiappproject.adapter.CarAdapter;
-import com.development.taxiappproject.adapter.MyRideAdapter;
 import com.development.taxiappproject.databinding.ActivityMyProfileBinding;
-import com.development.taxiappproject.databinding.ActivityMyRideScreenBinding;
 import com.development.taxiappproject.model.MyRideClass;
 
 import java.util.ArrayList;
@@ -42,7 +40,7 @@ public class MyProfile extends AppCompatActivity {
     private void settestimonialList(){
         rideList.clear();
         for (int i=0;i<4;i++){
-            MyRideClass ride = new MyRideClass();
+            MyRideClass ride = new MyRideClass("dateRide", "priceRide", "distanceRide", "timeRide", "startLocationRide", "endLocationRide");
             rideList.add(ride);
         }
         carAdapter.notifyDataSetChanged();

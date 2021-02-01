@@ -15,19 +15,9 @@ import com.development.taxiappproject.model.MyRideClass;
 
 import java.util.List;
 
-public class MyRideAdapter extends  RecyclerView.Adapter<MyRideAdapter.MyViewHolder> {
-    List<MyRideClass> myRideList ;
+public class MyRideAdapter extends RecyclerView.Adapter<MyRideAdapter.MyViewHolder> {
+    List<MyRideClass> myRideList;
     private Context context;
-
-    public class MyViewHolder extends RecyclerView.ViewHolder {
-        public TextView title;
-
-        public MyViewHolder(View view) {
-            super(view);
-            //   imageView = (ImageView)view.findViewById(R.id.image);
-//            cardView = (CardView)view.findViewById(R.id.cardView);
-        }
-    }
 
     public MyRideAdapter(Context context, List<MyRideClass> myRideList) {
         this.context = context;
@@ -39,16 +29,36 @@ public class MyRideAdapter extends  RecyclerView.Adapter<MyRideAdapter.MyViewHol
         View itemView = LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.ride_item_row, parent, false);
 
-        return new MyRideAdapter.MyViewHolder(itemView);
+        return new MyViewHolder(itemView);
     }
 
     @Override
     public void onBindViewHolder(MyRideAdapter.MyViewHolder holder, int position) {
-
+        holder.dateTxt.setText(myRideList.get(position).getDateRide());
+        holder.priceTxt.setText(myRideList.get(position).getPriceRide());
+        holder.distanceTxt.setText(myRideList.get(position).getDistanceRide());
+        holder.timeTxt.setText(myRideList.get(position).getTimeRide());
+        holder.startLocationTxt.setText(myRideList.get(position).getStartLocationRide());
+        holder.endLocationTxt.setText(myRideList.get(position).getEndLocationRide());
     }
 
     @Override
     public int getItemCount() {
         return myRideList.size();
+    }
+
+    public static class MyViewHolder extends RecyclerView.ViewHolder {
+        public TextView dateTxt, priceTxt, distanceTxt, timeTxt, startLocationTxt, endLocationTxt;
+
+        public MyViewHolder(View view) {
+            super(view);
+            dateTxt = view.findViewById(R.id.ride_item_date);
+            priceTxt = view.findViewById(R.id.ride_item_price);
+            distanceTxt = view.findViewById(R.id.ride_item_distance);
+            timeTxt = view.findViewById(R.id.ride_item_time);
+            startLocationTxt = view.findViewById(R.id.ride_item_start_location);
+            endLocationTxt = view.findViewById(R.id.ride_item_end_location);
+//            cardView = (CardView)view.findViewById(R.id.cardView);
+        }
     }
 }
