@@ -162,7 +162,7 @@ public class HomeScreen extends AppCompatActivity implements View.OnClickListene
                 break;
 
             case R.id.rate_layout:
-                startActivity(new Intent(HomeScreen.this, RateCard.class));
+                startActivity(new Intent(HomeScreen.this, RateCardScreen.class));
                 checkDrawer();
                 break;
         }

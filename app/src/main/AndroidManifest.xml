@@ -33,7 +33,7 @@
             android:name=".ui.login.LoginActivity"
             android:label="@string/title_activity_login" />
         <activity
-            android:name=".RateCard"
+            android:name=".RateCardScreen"
             android:theme="@style/SplashTheme" />
         <activity
             android:name=".EarningScreen"
@@ -75,7 +75,7 @@
             android:theme="@style/SplashTheme" />
 
 <!--        <activity-->
-<!--            android:name=".EarningScreen"-->
+<!--            android:name=".RateCardScreen"-->
 <!--            android:theme="@style/SplashTheme">-->
 <!--            <intent-filter>-->
 <!--                <action android:name="android.intent.action.MAIN" />-->

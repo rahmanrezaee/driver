@@ -8,9 +8,11 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.opengl.Visibility;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ProgressBar;
 
 import com.android.volley.NetworkResponse;
@@ -53,6 +55,7 @@ public class EarningScreen extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         screenBinding = DataBindingUtil.setContentView(this, R.layout.activity_earning_screen);
 
+        screenBinding.earningScreenMakePaidBtn.setVisibility(View.GONE);
 
         sharedPreferences = getSharedPreferences(OTPScreen.MyPREFERENCES, Context.MODE_PRIVATE);
         String userToken = sharedPreferences.getString("userToken", "defaultValue");
@@ -64,7 +67,6 @@ public class EarningScreen extends AppCompatActivity {
         setRecyclerView();
         getRideItem(userToken);
     }
-
 
     public void getRideItem(String userToken) {
         RequestQueue requestQueue = Volley.newRequestQueue(EarningScreen.this);
@@ -82,6 +84,7 @@ public class EarningScreen extends AppCompatActivity {
                         Log.i(TAG, "Mahdi: HomeScreen: getDashboard: res 1 " + data);
 
                         progressBar.setVisibility(View.GONE);
+                        screenBinding.earningScreenMakePaidBtn.setVisibility(View.GONE);
 
                         settestimonialList(data);
 
@@ -90,6 +93,7 @@ public class EarningScreen extends AppCompatActivity {
                     }
                 }, error -> {
             progressBar.setVisibility(View.GONE);
+            screenBinding.earningScreenMakePaidBtn.setVisibility(View.GONE);
             Log.e("Mahdi", "Mahdi: HomeScreen: getDashboard: Error " + error.getMessage());
         }) {
             @Override
@@ -123,9 +127,9 @@ public class EarningScreen extends AppCompatActivity {
     private void setRecyclerView() {
         rideAdapter = new EarningAdapter(EarningScreen.this, rideList);
         mLayoutManager = new LinearLayoutManager(EarningScreen.this);
-        screenBinding.recyclerView.setLayoutManager(mLayoutManager);
-        screenBinding.recyclerView.setItemAnimator(new DefaultItemAnimator());
-        screenBinding.recyclerView.setAdapter(rideAdapter);
+        screenBinding.earningRecyclerView.setLayoutManager(mLayoutManager);
+        screenBinding.earningRecyclerView.setItemAnimator(new DefaultItemAnimator());
+        screenBinding.earningRecyclerView.setAdapter(rideAdapter);
     }
 
     private void settestimonialList(JSONArray data) {

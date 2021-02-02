@@ -2,7 +2,9 @@ package com.development.taxiappproject;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -12,11 +14,24 @@ import android.widget.EditText;
 public class LoginScreen extends AppCompatActivity {
     EditText loginEdt;
     Button btnLogin;
+    SharedPreferences sharedPreferences;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login_screen);
+
+        sharedPreferences = getSharedPreferences(OTPScreen.MyPREFERENCES, Context.MODE_PRIVATE);
+        String userToken = sharedPreferences.getString("userToken", "defaultValue");
+
+        assert userToken != null;
+        if (!userToken.equalsIgnoreCase("defaultValue")) {
+            // User is signed in (getCurrentUser() will be null if not signed in)
+            Intent intent = new Intent(this, HomeScreen.class);
+            startActivity(intent);
+            finish();
+        }
+
         loginEdt = findViewById(R.id.phone_number);
         btnLogin = findViewById(R.id.login_btn);
         btnLogin.setOnClickListener(view -> {
