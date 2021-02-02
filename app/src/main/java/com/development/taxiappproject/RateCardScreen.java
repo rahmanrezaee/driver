@@ -31,6 +31,7 @@ import com.android.volley.Response;
 import com.android.volley.toolbox.HttpHeaderParser;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
+import com.development.taxiappproject.Const.SharedPrefKey;
 import com.development.taxiappproject.adapter.RateCardAdapter;
 import com.development.taxiappproject.model.MyEarningClass;
 import com.development.taxiappproject.model.MyRateCardClass;
@@ -64,8 +65,8 @@ public class RateCardScreen extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_rate_card);
         sharedPreferences = getSharedPreferences(OTPScreen.MyPREFERENCES, Context.MODE_PRIVATE);
-        String userToken = sharedPreferences.getString("userToken", "defaultValue");
-        String firebaseToken = sharedPreferences.getString("firebaseToken", "defaultValue");
+        String userToken = sharedPreferences.getString(SharedPrefKey.userToken, "defaultValue");
+        String firebaseToken = sharedPreferences.getString(SharedPrefKey.firebaseToken, "defaultValue");
 //        recyclerView = findViewById(R.id.rateCard_recycler_view);
 
         progressBar = findViewById(R.id.rateCardScreen_progressBar);
@@ -86,28 +87,6 @@ public class RateCardScreen extends AppCompatActivity {
     @RequiresApi(api = Build.VERSION_CODES.M)
     public void createTable(JSONArray data) {
         TableLayout ll = findViewById(R.id.rateCar_tableLayout);
-
-//        Resources resource = getApplicationContext().getResources();
-//
-//        TableRow rowTitle = new TableRow(this);
-//
-//        rowTitle.setBackground(Color.YELLOW);
-//
-//        TextView zipTitle = new TextView(RateCardScreen.this);
-//        TextView rateTitle = new TextView(RateCardScreen.this);
-//
-////                            <!--                        android:layout_width="fill_parent"-->
-////                    <!--                        android:layout_height="0dp"-->
-////                    <!--                        android:layout_margin="1dp"-->
-////                    <!--                        android:layout_weight="1"-->
-////                    <!--                        android:background="@color/view_background"-->
-//
-//
-//        zipTitle.setText("Zip/City");
-//        rateTitle.setText("Rate/Miles");
-
-//        rowTitle.addView(zipTitle);
-//        rowTitle.addView(rateTitle);
 
         for (int i = 0; i < data.length() + 1; i++) {
 

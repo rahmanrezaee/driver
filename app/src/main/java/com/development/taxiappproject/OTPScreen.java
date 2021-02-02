@@ -28,6 +28,7 @@ import com.android.volley.VolleyLog;
 import com.android.volley.toolbox.HttpHeaderParser;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
+import com.development.taxiappproject.Const.SharedPrefKey;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.FirebaseException;
@@ -240,13 +241,22 @@ public class OTPScreen extends AppCompatActivity {
 
                         Log.i(TAG, "Mahdi: OTPScreen: signUp: res 0 " + response);
                         JSONObject data = response.getJSONObject("data");
+                        JSONObject user = data.getJSONObject("user");
                         String userToken = data.getString("token");
                         String firebaseToken = data.getString("firebaseToken");
 
+                        String userId = user.getString("_id");
+                        String isOnline = user.getString("isOnline");
+
+                        Log.i(TAG, "Mahdi: OTPScreen: signUp: res 00 " + userId);
+                        Log.i(TAG, "Mahdi: OTPScreen: signUp: res 00 " + isOnline);
+
                         SharedPreferences.Editor editor = sharedpreferences.edit();
 
-                        editor.putString("firebaseToken", firebaseToken);
-                        editor.putString("userToken", userToken);
+                        editor.putString(SharedPrefKey.firebaseToken, firebaseToken);
+                        editor.putString(SharedPrefKey.userToken, userToken);
+                        editor.putString(SharedPrefKey.userId, userId);
+                        editor.putString(SharedPrefKey.isOnline, isOnline);
                         editor.apply();
 
                     } catch (JSONException e) {

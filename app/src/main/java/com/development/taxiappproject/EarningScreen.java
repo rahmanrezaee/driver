@@ -23,6 +23,7 @@ import com.android.volley.Response;
 import com.android.volley.toolbox.HttpHeaderParser;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
+import com.development.taxiappproject.Const.SharedPrefKey;
 import com.development.taxiappproject.adapter.EarningAdapter;
 import com.development.taxiappproject.databinding.ActivityEarningScreenBinding;
 import com.development.taxiappproject.model.MyEarningClass;
@@ -58,8 +59,7 @@ public class EarningScreen extends AppCompatActivity {
         screenBinding.earningScreenMakePaidBtn.setVisibility(View.GONE);
 
         sharedPreferences = getSharedPreferences(OTPScreen.MyPREFERENCES, Context.MODE_PRIVATE);
-        String userToken = sharedPreferences.getString("userToken", "defaultValue");
-        String firebaseToken = sharedPreferences.getString("firebaseToken", "defaultValue");
+        String userToken = sharedPreferences.getString(SharedPrefKey.userToken, "defaultValue");
 
         progressBar = findViewById(R.id.earningScreen_progressBar);
         progressBar.setVisibility(View.VISIBLE);

@@ -17,6 +17,7 @@ import com.android.volley.VolleyLog;
 import com.android.volley.toolbox.HttpHeaderParser;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
+import com.development.taxiappproject.Const.SharedPrefKey;
 import com.development.taxiappproject.databinding.ActivityHomeScreenBinding;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
@@ -54,11 +55,9 @@ public class HomeScreen extends AppCompatActivity implements View.OnClickListene
         super.onCreate(savedInstanceState);
 
         sharedPreferences = getSharedPreferences(OTPScreen.MyPREFERENCES, Context.MODE_PRIVATE);
-        String userToken = sharedPreferences.getString("userToken", "defaultValue");
-        String firebaseToken = sharedPreferences.getString("firebaseToken", "defaultValue");
+        String userToken = sharedPreferences.getString(SharedPrefKey.userToken, "defaultValue");
 
         Log.i(TAG, "Mahdi: HomeScreen: 0 " + userToken);
-        Log.i(TAG, "Mahdi: HomeScreen: 1 " + firebaseToken);
 
         getDashboardItem(userToken);
 

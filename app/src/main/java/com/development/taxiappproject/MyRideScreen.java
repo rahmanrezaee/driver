@@ -22,6 +22,7 @@ import com.android.volley.Response;
 import com.android.volley.toolbox.HttpHeaderParser;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
+import com.development.taxiappproject.Const.SharedPrefKey;
 import com.development.taxiappproject.adapter.MyRideAdapter;
 import com.development.taxiappproject.databinding.ActivityMyRideScreenBinding;
 import com.development.taxiappproject.model.MyRideClass;
@@ -53,8 +54,8 @@ public class MyRideScreen extends AppCompatActivity {
         screenBinding = DataBindingUtil.setContentView(this, R.layout.activity_my_ride_screen);
 
         sharedPreferences = getSharedPreferences(OTPScreen.MyPREFERENCES, Context.MODE_PRIVATE);
-        String userToken = sharedPreferences.getString("userToken", "defaultValue");
-        String firebaseToken = sharedPreferences.getString("firebaseToken", "defaultValue");
+        String userToken = sharedPreferences.getString(SharedPrefKey.userToken, "defaultValue");
+        String firebaseToken = sharedPreferences.getString(SharedPrefKey.firebaseToken, "defaultValue");
 
         progressBar = findViewById(R.id.rideScreen_progressBar);
         progressBar.setVisibility(View.VISIBLE);
@@ -69,7 +70,6 @@ public class MyRideScreen extends AppCompatActivity {
         screenBinding.recyclerView.setLayoutManager(mLayoutManager);
         screenBinding.recyclerView.setItemAnimator(new DefaultItemAnimator());
         screenBinding.recyclerView.setAdapter(rideAdapter);
-
     }
 
     public void getRideItem(String userToken) {
@@ -92,6 +92,7 @@ public class MyRideScreen extends AppCompatActivity {
                         settestimonialList(data);
 
                     } catch (JSONException e) {
+                        progressBar.setVisibility(View.GONE);
                         e.printStackTrace();
                     }
                 }, error -> {

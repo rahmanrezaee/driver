@@ -11,6 +11,8 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 
+import com.development.taxiappproject.Const.SharedPrefKey;
+
 public class LoginScreen extends AppCompatActivity {
     EditText loginEdt;
     Button btnLogin;
@@ -22,11 +24,10 @@ public class LoginScreen extends AppCompatActivity {
         setContentView(R.layout.activity_login_screen);
 
         sharedPreferences = getSharedPreferences(OTPScreen.MyPREFERENCES, Context.MODE_PRIVATE);
-        String userToken = sharedPreferences.getString("userToken", "defaultValue");
+        String userToken = sharedPreferences.getString(SharedPrefKey.userToken, "defaultValue");
 
         assert userToken != null;
         if (!userToken.equalsIgnoreCase("defaultValue")) {
-            // User is signed in (getCurrentUser() will be null if not signed in)
             Intent intent = new Intent(this, HomeScreen.class);
             startActivity(intent);
             finish();
