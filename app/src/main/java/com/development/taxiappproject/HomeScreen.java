@@ -6,22 +6,21 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
-import android.view.Menu;
 
 import com.android.volley.NetworkResponse;
 import com.android.volley.ParseError;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
-import com.android.volley.VolleyLog;
 import com.android.volley.toolbox.HttpHeaderParser;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 import com.development.taxiappproject.Const.SharedPrefKey;
+import com.development.taxiappproject.Service.MyFirebaseMessagingService;
 import com.development.taxiappproject.databinding.ActivityHomeScreenBinding;
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.google.android.material.snackbar.Snackbar;
-import com.google.android.material.navigation.NavigationView;
+import com.github.nkzawa.emitter.Emitter;
+import com.github.nkzawa.socketio.client.IO;
+import com.github.nkzawa.socketio.client.Socket;
 
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.core.view.GravityCompat;
@@ -38,6 +37,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.UnsupportedEncodingException;
+import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -47,6 +47,7 @@ public class HomeScreen extends AppCompatActivity implements View.OnClickListene
 
     private static final String TAG = "MAHDI";
     private AppBarConfiguration mAppBarConfiguration;
+    private Socket mSocket;
     ActivityHomeScreenBinding screenBinding;
     SharedPreferences sharedPreferences;
 
@@ -58,6 +59,7 @@ public class HomeScreen extends AppCompatActivity implements View.OnClickListene
         String userToken = sharedPreferences.getString(SharedPrefKey.userToken, "defaultValue");
 
         Log.i(TAG, "Mahdi: HomeScreen: 0 " + userToken);
+        Log.i(TAG, "Mahdi: HomeScreen: 1 " + MyFirebaseMessagingService.getToken(getApplicationContext()));
 
         getDashboardItem(userToken);
 
@@ -84,6 +86,27 @@ public class HomeScreen extends AppCompatActivity implements View.OnClickListene
         screenBinding.customNavigationDrawer.ridesLayout.setOnClickListener(this);
         screenBinding.customNavigationDrawer.earningLayout.setOnClickListener(this);
         screenBinding.customNavigationDrawer.rateLayout.setOnClickListener(this);
+
+        socketConnection();
+        mSocket.connect();
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+
+        mSocket.disconnect();
+        mSocket.off("new message", sendNewMessage());
+    }
+
+    public void socketConnection() {
+        try {
+            Log.e(TAG, "Mahdi: HomeScreen: socket 1 ");
+            mSocket = IO.socket(baseUrl);
+            Log.e(TAG, "Mahdi: HomeScreen: socket 2 ");
+        } catch (URISyntaxException e) {
+            Log.e(TAG, "Mahdi: HomeScreen: socket error ", e);
+        }
     }
 
     public void getDashboardItem(String userToken) {
@@ -164,7 +187,45 @@ public class HomeScreen extends AppCompatActivity implements View.OnClickListene
                 startActivity(new Intent(HomeScreen.this, RateCardScreen.class));
                 checkDrawer();
                 break;
+
+            case R.id.navMenu_logOut_btn:
+                SharedPreferences preferences = getSharedPreferences(OTPScreen.MyPREFERENCES, Context.MODE_PRIVATE);
+                SharedPreferences.Editor editor = preferences.edit();
+                editor.clear();
+                editor.apply();
+                Intent intent = new Intent(HomeScreen.this, LoginScreen.class);
+                startActivity(intent);
+                finish();
+                break;
+
+            case R.id.navMenu_switch:
+                sendNewMessage();
+                break;
+
         }
+    }
+
+    public Emitter.Listener sendNewMessage() {
+        return new Emitter.Listener() {
+            @Override
+            public void call(Object... args) {
+
+                HomeScreen.this.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        JSONObject data = (JSONObject) args[0];
+                        String username;
+                        String message;
+                        try {
+                            username = data.getString("username");
+                            message = data.getString("message");
+                        } catch (JSONException e) {
+                            return;
+                        }
+                    }
+                });
+            }
+        };
     }
 
     @Override
@@ -186,3 +247,23 @@ public class HomeScreen extends AppCompatActivity implements View.OnClickListene
         }
     }
 }
+
+//    private Emitter.Listener onNewMessage = new Emitter.Listener() {
+//        @Override
+//        public void call(final Object... args) {
+//            HomeScreen.this.runOnUiThread(new Runnable() {
+//                @Override
+//                public void run() {
+//                    JSONObject data = (JSONObject) args[0];
+//                    String username;
+//                    String message;
+//                    try {
+//                        username = data.getString("username");
+//                        message = data.getString("message");
+//                    } catch (JSONException e) {
+//                        return;
+//                    }
+//                }
+//            });
+//        }
+//    };

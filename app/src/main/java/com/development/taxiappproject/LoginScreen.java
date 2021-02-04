@@ -12,6 +12,9 @@ import android.widget.Button;
 import android.widget.EditText;
 
 import com.development.taxiappproject.Const.SharedPrefKey;
+import com.google.firebase.iid.FirebaseInstanceId;
+
+import static com.development.taxiappproject.Service.MyFirebaseMessagingService.fcmToken;
 
 public class LoginScreen extends AppCompatActivity {
     EditText loginEdt;
@@ -25,6 +28,11 @@ public class LoginScreen extends AppCompatActivity {
 
         sharedPreferences = getSharedPreferences(OTPScreen.MyPREFERENCES, Context.MODE_PRIVATE);
         String userToken = sharedPreferences.getString(SharedPrefKey.userToken, "defaultValue");
+
+        FirebaseInstanceId.getInstance().getInstanceId().addOnSuccessListener(this, instanceIdResult -> {
+            String newToken = instanceIdResult.getToken();
+            sharedPreferences.edit().putString(fcmToken, newToken).apply();
+        });
 
         assert userToken != null;
         if (!userToken.equalsIgnoreCase("defaultValue")) {

@@ -174,7 +174,8 @@ public class MyProfile extends AppCompatActivity {
     private void setTestimonialList() {
         rideList.clear();
         for (int i = 0; i < 4; i++) {
-            MyRideClass ride = new MyRideClass("dateRide", "priceRide", "distanceRide", "timeRide", "startLocationRide", "endLocationRide");
+            MyRideClass ride = new MyRideClass("dateRide", "priceRide", "distanceRide", "timeRide",
+                    "startLocationRide", "endLocationRide", "id");
             rideList.add(ride);
         }
         carAdapter.notifyDataSetChanged();

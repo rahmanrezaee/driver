@@ -3,15 +3,18 @@ package com.development.taxiappproject;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.ProgressDialog;
-import android.app.UiAutomation;
 import android.content.ClipData;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
@@ -23,40 +26,18 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Toast;
 
-import com.android.volley.AuthFailureError;
-import com.android.volley.DefaultRetryPolicy;
-import com.android.volley.NetworkResponse;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
-import com.android.volley.VolleyLog;
-import com.android.volley.toolbox.HttpHeaderParser;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
-import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.firebase.iid.FirebaseInstanceId;
-import com.google.firebase.iid.InstanceIdResult;
+import com.development.taxiappproject.Service.MyFirebaseMessagingService;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.UnsupportedEncodingException;
-import java.net.HttpURLConnection;
-import java.net.ProtocolException;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.ExecutionException;
 
 import de.hdodenhof.circleimageview.CircleImageView;
 
@@ -71,11 +52,18 @@ public class SignUpScreen extends AppCompatActivity {
 
     ProgressDialog p;
     String newToken;
+    private final int PERMISSION_REQUEST_CODE_CAMERA = 1;
+    private final int PERMISSION_REQUEST_CODE_GALLERY = 2;
+    private String TAG = "MAHDI";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_sign_up_screen);
+
+        String token = MyFirebaseMessagingService.getToken(SignUpScreen.this);
+
+        Log.i(TAG, "Mahdi: SignUpScreen onCreate: " + token);
 
         mCircleImageView = findViewById(R.id.profile_image);
         licenseImage = findViewById(R.id.license_image);
@@ -222,6 +210,95 @@ public class SignUpScreen extends AppCompatActivity {
         return valid;
     }
 
+    private boolean checkPermissionCamera() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
+                != PackageManager.PERMISSION_GRANTED) {
+            // Permission is not granted
+            return false;
+        }
+        return true;
+    }
+
+    private boolean checkPermissionGallery() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
+                != PackageManager.PERMISSION_GRANTED) {
+            // Permission is not granted
+            return false;
+        }
+        return true;
+    }
+
+    private void requestPermissionCamera() {
+
+        ActivityCompat.requestPermissions(this,
+                new String[]{Manifest.permission.CAMERA},
+                PERMISSION_REQUEST_CODE_CAMERA);
+    }
+
+    private void requestPermissionGallery() {
+        ActivityCompat.requestPermissions(this,
+                new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
+                PERMISSION_REQUEST_CODE_GALLERY);
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
+        switch (requestCode) {
+            case PERMISSION_REQUEST_CODE_CAMERA:
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    Toast.makeText(getApplicationContext(), "Permission Granted", Toast.LENGTH_SHORT).show();
+                    // main logic
+                } else {
+                    Toast.makeText(getApplicationContext(), "Permission Denied", Toast.LENGTH_SHORT).show();
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
+                                != PackageManager.PERMISSION_GRANTED) {
+                            showMessageOKCancel("You need to allow access permissions",
+                                    new DialogInterface.OnClickListener() {
+                                        @Override
+                                        public void onClick(DialogInterface dialog, int which) {
+                                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                                                requestPermissionCamera();
+                                            }
+                                        }
+                                    });
+                        }
+                    }
+                }
+                break;
+
+            case PERMISSION_REQUEST_CODE_GALLERY:
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    Toast.makeText(getApplicationContext(), "Permission Granted", Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(getApplicationContext(), "Permission Denied", Toast.LENGTH_SHORT).show();
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)
+                                != PackageManager.PERMISSION_GRANTED) {
+                            showMessageOKCancel("You need to allow access permissions",
+                                    new DialogInterface.OnClickListener() {
+                                        @Override
+                                        public void onClick(DialogInterface dialog, int which) {
+                                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                                                requestPermissionGallery();
+                                            }
+                                        }
+                                    });
+                        }
+                    }
+                }
+        }
+    }
+
+    private void showMessageOKCancel(String message, DialogInterface.OnClickListener okListener) {
+        new AlertDialog.Builder(SignUpScreen.this)
+                .setMessage(message)
+                .setPositiveButton("OK", okListener)
+                .setNegativeButton("Cancel", null)
+                .create()
+                .show();
+    }
+
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
     public void selectMultipleImage(int countImage) {
         String galleryNum = 3 + "" + countImage;
@@ -247,11 +324,20 @@ public class SignUpScreen extends AppCompatActivity {
         builder.setTitle("Add Photo!");
         builder.setItems(options, (dialog, item) -> {
             if (options[item].equals("Take Photo")) {
-                Intent cameraIntent = new Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
-                startActivityForResult(cameraIntent, Integer.parseInt(cameraNum));
+                if (checkPermissionCamera()) {
+                    Intent cameraIntent = new Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
+                    startActivityForResult(cameraIntent, Integer.parseInt(cameraNum));
+                } else {
+                    requestPermissionCamera();
+                }
             } else if (options[item].equals("Choose from Gallery")) {
-                Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-                startActivityForResult(intent, Integer.parseInt(galleryNum));
+                if (checkPermissionGallery()) {
+
+                    Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+                    startActivityForResult(intent, Integer.parseInt(galleryNum));
+                } else {
+                    requestPermissionGallery();
+                }
             } else if (options[item].equals("Cancel")) {
                 dialog.dismiss();
             }
@@ -385,7 +471,7 @@ public class SignUpScreen extends AppCompatActivity {
                 jsonBody.put("phone", contactNumber);
                 jsonBody.put("password", password);
                 jsonBody.put("carType", carType);
-                jsonBody.put("fcmToken", "instanceIdResult.getToken()");
+                jsonBody.put("fcmToken", MyFirebaseMessagingService.getToken(getApplicationContext()));
                 jsonBody.put("profilePhoto", "https://st.depositphotos.com/2101611/3925/v/600/depositphotos_39258143-stock-illustration-businessman-avatar-profile-picture.jpg");
             } catch (JSONException e) {
                 e.printStackTrace();

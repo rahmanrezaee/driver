@@ -8,13 +8,10 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.TextView;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.databinding.DataBindingUtil;
 import androidx.fragment.app.Fragment;
-import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProviders;
 import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -28,14 +25,12 @@ import com.android.volley.Response;
 import com.android.volley.toolbox.HttpHeaderParser;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
-import com.development.taxiappproject.CompleteRide;
+import com.development.taxiappproject.CompleteRiding;
 import com.development.taxiappproject.Const.SharedPrefKey;
-import com.development.taxiappproject.MyRideScreen;
 import com.development.taxiappproject.NewRideRequest;
 import com.development.taxiappproject.OTPScreen;
 import com.development.taxiappproject.R;
 import com.development.taxiappproject.adapter.DashboardAdapter;
-import com.development.taxiappproject.adapter.MyRideAdapter;
 import com.development.taxiappproject.databinding.FragmentHomeBinding;
 import com.development.taxiappproject.model.MyRideClass;
 
@@ -60,6 +55,8 @@ public class HomeFragment extends Fragment implements View.OnClickListener {
     private DashboardAdapter dashboardAdapter;
     RecyclerView.LayoutManager mLayoutManager;
     SharedPreferences sharedPreferences;
+
+    private static String lastId;
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
@@ -97,6 +94,8 @@ public class HomeFragment extends Fragment implements View.OnClickListener {
 
                         JSONArray todaySummery = data.getJSONArray("todaySummary");
                         JSONObject lastRide = data.getJSONObject("lastRide");
+
+                        lastId = lastRide.getString("_id");
 
                         binding.fragmentHomeDateLastTxt.setText(lastRide.getString("route"));
                         binding.fragmentHomePriceLastTxt.setText("$ " + lastRide.getString("actualFareAmount"));
@@ -166,7 +165,7 @@ public class HomeFragment extends Fragment implements View.OnClickListener {
                         "Total Fare:   $" + myData.getString("actualFareAmount"),
                         "Total Miles:   " + myData.getString("miles") + " Miles",
                         myData.getString("actualTimePassed"), myData.getString("from"),
-                        myData.getString("toWhere"));
+                        myData.getString("toWhere"), myData.getString("_id"));
             } catch (JSONException e) {
                 e.printStackTrace();
             }
@@ -180,12 +179,18 @@ public class HomeFragment extends Fragment implements View.OnClickListener {
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.new_ride_request:
-                startActivity(new Intent(getActivity(), NewRideRequest.class));
+                Intent intent = new Intent(getActivity(), CompleteRiding.class);
+                intent.putExtra("id", lastId);
+                startActivity(intent);
+
+//                startActivity(new Intent(getActivity(), NewRideRequest.class));
                 break;
 
-            case R.id.completed_request:
-                startActivity(new Intent(getActivity(), CompleteRide.class));
-                break;
+//            case R.id.dashboard_item_linear:
+//                Intent intent = new Intent();
+////                intent.putExtra("phone_number", email);
+//                startActivity(new Intent(getActivity(), CompleteRide.class));
+//                break;
         }
     }
 }

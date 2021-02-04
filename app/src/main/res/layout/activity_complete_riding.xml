@@ -1,0 +1,294 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context=".CompleteRiding">
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <RelativeLayout
+                android:id="@+id/completeRiding_relativeLayout"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+                <LinearLayout
+                    android:id="@+id/header_layout"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@color/appColorPrimary"
+                    android:orientation="horizontal">
+
+                    <ImageView
+                        android:id="@+id/back"
+                        android:layout_width="36dp"
+                        android:layout_height="36dp"
+                        android:layout_gravity="center_vertical"
+                        android:src="@drawable/ic_chevron_left_black_24dp" />
+
+                    <TextView
+                        android:id="@+id/login_head"
+                        android:layout_width="0dp"
+                        android:layout_height="50dp"
+                        android:layout_weight="1"
+                        android:background="@color/appColorPrimary"
+                        android:gravity="center"
+                        android:text="@string/complete_ride"
+                        android:textColor="@android:color/black"
+                        android:textSize="18sp"
+                        android:textStyle="bold" />
+
+                    <ImageView
+                        android:layout_width="36dp"
+                        android:layout_height="36dp"
+                        android:layout_gravity="center_vertical"
+                        android:src="@drawable/ic_chevron_left_black_24dp"
+                        android:visibility="invisible" />
+
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/completeRiding_fare_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@id/header_layout"
+                    android:layout_marginLeft="20dp"
+                    android:layout_marginTop="20dp"
+                    android:drawableLeft="@drawable/price_icon"
+                    android:drawablePadding="10dp"
+                    android:text="Total Fare: "
+                    android:textColor="@color/price_descrp"
+                    android:textSize="18dp" />
+
+                <TextView
+                    android:id="@+id/completeRiding_price_txt"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@id/header_layout"
+                    android:layout_marginLeft="5dp"
+                    android:layout_marginTop="20dp"
+                    android:layout_toRightOf="@id/completeRiding_fare_text"
+                    android:text="$ 40"
+                    android:textColor="@color/price_descrp"
+                    android:textSize="18dp"
+                    android:textStyle="bold" />
+
+                <View
+                    android:id="@+id/view"
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:layout_below="@id/completeRiding_price_txt"
+                    android:layout_margin="20dp"
+                    android:background="@color/view_background" />
+
+                <LinearLayout
+                    android:id="@+id/fare_explain"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@id/view"
+                    android:layout_marginLeft="20dp"
+                    android:layout_marginRight="20dp"
+                    android:layout_marginBottom="20dp"
+                    android:orientation="horizontal"
+                    android:weightSum="1">
+
+                    <RelativeLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:layout_weight="0.5"
+                        android:gravity="center">
+
+                        <TextView
+                            android:id="@+id/completeRiding_miles_txt"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:drawableLeft="@drawable/location_icon"
+                            android:drawablePadding="10dp"
+                            android:gravity="center"
+                            android:text="20 Miles"
+                            android:textColor="@color/fare_desc"
+                            android:textSize="16sp" />
+                    </RelativeLayout>
+
+
+                    <View
+                        android:layout_width="2dp"
+                        android:layout_height="40dp"
+                        android:background="@color/view_background"
+                        android:gravity="center" />
+
+
+                    <RelativeLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:layout_weight="0.5"
+                        android:gravity="center">
+
+                        <TextView
+                            android:id="@+id/completeRiding_time_txt"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:drawableLeft="@drawable/clock_icon"
+                            android:drawablePadding="10dp"
+                            android:gravity="center"
+                            android:text="20 Mins"
+                            android:textColor="@color/fare_desc"
+                            android:textSize="16sp" />
+                    </RelativeLayout>
+
+
+                </LinearLayout>
+
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/card_view"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@id/fare_explain"
+                    android:layout_marginLeft="20dp"
+                    android:layout_marginTop="10dp"
+                    android:layout_marginRight="20dp"
+                    android:layout_marginBottom="20dp"
+                    app:cardCornerRadius="10dp"
+                    app:cardElevation="10dp"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintTop_toTopOf="@+id/imageView"
+                    tools:layout_editor_absoluteX="43dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="20dp"
+                        android:layout_marginBottom="20dp"
+                        android:orientation="horizontal"
+                        android:padding="15dp"
+                        android:weightSum="1">
+
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center"
+                            android:layout_weight="0.4"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:id="@+id/completeRiding_startLocation_txt"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:gravity="center_horizontal"
+                                android:text="Pick Up Location"
+                                android:textColor="@android:color/black" />
+
+                            <TextView
+                                android:id="@+id/completeRiding_timeStart_txt"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:gravity="center_horizontal"
+                                android:text="Time 5:45 PM" />
+
+                        </LinearLayout>
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="0.2"
+                            android:gravity="center_horizontal"
+                            android:text="To"
+                            android:textColor="@android:color/black" />
+
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="0.4"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:id="@+id/completeRiding_endLocation_txt"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:gravity="center_horizontal"
+                                android:text="Drop Up Location"
+                                android:textColor="@android:color/black" />
+
+                            <TextView
+                                android:id="@+id/completeRiding_timeEnd_txt"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:gravity="center_horizontal"
+                                android:text="Time 5:45 PM" />
+
+                        </LinearLayout>
+
+                    </LinearLayout>
+
+                </androidx.cardview.widget.CardView>
+
+            </RelativeLayout>
+
+
+            <RelativeLayout
+                android:id="@+id/completeRiding_relativeLayout_progress"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:visibility="gone"
+                tools:context=".LoginScreen">
+
+
+                <LinearLayout
+                    android:id="@+id/myProfile_header_layout_progress"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@color/appColorPrimary"
+                    android:orientation="horizontal">
+
+                    <ImageView
+                        android:id="@+id/myProfile_back_progress"
+                        android:layout_width="36dp"
+                        android:layout_height="36dp"
+                        android:layout_gravity="center_vertical"
+                        android:src="@drawable/ic_chevron_left_black_24dp" />
+
+                    <TextView
+                        android:id="@+id/myProfile_login_head_progress"
+                        android:layout_width="0dp"
+                        android:layout_height="50dp"
+                        android:layout_weight="1"
+                        android:background="@color/appColorPrimary"
+                        android:gravity="center"
+                        android:text="@string/my_profile"
+                        android:textColor="@android:color/black"
+                        android:textSize="18sp"
+                        android:textStyle="bold" />
+
+                    <ImageView
+                        android:layout_width="36dp"
+                        android:layout_height="36dp"
+                        android:layout_gravity="center_vertical"
+                        android:src="@drawable/ic_chevron_left_black_24dp"
+                        android:visibility="invisible" />
+
+                </LinearLayout>
+
+                <ProgressBar
+                    android:id="@+id/completeRiding_progressBar"
+                    style="@style/Spinner"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_marginTop="120dp"/>
+
+            </RelativeLayout>
+
+        </LinearLayout>
+
+    </ScrollView>
+</layout>

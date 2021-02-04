@@ -29,8 +29,10 @@
                     android:text="Go Offline"/>
 
                 <Switch
+                    android:id="@+id/navMenu_switch"
                     android:layout_width="50dp"
                     android:layout_height="wrap_content"
+                    android:onClick="onClick"
                     />
 
             </LinearLayout>
@@ -180,12 +182,13 @@
                 android:alpha="0.8"/>
 
             <Button
-                android:id="@+id/login_button"
+                android:id="@+id/navMenu_logOut_btn"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="@string/logout"
                 android:layout_gravity="center"
                 android:layout_marginLeft="40dp"
+                android:onClick="onClick"
                 android:layout_marginTop="30dp"
                 android:layout_marginRight="40dp"
                 android:layout_marginBottom="40dp"

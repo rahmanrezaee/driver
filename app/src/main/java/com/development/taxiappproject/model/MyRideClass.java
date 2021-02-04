@@ -1,6 +1,7 @@
 package com.development.taxiappproject.model;
 
 public class MyRideClass {
+    private String id;
     private String dateRide;
     private String priceRide;
     private String distanceRide;
@@ -8,13 +9,15 @@ public class MyRideClass {
     private String startLocationRide;
     private String endLocationRide;
 
-    public MyRideClass(String dateRide, String priceRide, String distanceRide, String timeRide, String startLocationRide, String endLocationRide) {
+    public MyRideClass(String dateRide, String priceRide, String distanceRide, String timeRide, String startLocationRide,
+                       String endLocationRide, String id) {
         this.dateRide = dateRide;
         this.priceRide = priceRide;
         this.distanceRide = distanceRide;
         this.timeRide = timeRide;
         this.startLocationRide = startLocationRide;
         this.endLocationRide = endLocationRide;
+        this.id = id;
     }
 
     public String getDateRide() {
@@ -63,5 +66,13 @@ public class MyRideClass {
 
     public void setPriceRide(String priceRide) {
         this.priceRide = priceRide;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
     }
 }

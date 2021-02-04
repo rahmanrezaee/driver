@@ -1,14 +1,17 @@
 package com.development.taxiappproject.adapter;
 
 import android.content.Context;
+import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.development.taxiappproject.CompleteRiding;
 import com.development.taxiappproject.R;
 import com.development.taxiappproject.model.MyRideClass;
 
@@ -37,6 +40,18 @@ public class DashboardAdapter extends RecyclerView.Adapter<DashboardAdapter.MyVi
         holder.dateTxt.setText(myDashboardList.get(position).getDateRide());
         holder.priceTxt.setText(myDashboardList.get(position).getPriceRide());
         holder.distanceTxt.setText(myDashboardList.get(position).getDistanceRide());
+        holder.linearLayout.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(view.getContext(), CompleteRiding.class);
+                intent.putExtra("id", myDashboardList.get(position).getId());
+                context.startActivity(intent);
+
+//                Intent intent = new Intent(, CompleteMyRide.class);
+//                intent.putExtra("id", myDashboardList.get(position).getId());
+//                context.startActivity(intent);
+            }
+        });
     }
 
     @Override
@@ -46,12 +61,14 @@ public class DashboardAdapter extends RecyclerView.Adapter<DashboardAdapter.MyVi
 
     public static class MyViewHolder extends RecyclerView.ViewHolder {
         public TextView dateTxt, priceTxt, distanceTxt;
+        public LinearLayout linearLayout;
 
         public MyViewHolder(View view) {
             super(view);
             dateTxt = view.findViewById(R.id.dashboard_item_date);
             priceTxt = view.findViewById(R.id.dashboard_item_fare);
             distanceTxt = view.findViewById(R.id.dashboard_item_miles);
+            linearLayout = view.findViewById(R.id.dashboard_item_linear);
         }
     }
 }

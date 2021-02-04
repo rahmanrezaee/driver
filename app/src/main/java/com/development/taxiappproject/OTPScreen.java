@@ -29,6 +29,7 @@ import com.android.volley.toolbox.HttpHeaderParser;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 import com.development.taxiappproject.Const.SharedPrefKey;
+import com.development.taxiappproject.Service.MyFirebaseMessagingService;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.FirebaseException;
@@ -304,7 +305,6 @@ public class OTPScreen extends AppCompatActivity {
                 }
             }
         };
-
         requestQueue.add(jsonObjectRequest);
     }
 
@@ -323,13 +323,15 @@ public class OTPScreen extends AppCompatActivity {
                             user.getIdToken(true).addOnSuccessListener(result -> {
                                 String idToken = result.getToken();
 
+                                Log.i(TAG, "Hello: Mahdi: onComplete: " + idToken);
+
                                 if (type.equalsIgnoreCase("signUp")) {
                                     final String requestBody = jsonObject.toString();
                                     signUpAndSignInToServer(requestBody, idToken, type);
                                 } else {
                                     JSONObject jsonObject = new JSONObject();
                                     try {
-                                        jsonObject.put("fcmToken", "lakjdlfkjsal");
+                                        jsonObject.put("fcmToken", MyFirebaseMessagingService.getToken(getApplicationContext()));
                                     } catch (JSONException e) {
                                         e.printStackTrace();
                                     }

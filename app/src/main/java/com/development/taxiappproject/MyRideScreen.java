@@ -134,7 +134,9 @@ public class MyRideScreen extends AppCompatActivity {
             MyRideClass ride = null;
             try {
                 JSONObject myData = data.getJSONObject(i);
-                ride = new MyRideClass(myData.getString("eta"), myData.getString("actualFareAmount"), myData.getString("miles"), myData.getString("actualTimePassed"), myData.getString("from"), myData.getString("toWhere"));
+                ride = new MyRideClass(myData.getString("eta"), myData.getString("actualFareAmount"),
+                        myData.getString("miles"), myData.getString("actualTimePassed"), myData.getString("from"),
+                        myData.getString("toWhere"), myData.getString("_id"));
             } catch (JSONException e) {
                 e.printStackTrace();
             }
