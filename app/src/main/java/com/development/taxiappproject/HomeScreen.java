@@ -4,8 +4,12 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
+import android.widget.CompoundButton;
+import android.widget.Switch;
+import android.widget.TextView;
 
 import com.android.volley.NetworkResponse;
 import com.android.volley.ParseError;
@@ -44,6 +48,8 @@ import java.util.Map;
 import static com.development.taxiappproject.Const.ConstantValue.baseUrl;
 
 public class HomeScreen extends AppCompatActivity implements View.OnClickListener {
+    private TextView navMenuGoTxt;
+    private Switch mSwitch;
 
     private static final String TAG = "MAHDI";
     private AppBarConfiguration mAppBarConfiguration;
@@ -57,13 +63,25 @@ public class HomeScreen extends AppCompatActivity implements View.OnClickListene
 
         sharedPreferences = getSharedPreferences(OTPScreen.MyPREFERENCES, Context.MODE_PRIVATE);
         String userToken = sharedPreferences.getString(SharedPrefKey.userToken, "defaultValue");
+        String firebaseToken = sharedPreferences.getString(SharedPrefKey.firebaseToken, "defaultValue");
 
         Log.i(TAG, "Mahdi: HomeScreen: 0 " + userToken);
         Log.i(TAG, "Mahdi: HomeScreen: 1 " + MyFirebaseMessagingService.getToken(getApplicationContext()));
+        Log.i(TAG, "Mahdi: HomeScreen: 2 " + firebaseToken);
 
         getDashboardItem(userToken);
 
         screenBinding = DataBindingUtil.setContentView(this, R.layout.activity_home_screen);
+        navMenuGoTxt = findViewById(R.id.navMenu_go_txt);
+        mSwitch = findViewById(R.id.navMenu_switch);
+
+        mSwitch.setOnCheckedChangeListener((compoundButton, b) -> {
+            if (b)
+                navMenuGoTxt.setText("Go Offline");
+            else
+                navMenuGoTxt.setText("Go Online");
+        });
+
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
@@ -101,9 +119,9 @@ public class HomeScreen extends AppCompatActivity implements View.OnClickListene
 
     public void socketConnection() {
         try {
-            Log.e(TAG, "Mahdi: HomeScreen: socket 1 ");
+            Log.i(TAG, "Mahdi: HomeScreen: socket 1 ");
             mSocket = IO.socket(baseUrl);
-            Log.e(TAG, "Mahdi: HomeScreen: socket 2 ");
+            Log.i(TAG, "Mahdi: HomeScreen: socket 2 ");
         } catch (URISyntaxException e) {
             Log.e(TAG, "Mahdi: HomeScreen: socket error ", e);
         }
@@ -204,6 +222,16 @@ public class HomeScreen extends AppCompatActivity implements View.OnClickListene
 
         }
     }
+
+//    private void attemptSend() {
+//        String message = mInputMessageView.getText().toString().trim();
+//        if (TextUtils.isEmpty(message)) {
+//            return;
+//        }
+//
+//        mInputMessageView.setText("");
+//        mSocket.emit("new message", message);
+//    }
 
     public Emitter.Listener sendNewMessage() {
         return new Emitter.Listener() {

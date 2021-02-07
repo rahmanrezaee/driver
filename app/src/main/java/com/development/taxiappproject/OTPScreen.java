@@ -252,6 +252,9 @@ public class OTPScreen extends AppCompatActivity {
                         Log.i(TAG, "Mahdi: OTPScreen: signUp: res 00 " + userId);
                         Log.i(TAG, "Mahdi: OTPScreen: signUp: res 00 " + isOnline);
 
+                        Log.i(TAG, "Mahdi: OTPScreen: signUp: res 1 " + data);
+                        Log.i(TAG, "Mahdi: OTPScreen: signUp: res 2 " + firebaseToken);
+
                         SharedPreferences.Editor editor = sharedpreferences.edit();
 
                         editor.putString(SharedPrefKey.firebaseToken, firebaseToken);
@@ -260,11 +263,12 @@ public class OTPScreen extends AppCompatActivity {
                         editor.putString(SharedPrefKey.isOnline, isOnline);
                         editor.apply();
 
+                        startActivity(new Intent(getApplicationContext(), HomeScreen.class));
+
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
                     p.hide();
-                    startActivity(new Intent(getApplicationContext(), HomeScreen.class));
                 }, error -> {
             p.hide();
             Log.e("Mahdi", "Mahdi: OTPScreen: signUp: Error " + error.getMessage());
@@ -319,6 +323,8 @@ public class OTPScreen extends AppCompatActivity {
                             FirebaseUser user = Objects.requireNonNull(task.getResult()).getUser();
                             assert user != null;
 //                            user.getIdToken();
+
+                            Log.i(TAG, "Hello: Mahdi: onComplete: User " + user);
 
                             user.getIdToken(true).addOnSuccessListener(result -> {
                                 String idToken = result.getToken();

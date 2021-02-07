@@ -6,6 +6,8 @@
     android:layout_height="match_parent"
     tools:context=".Testing.Testing">
 
+<!--    For Upload image-->
+
     <de.hdodenhof.circleimageview.CircleImageView
         android:id="@+id/selectTestImage"
         android:layout_width="80dp"
@@ -15,17 +17,189 @@
         android:onClick="onClick"
         android:src="@drawable/ic_account_circle_black_24dp"
         app:civ_border_color="@color/appColorSecondary"
-        app:civ_border_width="2dp"
-        />
+        app:civ_border_width="2dp" />
 
     <Button
         android:id="@+id/click_me"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@id/selectTestImage"
-        android:onClick="onClick"
         android:background="@color/appColorPrimary"
-        android:text="hello"
-        />
+        android:onClick="onClick"
+        android:text="hello" />
+
+    <!--    <TextView-->
+    <!--        android:layout_width="match_parent"-->
+    <!--        android:layout_height="50dp"-->
+    <!--        android:background="#3F51B5"-->
+    <!--        android:gravity="center"-->
+    <!--        android:text="Location using service"-->
+    <!--        android:textColor="#ffffff"-->
+    <!--        android:textSize="20dp" />-->
+    <!--    -->
+    <!--    <Button-->
+    <!--        android:id="@+id/btn_start"-->
+    <!--        android:layout_width="match_parent"-->
+    <!--        android:layout_height="wrap_content"-->
+    <!--        android:layout_alignParentBottom="true"-->
+    <!--        android:text="Get Location" />-->
+
+    <!--    <LinearLayout-->
+    <!--        android:layout_width="match_parent"-->
+    <!--        android:layout_height="wrap_content"-->
+    <!--        android:layout_centerInParent="true"-->
+    <!--        android:orientation="vertical">-->
+
+    <!--        <LinearLayout-->
+    <!--            android:layout_width="match_parent"-->
+    <!--            android:layout_height="50dp"-->
+    <!--            android:orientation="horizontal">-->
+
+    <!--            <TextView-->
+    <!--                android:layout_width="150dp"-->
+    <!--                android:layout_height="wrap_content"-->
+    <!--                android:layout_gravity="center_vertical"-->
+    <!--                android:layout_marginLeft="10dp"-->
+    <!--                android:text="Latitude"-->
+    <!--                android:textColor="#000000"-->
+    <!--                android:textSize="20dp" />-->
+
+    <!--            <TextView-->
+    <!--                android:id="@+id/tv_latitude"-->
+    <!--                android:layout_width="wrap_content"-->
+    <!--                android:layout_height="wrap_content"-->
+    <!--                android:layout_gravity="center_vertical"-->
+    <!--                android:layout_marginLeft="10dp"-->
+    <!--                android:text=""-->
+    <!--                android:textColor="#000000"-->
+    <!--                android:textSize="20dp" />-->
+
+    <!--        </LinearLayout>-->
+
+    <!--        <LinearLayout-->
+    <!--            android:layout_width="match_parent"-->
+    <!--            android:layout_height="50dp"-->
+    <!--            android:orientation="horizontal">-->
+
+    <!--            <TextView-->
+    <!--                android:layout_width="150dp"-->
+    <!--                android:layout_height="wrap_content"-->
+    <!--                android:layout_gravity="center_vertical"-->
+    <!--                android:layout_marginLeft="10dp"-->
+    <!--                android:text="Longitude"-->
+    <!--                android:textColor="#000000"-->
+    <!--                android:textSize="20dp" />-->
+
+    <!--            <TextView-->
+    <!--                android:id="@+id/tv_longitude"-->
+    <!--                android:layout_width="wrap_content"-->
+    <!--                android:layout_height="wrap_content"-->
+    <!--                android:layout_gravity="center_vertical"-->
+    <!--                android:layout_marginLeft="10dp"-->
+    <!--                android:text=""-->
+    <!--                android:textColor="#000000"-->
+    <!--                android:textSize="20dp" />-->
+
+    <!--        </LinearLayout>-->
+
+    <!--        <LinearLayout-->
+    <!--            android:layout_width="match_parent"-->
+    <!--            android:layout_height="50dp"-->
+    <!--            android:orientation="horizontal">-->
+
+    <!--            <TextView-->
+    <!--                android:layout_width="150dp"-->
+    <!--                android:layout_height="wrap_content"-->
+    <!--                android:layout_gravity="center_vertical"-->
+    <!--                android:layout_marginLeft="10dp"-->
+    <!--                android:text="Address"-->
+    <!--                android:textColor="#000000"-->
+    <!--                android:textSize="20dp" />-->
+
+    <!--            <TextView-->
+    <!--                android:id="@+id/tv_address"-->
+    <!--                android:layout_width="wrap_content"-->
+    <!--                android:layout_height="wrap_content"-->
+    <!--                android:layout_gravity="center_vertical"-->
+    <!--                android:layout_marginLeft="10dp"-->
+    <!--                android:text=""-->
+    <!--                android:textColor="#000000"-->
+    <!--                android:textSize="20dp" />-->
+
+    <!--        </LinearLayout>-->
+
+    <!--        <LinearLayout-->
+    <!--            android:layout_width="match_parent"-->
+    <!--            android:layout_height="50dp"-->
+    <!--            android:orientation="horizontal">-->
+
+    <!--            <TextView-->
+    <!--                android:layout_width="150dp"-->
+    <!--                android:layout_height="wrap_content"-->
+    <!--                android:layout_gravity="center_vertical"-->
+    <!--                android:layout_marginLeft="10dp"-->
+    <!--                android:text="Area"-->
+    <!--                android:textColor="#000000"-->
+    <!--                android:textSize="20dp" />-->
+
+    <!--            <TextView-->
+    <!--                android:id="@+id/tv_area"-->
+    <!--                android:layout_width="wrap_content"-->
+    <!--                android:layout_height="wrap_content"-->
+    <!--                android:layout_gravity="center_vertical"-->
+    <!--                android:layout_marginLeft="10dp"-->
+    <!--                android:text=""-->
+    <!--                android:textColor="#000000"-->
+    <!--                android:textSize="20dp" />-->
+
+    <!--        </LinearLayout>-->
+
+    <!--        <LinearLayout-->
+    <!--            android:layout_width="match_parent"-->
+    <!--            android:layout_height="50dp"-->
+    <!--            android:orientation="horizontal">-->
+
+    <!--            <TextView-->
+    <!--                android:layout_width="150dp"-->
+    <!--                android:layout_height="wrap_content"-->
+    <!--                android:layout_gravity="center_vertical"-->
+    <!--                android:layout_marginLeft="10dp"-->
+    <!--                android:text="Locality"-->
+    <!--                android:textColor="#000000"-->
+    <!--                android:textSize="20dp" />-->
+
+    <!--            <TextView-->
+    <!--                android:id="@+id/tv_locality"-->
+    <!--                android:layout_width="wrap_content"-->
+    <!--                android:layout_height="wrap_content"-->
+    <!--                android:layout_gravity="center_vertical"-->
+    <!--                android:layout_marginLeft="10dp"-->
+    <!--                android:text=""-->
+    <!--                android:textColor="#000000"-->
+    <!--                android:textSize="20dp" />-->
+
+    <!--        </LinearLayout>-->
+
+    <!--    </LinearLayout>-->
+
+    <!--    <TextView-->
+    <!--        android:id="@+id/txt_location"-->
+    <!--        android:layout_width="match_parent"-->
+    <!--        android:layout_height="match_parent"-->
+    <!--        android:gravity="center"-->
+    <!--        android:text="Hello World!" />-->
+
+    <!--    <TextView-->
+    <!--        android:id="@+id/txt_address"-->
+    <!--        android:layout_width="match_parent"-->
+    <!--        android:layout_height="match_parent"-->
+    <!--        android:gravity="center_horizontal"-->
+    <!--        android:text="Hello" />-->
+
+    <!--    <Button-->
+    <!--        android:id="@+id/test_button"-->
+    <!--        android:layout_width="wrap_content"-->
+    <!--        android:layout_height="wrap_content"-->
+    <!--        android:text="Button" />-->
 
 </RelativeLayout>

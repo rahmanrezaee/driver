@@ -92,22 +92,32 @@ public class HomeFragment extends Fragment implements View.OnClickListener {
                         Log.i(TAG, "Mahdi: HomeFragment: getDashboardItem: res 0 " + response);
                         JSONObject data = response.getJSONObject("data");
 
+                        boolean lastRideIsNull = data.get("lastRide").toString() == "null";
+
+                        if (!lastRideIsNull) {
+                            JSONObject lastRide = data.getJSONObject("lastRide");
+
+                            lastId = lastRide.getString("_id");
+
+                            binding.fragmentHomeDateLastTxt.setText(lastRide.getString("route"));
+                            binding.fragmentHomePriceLastTxt.setText("$ " + lastRide.getString("actualFareAmount"));
+                            binding.fragmentHomeFromTxt.setText(lastRide.getString("from"));
+                            binding.fragmentHomeToTxt.setText(lastRide.getString("toWhere"));
+                            binding.fragmentHomeMilesTxt.setText(lastRide.getString("miles") + " Miles");
+                        }
                         JSONArray todaySummery = data.getJSONArray("todaySummary");
-                        JSONObject lastRide = data.getJSONObject("lastRide");
 
-                        lastId = lastRide.getString("_id");
+                        if (todaySummery.length() != 0) {
+                            settestimonialList(todaySummery);
+                        }
 
-                        binding.fragmentHomeDateLastTxt.setText(lastRide.getString("route"));
-                        binding.fragmentHomePriceLastTxt.setText("$ " + lastRide.getString("actualFareAmount"));
-                        binding.fragmentHomeFromTxt.setText(lastRide.getString("from"));
-                        binding.fragmentHomeToTxt.setText(lastRide.getString("toWhere"));
-                        binding.fragmentHomeMilesTxt.setText(lastRide.getString("miles") + " Miles");
-
-                        Log.i(TAG, "Mahdi: HomeFragment: getDashboardItem: res 1 " + data);
-                        binding.fragmentHomeProgressBar.setVisibility(View.GONE);
-                        binding.newRideRequest.setVisibility(View.VISIBLE);
-
-                        settestimonialList(todaySummery);
+                        if (todaySummery.length() == 0 && lastRideIsNull) {
+                            binding.fragmentHomeProgressBar.setVisibility(View.GONE);
+                            binding.newRideRequest.setVisibility(View.GONE);
+                        } else {
+                            binding.fragmentHomeProgressBar.setVisibility(View.GONE);
+                            binding.newRideRequest.setVisibility(View.VISIBLE);
+                        }
 
                     } catch (JSONException e) {
                         binding.fragmentHomeProgressBar.setVisibility(View.VISIBLE);

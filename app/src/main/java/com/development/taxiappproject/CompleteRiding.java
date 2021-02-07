@@ -56,7 +56,6 @@ public class CompleteRiding extends AppCompatActivity {
         getSingleRideItem(userToken, sessionId);
     }
 
-
     public void getSingleRideItem(String userToken, String rideId) {
         RequestQueue requestQueue = Volley.newRequestQueue(CompleteRiding.this);
         String mURL = baseUrl + "/rides/?id=" + rideId;
