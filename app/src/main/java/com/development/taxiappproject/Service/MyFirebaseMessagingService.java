@@ -59,7 +59,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
 
             Intent intent = new Intent(MyFirebaseMessagingService.this, NewRideRequest.class);
 
-            intent.putExtra("id", remoteMessage.getData().get("rideId"));
+            intent.putExtra("rideId", remoteMessage.getData().get("rideId"));
             intent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);
 
             PendingIntent localIntent = PendingIntent.getActivity(MyFirebaseMessagingService.this,

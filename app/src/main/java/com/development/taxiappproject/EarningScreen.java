@@ -68,6 +68,14 @@ public class EarningScreen extends AppCompatActivity {
         getRideItem(userToken);
     }
 
+    public void onClick(View view){
+        switch (view.getId()){
+            case R.id.earningScreen_back_btn:
+                finish();
+                break;
+        }
+    }
+
     public void getRideItem(String userToken) {
         RequestQueue requestQueue = Volley.newRequestQueue(EarningScreen.this);
         String mURL = baseUrl + "/rides?earnings=true";

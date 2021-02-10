@@ -28,6 +28,15 @@
         android:onClick="onClick"
         android:text="hello" />
 
+    <Button
+        android:id="@+id/upload_image"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/click_me"
+        android:background="@color/appColorPrimary"
+        android:onClick="onClick"
+        android:text="upload" />
+
     <!--    <TextView-->
     <!--        android:layout_width="match_parent"-->
     <!--        android:layout_height="50dp"-->

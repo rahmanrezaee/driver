@@ -246,6 +246,9 @@ public class OTPScreen extends AppCompatActivity {
                         String userToken = data.getString("token");
                         String firebaseToken = data.getString("firebaseToken");
 
+                        String userName = user.getString("username");
+                        String profilePath = user.getString("profilePhoto");
+
                         String userId = user.getString("_id");
                         String isOnline = user.getString("isOnline");
 
@@ -261,6 +264,8 @@ public class OTPScreen extends AppCompatActivity {
                         editor.putString(SharedPrefKey.userToken, userToken);
                         editor.putString(SharedPrefKey.userId, userId);
                         editor.putString(SharedPrefKey.isOnline, isOnline);
+                        editor.putString(SharedPrefKey.userName, userName);
+                        editor.putString(SharedPrefKey.profilePath, profilePath);
                         editor.apply();
 
                         startActivity(new Intent(getApplicationContext(), HomeScreen.class));
@@ -329,7 +334,7 @@ public class OTPScreen extends AppCompatActivity {
                             user.getIdToken(true).addOnSuccessListener(result -> {
                                 String idToken = result.getToken();
 
-                                Log.i(TAG, "Hello: Mahdi: onComplete: " + idToken);
+                                Log.i(TAG, "Hello: Mahdi: onComplete: firebaseToken " + idToken);
 
                                 if (type.equalsIgnoreCase("signUp")) {
                                     final String requestBody = jsonObject.toString();

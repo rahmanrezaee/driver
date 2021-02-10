@@ -84,6 +84,14 @@ public class RateCardScreen extends AppCompatActivity {
 //        recyclerView.setAdapter(rideAdapter);
 //    }
 
+    public void onClick(View view){
+        switch (view.getId()) {
+            case R.id.rateCard_back_btn:
+                finish();
+                break;
+        }
+    }
+
     @RequiresApi(api = Build.VERSION_CODES.M)
     public void createTable(JSONArray data) {
         TableLayout ll = findViewById(R.id.rateCar_tableLayout);

@@ -17,12 +17,11 @@
             android:orientation="horizontal">
 
             <ImageView
-                android:id="@+id/back"
+                android:id="@+id/newRequest_back_btn"
                 android:layout_width="36dp"
                 android:layout_height="36dp"
                 android:layout_gravity="center_vertical"
                 android:src="@drawable/ic_chevron_left_black_24dp" />
-
 
             <TextView
                 android:id="@+id/login_head"
@@ -71,9 +70,7 @@
                 android:padding="10dp"
                 android:text="Timer: 05:15:20"
                 android:textColor="@android:color/black"
-                android:textSize="16sp"
-
-                />
+                android:textSize="16sp" />
 
             <LinearLayout
                 android:id="@+id/newRide_calulate_layout"
@@ -131,7 +128,6 @@
                     android:textColor="@android:color/black"
                     android:textSize="16sp" />
 
-
             </LinearLayout>
 
             <LinearLayout
@@ -179,10 +175,7 @@
                     android:textSize="16sp"
                     android:textStyle="bold" />
 
-
             </LinearLayout>
-
-
         </RelativeLayout>
 
         <androidx.cardview.widget.CardView
@@ -227,7 +220,7 @@
             android:orientation="horizontal">
 
             <Button
-                android:id="@+id/accept"
+                android:id="@+id/newRide_accept_btn"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginRight="10dp"
@@ -237,6 +230,7 @@
                 android:textColor="@android:color/black" />
 
             <Button
+                android:id="@+id/newRide_decline_btn"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="10dp"

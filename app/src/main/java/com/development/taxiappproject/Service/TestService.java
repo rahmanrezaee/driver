@@ -1,18 +1,19 @@
 package com.development.taxiappproject.Service;
 
 import android.Manifest;
-import android.app.AlarmManager;
-import android.app.PendingIntent;
+import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
-import android.os.Bundle;
-import android.os.Handler;
+import android.os.Build;
 import android.os.IBinder;
 import android.text.TextUtils;
 import android.util.Log;
@@ -20,10 +21,13 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
 import androidx.core.app.ActivityCompat;
+import androidx.core.app.NotificationCompat;
 
 import com.development.taxiappproject.Const.SharedPrefKey;
 import com.development.taxiappproject.OTPScreen;
+import com.development.taxiappproject.Restarter;
 import com.github.nkzawa.emitter.Emitter;
 import com.github.nkzawa.engineio.client.transports.WebSocket;
 import com.github.nkzawa.socketio.client.IO;
@@ -33,10 +37,12 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.net.URISyntaxException;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import static com.development.taxiappproject.Const.ConstantValue.socketBaseUrl;
 
-public class MyBackgroundLocationService extends Service implements LocationListener {
+public class TestService extends Service implements LocationListener {
     boolean isGPSEnable = false;
     private String TAG = "MAHDI";
     boolean isNetworkEnable = false;
@@ -48,19 +54,63 @@ public class MyBackgroundLocationService extends Service implements LocationList
     private Socket mSocket;
     SharedPreferences sharedPreferences;
 
-    public MyBackgroundLocationService() {
+    public int counter = 0;
 
-    }
-
-    @Nullable
     @Override
-    public IBinder onBind(Intent intent) {
-        return null;
+    public void onCreate() {
+        super.onCreate();
+        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.O)
+            startMyOwnForeground();
+        else
+            startForeground(1, new Notification());
+
+        sharedPreferences = getSharedPreferences(OTPScreen.MyPREFERENCES, Context.MODE_PRIVATE);
+        socketConnection();
+
+        fn_getLocation();
+
+        mSocket.connect();
+
+        locationManager = (LocationManager) getApplicationContext().getSystemService(Context.LOCATION_SERVICE);
+
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            return;
+        }
+        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, (LocationListener) this);
+        locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, (LocationListener) this);
+
+        isGPSEnable = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
+        isNetworkEnable = locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
     }
+
+    @RequiresApi(api = Build.VERSION_CODES.O)
+    private void startMyOwnForeground() {
+        String NOTIFICATION_CHANNEL_ID = "example.permanence";
+        String channelName = "Background Service";
+        NotificationChannel chan = new NotificationChannel(NOTIFICATION_CHANNEL_ID, channelName, NotificationManager.IMPORTANCE_NONE);
+        chan.setLightColor(Color.BLUE);
+        chan.setLockscreenVisibility(Notification.VISIBILITY_PRIVATE);
+
+        NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        assert manager != null;
+        manager.createNotificationChannel(chan);
+
+        NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID);
+        Notification notification = notificationBuilder.setOngoing(true)
+                .setContentTitle("App is running in background")
+                .setPriority(NotificationManager.IMPORTANCE_MIN)
+                .setCategory(Notification.CATEGORY_SERVICE)
+                .build();
+        startForeground(2, notification);
+    }
+
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        return Service.START_STICKY;
+        super.onStartCommand(intent, flags, startId);
+        startTimer();
+        return START_STICKY;
     }
 
     public void socketConnection() {
@@ -76,58 +126,57 @@ public class MyBackgroundLocationService extends Service implements LocationList
         }
     }
 
-    private Emitter.Listener onConnect = new Emitter.Listener() {
-        @Override
-        public void call(Object... args) {
-            Log.d(TAG, "Mahdi: BackgroundService: connected 1");
-        }
-    };
-
     @Override
-    public void onCreate() {
-        super.onCreate();
-        Toast.makeText(getApplicationContext(), "onCreate: 1 ", Toast.LENGTH_SHORT).show();
+    public void onDestroy() {
+        super.onDestroy();
+        stoptimertask();
+
         sharedPreferences = getSharedPreferences(OTPScreen.MyPREFERENCES, Context.MODE_PRIVATE);
-        socketConnection();
 
-        fn_getLocation();
+        String switchFlag = sharedPreferences.getString("isOnline", "null");
+        boolean switchFlagBool = switchFlag.equalsIgnoreCase("null") ? false : true;
 
-        mSocket.on(Socket.EVENT_CONNECT, onConnect);
+        Log.i(TAG, "Mahdi: TestService onDestroy: " + switchFlag);
 
-        mSocket.connect();
+        mSocket.disconnect();
 
-        locationManager = (LocationManager) getApplicationContext().getSystemService(Context.LOCATION_SERVICE);
+//        if (switchFlagBool) {
+//            Intent broadcastIntent = new Intent();
+//            broadcastIntent.setAction("restartservice");
+//            broadcastIntent.setClass(this, Restarter.class);
+//            this.sendBroadcast(broadcastIntent);
+//        } else {
+//            mSocket.disconnect();
+//        }
+    }
 
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
-                && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
 
-            Toast.makeText(getApplicationContext(), "onCreate: 2 ", Toast.LENGTH_SHORT).show();
-            return;
+    private Timer timer;
+    private TimerTask timerTask;
+
+    public void startTimer() {
+        timer = new Timer();
+        timerTask = new TimerTask() {
+            public void run() {
+                Log.i("Count", "=========  " + (counter++));
+            }
+        };
+        timer.schedule(timerTask, 1000, 1000); //
+    }
+
+    public void stoptimertask() {
+        if (timer != null) {
+            timer.cancel();
+            timer = null;
         }
-        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, this);
-        locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, this);
-
-        isGPSEnable = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
-        isNetworkEnable = locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
-
-        Toast.makeText(getApplicationContext(), "onCreate: 3 ", Toast.LENGTH_SHORT).show();
     }
 
+    @Nullable
     @Override
-    public void onLocationChanged(@NonNull Location location) {
-        intent = new Intent(str_receiver);
-        fn_getLocation();
+    public IBinder onBind(Intent intent) {
+        return null;
     }
 
-    @Override
-    public void onTaskRemoved(Intent rootIntent) {
-        super.onTaskRemoved(rootIntent);
-        Intent intent = new Intent("com.development.taxiappproject.Service");
-        sendBroadcast(intent);
-    }
-
-    //        {driver: id, lat: lat, lng: lng}
-//        {MyLocation: }
     private void sendDriverData(String lat, String lng, String status) {
         String userId = sharedPreferences.getString(SharedPrefKey.userId, "defaultValue");
 
@@ -147,17 +196,6 @@ public class MyBackgroundLocationService extends Service implements LocationList
         Log.i(TAG, "sendDriverData: " + userStatus);
 
         mSocket.emit("MyLocation", userStatus);
-
-//        JSONObject jsonObject = new JSONObject();
-//
-//        try {
-//            jsonObject.put("driver", lat);
-//            jsonObject.put("longitude", lng);
-//            jsonObject.put("status", status);
-//        } catch (JSONException e) {
-//            e.printStackTrace();
-//        }
-//        {driver: id, status: false/true}
     }
 
     private void fn_getLocation() {
@@ -211,4 +249,11 @@ public class MyBackgroundLocationService extends Service implements LocationList
         intent.putExtra("longitude", location.getLongitude() + "");
         sendBroadcast(intent);
     }
+
+    @Override
+    public void onLocationChanged(@NonNull Location location) {
+        intent = new Intent(str_receiver);
+        fn_getLocation();
+    }
+
 }

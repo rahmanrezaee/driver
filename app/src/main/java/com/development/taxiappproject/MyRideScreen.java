@@ -72,6 +72,14 @@ public class MyRideScreen extends AppCompatActivity {
         screenBinding.recyclerView.setAdapter(rideAdapter);
     }
 
+    public void onClick(View view) {
+        switch (view.getId()) {
+            case R.id.myRideScreen_back_btn:
+                finish();
+                break;
+        }
+    }
+
     public void getRideItem(String userToken) {
         RequestQueue requestQueue = Volley.newRequestQueue(MyRideScreen.this);
         String mURL = baseUrl + "/rides";

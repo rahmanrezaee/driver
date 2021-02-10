@@ -102,7 +102,7 @@ public class MyProfile extends AppCompatActivity {
 
                         profileBinding.myProfileNameTxt.setText(data.getString("username"));
                         profileBinding.myProfileEmailTxt.setText(data.getString("email"));
-                        profileBinding.myProfilePlateNoTxt.setText(data.getString("email"));
+//                        profileBinding.myProfilePlateNoTxt.setText(data.getString("email"));
 
                         Picasso.get().load(data.getString("profilePhoto")).into(profileBinding.myProfileCircleImage);
 
@@ -120,7 +120,6 @@ public class MyProfile extends AppCompatActivity {
                     }
                 }, error -> {
             profileBinding.myProfileRelativeLayoutProgress.setVisibility(View.GONE);
-            Toast.makeText(getApplicationContext(), "Not connection!", Toast.LENGTH_SHORT).show();
             Log.e("Mahdi", "Mahdi: MyProfile: getProfileItem: Error " + error.getMessage());
         }) {
             @Override
@@ -179,6 +178,17 @@ public class MyProfile extends AppCompatActivity {
             rideList.add(ride);
         }
         carAdapter.notifyDataSetChanged();
+    }
+
+    public void onClick(View view) {
+        switch (view.getId()) {
+            case R.id.myProfile_back_btn:
+                finish();
+                break;
+
+            case R.id.myProfile_edit_btn:
+                break;
+        }
     }
 
 //    static class RetrieveFeedTask extends AsyncTask<String, Void, Drawable> {

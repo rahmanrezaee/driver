@@ -14,7 +14,7 @@
     <string name="forgot_text"><u>Forgot Password</u></string>
     <string name="resend">Resend</string>
     <string name="otp_desc_2">Didn\'t Receive an OTP?</string>
-    <string name="otp_desc">Enter the 4 Digit OTP received on your registered phone number to Verify your number</string>
+    <string name="otp_desc">Enter the 6 Digit OTP received on your registered phone number to Verify your number</string>
     <string name="otp_verification">OTP Verification</string>
     <string name="car">Car in ( 4 Pics)</string>
     <string name="car_out">Car Out (4 Pics )</string>

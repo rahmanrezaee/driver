@@ -1,30 +1,23 @@
 package com.development.taxiappproject;
 
+import android.app.ActivityManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
-import android.widget.CompoundButton;
 import android.widget.Switch;
 import android.widget.TextView;
 
-import com.android.volley.NetworkResponse;
-import com.android.volley.ParseError;
-import com.android.volley.Request;
-import com.android.volley.RequestQueue;
-import com.android.volley.Response;
-import com.android.volley.toolbox.HttpHeaderParser;
-import com.android.volley.toolbox.JsonObjectRequest;
-import com.android.volley.toolbox.Volley;
 import com.development.taxiappproject.Const.SharedPrefKey;
 import com.development.taxiappproject.Service.MyFirebaseMessagingService;
+import com.development.taxiappproject.Service.TestService;
 import com.development.taxiappproject.databinding.ActivityHomeScreenBinding;
-import com.github.nkzawa.emitter.Emitter;
+import com.github.nkzawa.engineio.client.transports.WebSocket;
 import com.github.nkzawa.socketio.client.IO;
 import com.github.nkzawa.socketio.client.Socket;
+import com.squareup.picasso.Picasso;
 
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.core.view.GravityCompat;
@@ -40,46 +33,131 @@ import androidx.appcompat.widget.Toolbar;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.UnsupportedEncodingException;
 import java.net.URISyntaxException;
-import java.util.HashMap;
-import java.util.Map;
 
-import static com.development.taxiappproject.Const.ConstantValue.baseUrl;
+import de.hdodenhof.circleimageview.CircleImageView;
+
+import static com.development.taxiappproject.Const.ConstantValue.socketBaseUrl;
 
 public class HomeScreen extends AppCompatActivity implements View.OnClickListener {
-    private TextView navMenuGoTxt;
+    private TextView navMenuGoTxt, profileTxt;
+    private CircleImageView imageProfile;
     private Switch mSwitch;
 
     private static final String TAG = "MAHDI";
     private AppBarConfiguration mAppBarConfiguration;
-    private Socket mSocket;
     ActivityHomeScreenBinding screenBinding;
     SharedPreferences sharedPreferences;
+
+    TestService mYourService;
+    Intent mServiceIntent;
+
+    private Socket mSocket;
+
+    {
+        try {
+            IO.Options options = new IO.Options();
+            options.transports = new String[]{WebSocket.NAME};
+            mSocket = IO.socket(socketBaseUrl, options);
+            //mSocket = IO.socket("http://chat.socket.io");
+        } catch (URISyntaxException e) {
+            Log.e("abc", "index=" + e);
+        }
+    }
+
+    private boolean isMyServiceRunning(Class<?> serviceClass) {
+        ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
+            if (serviceClass.getName().equals(service.service.getClassName())) {
+                Log.i("Service status", "Running");
+                return true;
+            }
+        }
+        Log.i("Service status", "Not running");
+        return false;
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        mSocket.connect();
         sharedPreferences = getSharedPreferences(OTPScreen.MyPREFERENCES, Context.MODE_PRIVATE);
         String userToken = sharedPreferences.getString(SharedPrefKey.userToken, "defaultValue");
         String firebaseToken = sharedPreferences.getString(SharedPrefKey.firebaseToken, "defaultValue");
+        String userId = sharedPreferences.getString(SharedPrefKey.userId, "defaultValue");
+        String userName = sharedPreferences.getString(SharedPrefKey.userName, "defaultValue");
+        String profilePath = sharedPreferences.getString(SharedPrefKey.profilePath, "defaultValue");
+
+        String switchFlag = sharedPreferences.getString("isOnline", "null");
+
+        boolean switchFlagBool = switchFlag.equalsIgnoreCase("null") ? false : true;
+
+        Log.i(TAG, "Mahdi: HomeScreen: 4 " + switchFlagBool + switchFlag);
 
         Log.i(TAG, "Mahdi: HomeScreen: 0 " + userToken);
         Log.i(TAG, "Mahdi: HomeScreen: 1 " + MyFirebaseMessagingService.getToken(getApplicationContext()));
         Log.i(TAG, "Mahdi: HomeScreen: 2 " + firebaseToken);
+        Log.i(TAG, "Mahdi: HomeScreen: 3 " + userId);
 
-        getDashboardItem(userToken);
+//        profileTxt = findViewById(R.id.navHeader_email);
+
+//        getDashboardItem(userToken);
+
+        ///////////////////////////////////////////////////////////////////////
+
+//        mYourService = new TestService();
+//        mServiceIntent = new Intent(this, mYourService.getClass());
+//        if (!isMyServiceRunning(mYourService.getClass())) {
+//            startService(mServiceIntent);
+//        }
+
+        ///////////////////////////////////////////////////////////////////////
 
         screenBinding = DataBindingUtil.setContentView(this, R.layout.activity_home_screen);
         navMenuGoTxt = findViewById(R.id.navMenu_go_txt);
         mSwitch = findViewById(R.id.navMenu_switch);
+        mSwitch.setChecked(switchFlagBool);
+
+        View headerLayout = getWindow().findViewById(R.id.header_layout);
+
+        profileTxt = headerLayout.findViewById(R.id.navHeader_email);
+        imageProfile = findViewById(R.id.navHeader_profile_image);
+
+        profileTxt.setText(userName);
+
+        Picasso.get().load(profilePath).into(imageProfile);
+
+        if (switchFlagBool) {
+            navMenuGoTxt.setText("Go Offline");
+        } else {
+            navMenuGoTxt.setText("Go Online");
+        }
 
         mSwitch.setOnCheckedChangeListener((compoundButton, b) -> {
-            if (b)
+            if (b) {
+                SharedPreferences.Editor editor = sharedPreferences.edit();
+                editor.putString("isOnline", "value");
+                editor.commit();
                 navMenuGoTxt.setText("Go Offline");
-            else
+                sendData(true);
+
+                mYourService = new TestService();
+                mServiceIntent = new Intent(this, mYourService.getClass());
+                if (!isMyServiceRunning(mYourService.getClass())) {
+                    startService(mServiceIntent);
+                }
+            } else {
+                SharedPreferences.Editor editor = sharedPreferences.edit();
+                editor.putString("isOnline", "null");
+                editor.commit();
+                sendData(false);
                 navMenuGoTxt.setText("Go Online");
+
+                mYourService = new TestService();
+                mServiceIntent = new Intent(this, mYourService.getClass());
+                stopService(mServiceIntent);
+            }
         });
 
         Toolbar toolbar = findViewById(R.id.toolbar);
@@ -104,9 +182,21 @@ public class HomeScreen extends AppCompatActivity implements View.OnClickListene
         screenBinding.customNavigationDrawer.ridesLayout.setOnClickListener(this);
         screenBinding.customNavigationDrawer.earningLayout.setOnClickListener(this);
         screenBinding.customNavigationDrawer.rateLayout.setOnClickListener(this);
+    }
 
-        socketConnection();
-        mSocket.connect();
+    public void sendData(boolean status) {
+        JSONObject jsonObject = new JSONObject();
+        String userId = sharedPreferences.getString(SharedPrefKey.userId, "defaultValue");
+
+        Log.i(TAG, "Mahdi: MyProfile: userId: " + userId);
+
+        try {
+            jsonObject.put("driver", userId);
+            jsonObject.put("status", status);
+            mSocket.emit("online", jsonObject);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -114,65 +204,64 @@ public class HomeScreen extends AppCompatActivity implements View.OnClickListene
         super.onDestroy();
 
         mSocket.disconnect();
-        mSocket.off("new message", sendNewMessage());
-    }
+        //stopService(mServiceIntent);
+        String switchFlag = sharedPreferences.getString("isOnline", "null");
+        boolean switchFlagBool = switchFlag.equalsIgnoreCase("null") ? false : true;
 
-    public void socketConnection() {
-        try {
-            Log.i(TAG, "Mahdi: HomeScreen: socket 1 ");
-            mSocket = IO.socket(baseUrl);
-            Log.i(TAG, "Mahdi: HomeScreen: socket 2 ");
-        } catch (URISyntaxException e) {
-            Log.e(TAG, "Mahdi: HomeScreen: socket error ", e);
+        if (switchFlagBool) {
+            Intent broadcastIntent = new Intent();
+            broadcastIntent.setAction("restartservice");
+            broadcastIntent.setClass(this, Restarter.class);
+            this.sendBroadcast(broadcastIntent);
         }
     }
 
-    public void getDashboardItem(String userToken) {
-        RequestQueue requestQueue = Volley.newRequestQueue(HomeScreen.this);
-        String mURL = baseUrl + "/rides/dashboard";
-
-        Log.i(TAG, "Mahdi: HomeScreen: getDashboard: 1 " + userToken);
-
-        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, mURL,
-                null,
-                response -> {
-                    try {
-                        Log.i(TAG, "Mahdi: HomeScreen: getDashboard: res 0 " + response);
-                        JSONObject data = response.getJSONObject("data");
-
-                    } catch (JSONException e) {
-                        e.printStackTrace();
-                    }
-                }, error -> {
-            Log.e("Mahdi", "Mahdi: HomeScreen: getDashboard: Error " + error.getMessage());
-        }) {
-            @Override
-            public String getBodyContentType() {
-                return "application/json; charset=utf-8";
-            }
-
-            @Override
-            public Map<String, String> getHeaders() {
-                Map<String, String> params = new HashMap<>();
-                params.put("token", userToken);
-                return params;
-            }
-
-            @Override
-            protected Response parseNetworkResponse(NetworkResponse response) {
-                try {
-                    Log.i(TAG, "Mahdi: HomeScreen: getDashboard: res 1 " + response.data);
-                    String jsonString = new String(response.data, HttpHeaderParser.parseCharset(response.headers));
-                    return Response.success(new JSONObject(jsonString), HttpHeaderParser.parseCacheHeaders(response));
-                } catch (UnsupportedEncodingException e) {
-                    return Response.error(new ParseError(e));
-                } catch (JSONException je) {
-                    return Response.error(new ParseError(je));
-                }
-            }
-        };
-        requestQueue.add(jsonObjectRequest);
-    }
+//    public void getDashboardItem(String userToken) {
+//        RequestQueue requestQueue = Volley.newRequestQueue(HomeScreen.this);
+//        String mURL = baseUrl + "/rides/dashboard";
+//
+//        Log.i(TAG, "Mahdi: HomeScreen: getDashboard: 1 " + userToken);
+//
+//        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, mURL,
+//                null,
+//                response -> {
+//                    try {
+//                        Log.i(TAG, "Mahdi: HomeScreen: getDashboard: res 0 " + response);
+//                        JSONObject data = response.getJSONObject("data");
+//
+//                    } catch (JSONException e) {
+//                        e.printStackTrace();
+//                    }
+//                }, error -> {
+//            Log.e("Mahdi", "Mahdi: HomeScreen: getDashboard: Error " + error.getMessage());
+//        }) {
+//            @Override
+//            public String getBodyContentType() {
+//                return "application/json; charset=utf-8";
+//            }
+//
+//            @Override
+//            public Map<String, String> getHeaders() {
+//                Map<String, String> params = new HashMap<>();
+//                params.put("token", userToken);
+//                return params;
+//            }
+//
+//            @Override
+//            protected Response parseNetworkResponse(NetworkResponse response) {
+//                try {
+//                    Log.i(TAG, "Mahdi: HomeScreen: getDashboard: res 1 " + response.data);
+//                    String jsonString = new String(response.data, HttpHeaderParser.parseCharset(response.headers));
+//                    return Response.success(new JSONObject(jsonString), HttpHeaderParser.parseCacheHeaders(response));
+//                } catch (UnsupportedEncodingException e) {
+//                    return Response.error(new ParseError(e));
+//                } catch (JSONException je) {
+//                    return Response.error(new ParseError(je));
+//                }
+//            }
+//        };
+//        requestQueue.add(jsonObjectRequest);
+//    }
 
     @Override
     public boolean onSupportNavigateUp() {
@@ -216,44 +305,11 @@ public class HomeScreen extends AppCompatActivity implements View.OnClickListene
                 finish();
                 break;
 
-            case R.id.navMenu_switch:
-                sendNewMessage();
-                break;
+//            case R.id.navMenu_switch:
+//                sendNewMessage();
+//                break;
 
         }
-    }
-
-//    private void attemptSend() {
-//        String message = mInputMessageView.getText().toString().trim();
-//        if (TextUtils.isEmpty(message)) {
-//            return;
-//        }
-//
-//        mInputMessageView.setText("");
-//        mSocket.emit("new message", message);
-//    }
-
-    public Emitter.Listener sendNewMessage() {
-        return new Emitter.Listener() {
-            @Override
-            public void call(Object... args) {
-
-                HomeScreen.this.runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        JSONObject data = (JSONObject) args[0];
-                        String username;
-                        String message;
-                        try {
-                            username = data.getString("username");
-                            message = data.getString("message");
-                        } catch (JSONException e) {
-                            return;
-                        }
-                    }
-                });
-            }
-        };
     }
 
     @Override
@@ -275,23 +331,3 @@ public class HomeScreen extends AppCompatActivity implements View.OnClickListene
         }
     }
 }
-
-//    private Emitter.Listener onNewMessage = new Emitter.Listener() {
-//        @Override
-//        public void call(final Object... args) {
-//            HomeScreen.this.runOnUiThread(new Runnable() {
-//                @Override
-//                public void run() {
-//                    JSONObject data = (JSONObject) args[0];
-//                    String username;
-//                    String message;
-//                    try {
-//                        username = data.getString("username");
-//                        message = data.getString("message");
-//                    } catch (JSONException e) {
-//                        return;
-//                    }
-//                }
-//            });
-//        }
-//    };

@@ -3,6 +3,7 @@ package com.development.taxiappproject.ui.home;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -88,6 +89,7 @@ public class HomeFragment extends Fragment implements View.OnClickListener {
         JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, mURL,
                 null,
                 response -> {
+                    Log.i("Mahdi", "Mahdi: HomeFragment: getDashboardItem: response " + response);
                     try {
                         Log.i(TAG, "Mahdi: HomeFragment: getDashboardItem: res 0 " + response);
                         JSONObject data = response.getJSONObject("data");
@@ -123,8 +125,9 @@ public class HomeFragment extends Fragment implements View.OnClickListener {
                         binding.fragmentHomeProgressBar.setVisibility(View.VISIBLE);
                         e.printStackTrace();
                     }
+
                 }, error -> {
-            binding.fragmentHomeProgressBar.setVisibility(View.VISIBLE);
+            binding.fragmentHomeProgressBar.setVisibility(View.GONE);
             Log.e("Mahdi", "Mahdi: HomeFragment: getDashboardItem: Error " + error.getMessage());
         }) {
             @Override
@@ -140,20 +143,177 @@ public class HomeFragment extends Fragment implements View.OnClickListener {
             }
 
             @Override
-            protected Response parseNetworkResponse(NetworkResponse response) {
-                try {
-                    Log.i(TAG, "Mahdi: HomeFragment: getDashboard: res 1 " + response.data);
-                    String jsonString = new String(response.data, HttpHeaderParser.parseCharset(response.headers));
-                    return Response.success(new JSONObject(jsonString), HttpHeaderParser.parseCacheHeaders(response));
-                } catch (UnsupportedEncodingException e) {
-                    return Response.error(new ParseError(e));
-                } catch (JSONException je) {
-                    return Response.error(new ParseError(je));
-                }
+            protected Response<JSONObject> parseNetworkResponse(NetworkResponse response) {
+                Log.i(TAG, "Mahdi: HomeFragment: getDashboard: res 1 " + response.data);
+                return super.parseNetworkResponse(response);
             }
         };
         requestQueue.add(jsonObjectRequest);
     }
+
+//    public void getDashboardItem(String userToken) {
+//        RequestQueue requestQueue = Volley.newRequestQueue(getActivity());
+//        String mURL = baseUrl + "/rides/dashboard";
+//
+//        Log.i(TAG, "Mahdi: HomeFragment: getDashboardItem: 1 " + userToken);
+//        Log.i(TAG, "Mahdi: HomeFragment: getDashboardItem: 11 " + mURL);
+//
+//        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, mURL,
+//                null,
+//                response -> {
+//                    Log.e("Mahdi", "Mahdi: HomeFragment: getDashboardItem: response " + response);
+////                    try {
+////                        Log.i(TAG, "Mahdi: HomeFragment: getDashboardItem: res 0 " + response);
+////                        JSONObject data = response.getJSONObject("data");
+////
+////                        boolean lastRideIsNull = data.get("lastRide").toString() == "null";
+////
+////                        if (!lastRideIsNull) {
+////                            JSONObject lastRide = data.getJSONObject("lastRide");
+////
+////                            lastId = lastRide.getString("_id");
+////
+////                            binding.fragmentHomeDateLastTxt.setText(lastRide.getString("route"));
+////                            binding.fragmentHomePriceLastTxt.setText("$ " + lastRide.getString("actualFareAmount"));
+////                            binding.fragmentHomeFromTxt.setText(lastRide.getString("from"));
+////                            binding.fragmentHomeToTxt.setText(lastRide.getString("toWhere"));
+////                            binding.fragmentHomeMilesTxt.setText(lastRide.getString("miles") + " Miles");
+////                        }
+////                        JSONArray todaySummery = data.getJSONArray("todaySummary");
+////
+////                        if (todaySummery.length() != 0) {
+////                            settestimonialList(todaySummery);
+////                        }
+////
+////                        if (todaySummery.length() == 0 && lastRideIsNull) {
+////                            binding.fragmentHomeProgressBar.setVisibility(View.GONE);
+////                            binding.newRideRequest.setVisibility(View.GONE);
+////                        } else {
+////                            binding.fragmentHomeProgressBar.setVisibility(View.GONE);
+////                            binding.newRideRequest.setVisibility(View.VISIBLE);
+////                        }
+////
+////                    } catch (JSONException e) {
+////                        binding.fragmentHomeProgressBar.setVisibility(View.VISIBLE);
+////                        e.printStackTrace();
+////                    }
+//                }, error -> {
+//            binding.fragmentHomeProgressBar.setVisibility(View.GONE);
+//            Log.e("Mahdi", "Mahdi: HomeFragment: getDashboardItem: Error " + error.getMessage());
+//        }) {
+//            @Override
+//            public String getBodyContentType() {
+//                return "application/json; charset=utf-8";
+//            }
+//
+//            @Override
+//            public Map<String, String> getHeaders() {
+//                Map<String, String> params = new HashMap<>();
+//                params.put("token", userToken);
+//                return params;
+//            }
+//
+//            @Override
+//            protected Response parseNetworkResponse(NetworkResponse response) {
+//                try {
+//                    Log.i(TAG, "Mahdi: HomeFragment: getDashboard: res 1 " + new JSONObject(String.valueOf(response.data)));
+//
+//                    String jsonString = new String(response.data, HttpHeaderParser.parseCharset(response.headers));
+//                    return Response.success(new JSONArray(jsonString), HttpHeaderParser.parseCacheHeaders(response));
+//                } catch (UnsupportedEncodingException e) {
+//                    Log.i(TAG, "Mahdi: HomeFragment: getDashboard: Error 1 " + e);
+//                    return Response.error(new ParseError(e));
+//                } catch (JSONException je) {
+//                    Log.i(TAG, "Mahdi: HomeFragment: getDashboard: Error 2 " + je);
+//                    return Response.error(new ParseError(je));
+//                }
+//            }
+//        };
+//        requestQueue.add(jsonObjectRequest);
+//    }
+
+//    public void getDashboardItem(String userToken) {
+//        RequestQueue requestQueue = Volley.newRequestQueue(getActivity());
+//        String mURL = baseUrl + "/rides/dashboard";
+//
+//        Log.i(TAG, "Mahdi: HomeFragment: getDashboardItem: 1 " + userToken);
+//        Log.i(TAG, "Mahdi: HomeFragment: getDashboardItem: 11 " + mURL);
+//
+//        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, mURL,
+//                null,
+//                response -> {
+////                    try {
+////                        Log.i(TAG, "Mahdi: HomeFragment: getDashboardItem: res 0 " + response);
+////                        JSONObject data = response.getJSONObject("data");
+////
+////                        boolean lastRideIsNull = data.get("lastRide").toString() == "null";
+////
+////                        if (!lastRideIsNull) {
+////                            JSONObject lastRide = data.getJSONObject("lastRide");
+////
+////                            lastId = lastRide.getString("_id");
+////
+////                            binding.fragmentHomeDateLastTxt.setText(lastRide.getString("route"));
+////                            binding.fragmentHomePriceLastTxt.setText("$ " + lastRide.getString("actualFareAmount"));
+////                            binding.fragmentHomeFromTxt.setText(lastRide.getString("from"));
+////                            binding.fragmentHomeToTxt.setText(lastRide.getString("toWhere"));
+////                            binding.fragmentHomeMilesTxt.setText(lastRide.getString("miles") + " Miles");
+////                        }
+////                        JSONArray todaySummery = data.getJSONArray("todaySummary");
+////
+////                        if (todaySummery.length() != 0) {
+////                            settestimonialList(todaySummery);
+////                        }
+////
+////                        if (todaySummery.length() == 0 && lastRideIsNull) {
+////                            binding.fragmentHomeProgressBar.setVisibility(View.GONE);
+////                            binding.newRideRequest.setVisibility(View.GONE);
+////                        } else {
+////                            binding.fragmentHomeProgressBar.setVisibility(View.GONE);
+////                            binding.newRideRequest.setVisibility(View.VISIBLE);
+////                        }
+////                    } catch (JSONException e) {
+////                        binding.fragmentHomeProgressBar.setVisibility(View.VISIBLE);
+////                        e.printStackTrace();
+////                    }
+//                }, error -> {
+//            binding.fragmentHomeProgressBar.setVisibility(View.GONE);
+//            Log.e("Mahdi", "Mahdi: HomeFragment: getDashboardItem: Error " + error.getMessage());
+//        }) {
+//            @Override
+//            public String getBodyContentType() {
+//                return "application/json; charset=utf-8";
+//            }
+//
+//            @Override
+//            public Map<String, String> getHeaders() {
+//                Map<String, String> params = new HashMap<>();
+//                params.put("token", userToken);
+//                return params;
+//            }
+//
+//            @Override
+//            protected Response parseNetworkResponse(NetworkResponse response) {
+//                try {
+//                    Log.i(TAG, "Mahdi: HomeFragment: getDashboard: parseNetworkResponse 1 " + response.data);
+//
+//                    String jsonString = new String(response.data, HttpHeaderParser.parseCharset(response.headers));
+//                    return Response.success(new JSONObject(jsonString), HttpHeaderParser.parseCacheHeaders(response));
+//
+////                    String jsonString = new String(response.data, HttpHeaderParser.parseCharset(response.headers));
+////                    return Response.success(new JSONObject(jsonString), HttpHeaderParser.parseCacheHeaders(response));
+////                    return Response.success(new JSONObject(String.valueOf(response.data)), HttpHeaderParser.parseCacheHeaders(response));
+//                } catch (UnsupportedEncodingException e) {
+//                    Log.i(TAG, "Mahdi: HomeFragment: getDashboard: parseNetworkResponse error 1 " + e);
+//                    return Response.error(new ParseError(e));
+//                } catch (JSONException je) {
+//                    Log.i(TAG, "Mahdi: HomeFragment: getDashboard: parseNetworkResponse error 2 " + je);
+//                    return Response.error(new ParseError(je));
+//                }
+//            }
+//        };
+//        requestQueue.add(jsonObjectRequest);
+//    }
 
     private void setRecyclerView() {
         dashboardAdapter = new DashboardAdapter(getActivity(), rideList);

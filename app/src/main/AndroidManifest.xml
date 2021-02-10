@@ -19,6 +19,7 @@
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
 
     <application
         android:allowBackup="true"
@@ -26,10 +27,23 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/AppTheme">
+        android:theme="@style/AppTheme"
+        android:usesCleartextTraffic="true">
 
-        <!--        <receiver android:name=".Service.MyLocationService" />-->
 
+        <receiver
+            android:name=".Restarter"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="restartservice" />
+            </intent-filter>
+        </receiver>
+
+        <service
+            android:name=".Service.TestService"
+            android:enabled="true" />
+        <!-- <receiver android:name=".Service.MyLocationService" /> -->
         <activity
             android:name=".CompleteRiding"
             android:theme="@style/SplashTheme" /> <!-- <activity -->
@@ -60,10 +74,23 @@
         -->
         <activity
             android:name=".HomeScreen"
-            android:theme="@style/SplashTheme" />
+            android:theme="@style/SplashTheme">
+            <intent-filter>
+                <action android:name="android.intent.action.HOMESCREEN" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
         <activity
             android:name=".MyProfile"
-            android:theme="@style/SplashTheme" />
+            android:theme="@style/SplashTheme">
+            <intent-filter>
+                <action android:name="android.intent.action.MYPROFILE" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+
         <activity
             android:name=".MyRideScreen"
             android:theme="@style/SplashTheme" />
@@ -88,7 +115,6 @@
         <!--            android:theme="@style/SplashTheme">-->
         <!--            <intent-filter>-->
         <!--                <action android:name="android.intent.action.MAIN" />-->
-
         <!--                <category android:name="android.intent.category.LAUNCHER" />-->
         <!--            </intent-filter>-->
         <!--        </activity>-->
@@ -97,9 +123,11 @@
             android:theme="@style/SplashTheme">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
         <meta-data
             android:name="com.google.android.geo.API_KEY"
             android:value="@string/google_maps_key" /> <!-- cache directory file provider paths -->
@@ -133,6 +161,7 @@
             android:theme="@style/SplashTheme">
             <intent-filter>
                 <action android:name="android.intent.action.NEWRIDEREQUEST" />
+
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
@@ -145,8 +174,7 @@
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />
             </intent-filter>
         </service>
-
-        <service android:name=".Service.MyBackgroundLocationService"></service>
+        <service android:name=".Service.MyBackgroundLocationService" />
     </application>
 
 </manifest>
