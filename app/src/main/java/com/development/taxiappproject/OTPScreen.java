@@ -73,7 +73,7 @@ public class OTPScreen extends AppCompatActivity {
     private long mLastClickTime = 0;
 
     String type;
-    JSONObject jsonObject;
+    JSONObject jsonObject1;
     public static String MyPREFERENCES = "User info";
 
     @Override
@@ -93,9 +93,9 @@ public class OTPScreen extends AppCompatActivity {
         assert type != null;
         if (type.equalsIgnoreCase("signUp")) {
             try {
-                jsonObject = new JSONObject(Objects.requireNonNull(getIntent().getStringExtra("bodyData")));
+                jsonObject1 = new JSONObject(Objects.requireNonNull(getIntent().getStringExtra("bodyData")));
                 phone_number = getIntent().getStringExtra("phone_number");
-                Log.i(TAG, "Mahdi: OTP: " + jsonObject);
+                Log.i(TAG, "Mahdi: OTP: " + jsonObject1);
             } catch (JSONException e) {
                 Log.e(TAG, "Mahdi: OTP: Error ", e);
                 e.printStackTrace();
@@ -337,7 +337,7 @@ public class OTPScreen extends AppCompatActivity {
                                 Log.i(TAG, "Hello: Mahdi: onComplete: firebaseToken " + idToken);
 
                                 if (type.equalsIgnoreCase("signUp")) {
-                                    final String requestBody = jsonObject.toString();
+                                    final String requestBody = jsonObject1.toString();
                                     signUpAndSignInToServer(requestBody, idToken, type);
                                 } else {
                                     JSONObject jsonObject = new JSONObject();
