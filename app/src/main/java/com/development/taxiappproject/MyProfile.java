@@ -66,7 +66,6 @@ public class MyProfile extends AppCompatActivity {
         profileBinding = DataBindingUtil.setContentView(this, R.layout.activity_my_profile);
 
         profileBinding.myProfileRelativeLayoutItem.setVisibility(View.GONE);
-
         profileBinding.myProfileProgressBar.setVisibility(View.VISIBLE);
 
 //        progressBar = findViewById(R.id.myProfile_progressBar);
@@ -79,9 +78,14 @@ public class MyProfile extends AppCompatActivity {
         Log.i(TAG, "Mahdi: MyProfile: token: " + userToken);
         Log.i(TAG, "Mahdi: MyProfile: userId: " + userId);
 
+        profileBinding.myProfileSwipeRefreshLayout.setOnRefreshListener(() -> {
+            getProfileItem(userToken, userId);
+        });
+
         if (!MyCheckConnection.mCheckConnectivity(MyProfile.this)) {
             profileBinding.myProfileRelativeLayoutItem.setVisibility(View.VISIBLE);
             profileBinding.myProfileProgressBar.setVisibility(View.GONE);
+            profileBinding.myProfileSwipeRefreshLayout.setRefreshing(false);
             return;
         }
 
@@ -117,9 +121,12 @@ public class MyProfile extends AppCompatActivity {
 
                         profileBinding.myProfileRelativeLayoutItem.setVisibility(View.VISIBLE);
                         profileBinding.myProfileRelativeLayoutProgress.setVisibility(View.GONE);
+                        profileBinding.myProfileSwipeRefreshLayout.setRefreshing(false);
 
                         profileBinding.myProfileNameTxt.setText(data.getString("username"));
+                        profileBinding.myProfilePlateNoTxt.setText(data.getString("carPlateNumber"));
                         profileBinding.myProfileEmailTxt.setText(data.getString("email"));
+
 //                        profileBinding.myProfilePlateNoTxt.setText(data.getString("email"));
 
                         Picasso.get().load(data.getString("profilePhoto")).into(profileBinding.myProfileCircleImage);
@@ -134,10 +141,12 @@ public class MyProfile extends AppCompatActivity {
 
                     } catch (JSONException e) {
                         profileBinding.myProfileRelativeLayoutProgress.setVisibility(View.GONE);
+                        profileBinding.myProfileSwipeRefreshLayout.setRefreshing(false);
                         e.printStackTrace();
                     }
                 }, error -> {
             profileBinding.myProfileRelativeLayoutProgress.setVisibility(View.GONE);
+            profileBinding.myProfileSwipeRefreshLayout.setRefreshing(false);
             Log.e("Mahdi", "Mahdi: MyProfile: getProfileItem: Error " + error.getMessage());
         }) {
             @Override

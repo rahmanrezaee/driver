@@ -299,12 +299,13 @@ public class OTPScreen extends AppCompatActivity {
                         startActivity(new Intent(getApplicationContext(), HomeScreen.class));
 
                     } catch (JSONException e) {
+                        Log.e("Mahdi", "Mahdi: OTPScreen: signUp: Error 1 " + e);
                         e.printStackTrace();
                     }
                     p.hide();
                 }, error -> {
             p.hide();
-            Log.e("Mahdi", "Mahdi: OTPScreen: signUp: Error " + error.getMessage());
+            Log.e("Mahdi", "Mahdi: OTPScreen: signUp: Error 2 " + error);
         }) {
             @Override
             public String getBodyContentType() {

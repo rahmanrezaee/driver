@@ -67,7 +67,15 @@ public class Testing extends AppCompatActivity {
 
         swipeRefreshLayout = findViewById(R.id.testing_swipeRefreshLayout);
         swipeRefreshLayout.setOnRefreshListener(() -> {
-
+            for (int i = 0; i < 4; i++) {
+                MyRideClass ride = null;
+                ride = new MyRideClass("eta", "actualFareAmount",
+                        "miles", "actualTimePassed", "from",
+                        "toWhere", "_id");
+                rideList.add(ride);
+            }
+            rideAdapter.notifyDataSetChanged();
+            swipeRefreshLayout.setRefreshing(false);
         });
 
         setRecyclerView();

@@ -5,6 +5,7 @@ import androidx.databinding.DataBindingUtil;
 import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -13,6 +14,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
+import android.widget.Toast;
 
 import com.android.volley.NetworkResponse;
 import com.android.volley.ParseError;
@@ -47,6 +49,9 @@ public class MyRideScreen extends AppCompatActivity {
     List<MyRideClass> rideList = new ArrayList<>();
     ProgressBar progressBar;
     SharedPreferences sharedPreferences;
+    SwipeRefreshLayout swipeRefreshLayout;
+
+//    myRideScreen_swipeRefreshLayout
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,7 +65,14 @@ public class MyRideScreen extends AppCompatActivity {
         progressBar = findViewById(R.id.rideScreen_progressBar);
         progressBar.setVisibility(View.VISIBLE);
 
+        swipeRefreshLayout = findViewById(R.id.myRideScreen_swipeRefreshLayout);
+        swipeRefreshLayout.setOnRefreshListener(() -> {
+            Toast.makeText(getApplicationContext(), "Refreshed!", Toast.LENGTH_SHORT).show();
+            getRideItem(userToken);
+        });
+
         if (!MyCheckConnection.mCheckConnectivity(MyRideScreen.this)) {
+            swipeRefreshLayout.setRefreshing(false);
             progressBar.setVisibility(View.GONE);
             return;
         }
@@ -101,14 +113,17 @@ public class MyRideScreen extends AppCompatActivity {
                         Log.i(TAG, "Mahdi: HomeScreen: getDashboard: res 1 " + data);
 
                         progressBar.setVisibility(View.GONE);
+                        swipeRefreshLayout.setRefreshing(false);
 
                         settestimonialList(data);
 
                     } catch (JSONException e) {
                         progressBar.setVisibility(View.GONE);
+                        swipeRefreshLayout.setRefreshing(false);
                         e.printStackTrace();
                     }
                 }, error -> {
+            swipeRefreshLayout.setRefreshing(false);
             progressBar.setVisibility(View.GONE);
             Log.e("Mahdi", "Mahdi: HomeScreen: getDashboard: Error " + error.getMessage());
         }) {

@@ -3,67 +3,73 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <androidx.core.widget.NestedScrollView
-        android:layout_width="match_parent"
-        android:layout_height="match_parent">
+    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+        android:id="@+id/myRideScreen_swipeRefreshLayout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
 
-        <RelativeLayout
+        <androidx.core.widget.NestedScrollView
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            tools:context=".LoginScreen">
+            android:layout_height="match_parent">
 
-            <LinearLayout
-                android:id="@+id/header_layout"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="@color/appColorPrimary"
-                android:orientation="horizontal">
-
-                <ImageView
-                    android:id="@+id/myRideScreen_back_btn"
-                    android:layout_width="36dp"
-                    android:layout_height="36dp"
-                    android:onClick="onClick"
-                    android:layout_gravity="center_vertical"
-                    android:src="@drawable/ic_chevron_left_black_24dp" />
-
-                <TextView
-                    android:id="@+id/login_head"
-                    android:layout_width="0dp"
-                    android:layout_height="50dp"
-                    android:layout_weight="1"
-                    android:background="@color/appColorPrimary"
-                    android:gravity="center"
-                    android:text="@string/my_ride"
-                    android:textColor="@android:color/black"
-                    android:textSize="18sp"
-                    android:textStyle="bold" />
-
-                <ImageView
-                    android:layout_width="36dp"
-                    android:layout_height="36dp"
-                    android:layout_gravity="center_vertical"
-                    android:src="@drawable/ic_chevron_left_black_24dp"
-                    android:visibility="invisible" />
-
-            </LinearLayout>
-
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/recycler_view"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_below="@id/header_layout"
-                android:layout_marginTop="20dp" />
-
-            <ProgressBar
-                android:id="@+id/rideScreen_progressBar"
-                style="@style/Spinner"
+            <RelativeLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:layout_marginTop="120dp"
-                android:visibility="gone" />
+                tools:context=".LoginScreen">
 
-        </RelativeLayout>
+                <LinearLayout
+                    android:id="@+id/header_layout"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@color/appColorPrimary"
+                    android:orientation="horizontal">
 
-    </androidx.core.widget.NestedScrollView>
+                    <ImageView
+                        android:id="@+id/myRideScreen_back_btn"
+                        android:layout_width="36dp"
+                        android:layout_height="36dp"
+                        android:layout_gravity="center_vertical"
+                        android:onClick="onClick"
+                        android:src="@drawable/ic_chevron_left_black_24dp" />
+
+                    <TextView
+                        android:id="@+id/login_head"
+                        android:layout_width="0dp"
+                        android:layout_height="50dp"
+                        android:layout_weight="1"
+                        android:background="@color/appColorPrimary"
+                        android:gravity="center"
+                        android:text="@string/my_ride"
+                        android:textColor="@android:color/black"
+                        android:textSize="18sp"
+                        android:textStyle="bold" />
+
+                    <ImageView
+                        android:layout_width="36dp"
+                        android:layout_height="36dp"
+                        android:layout_gravity="center_vertical"
+                        android:src="@drawable/ic_chevron_left_black_24dp"
+                        android:visibility="invisible" />
+
+                </LinearLayout>
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/recycler_view"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@id/header_layout"
+                    android:layout_marginTop="20dp" />
+
+                <ProgressBar
+                    android:id="@+id/rideScreen_progressBar"
+                    style="@style/Spinner"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_marginTop="120dp"
+                    android:visibility="gone" />
+
+            </RelativeLayout>
+
+        </androidx.core.widget.NestedScrollView>
+    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 </layout>

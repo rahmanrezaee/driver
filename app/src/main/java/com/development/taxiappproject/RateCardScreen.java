@@ -6,6 +6,7 @@ import androidx.databinding.DataBindingUtil;
 import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -58,6 +59,7 @@ public class RateCardScreen extends AppCompatActivity {
 
     ProgressBar progressBar;
     SharedPreferences sharedPreferences;
+    SwipeRefreshLayout swipeRefreshLayout;
 
     @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
@@ -70,10 +72,18 @@ public class RateCardScreen extends AppCompatActivity {
 //        recyclerView = findViewById(R.id.rateCard_recycler_view);
 
         progressBar = findViewById(R.id.rateCardScreen_progressBar);
+        swipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.rateCard_swipeRefreshLayout);
+        swipeRefreshLayout.setOnRefreshListener(() -> {
+            getRideItem(userToken);
+        });
+
         progressBar.setVisibility(View.VISIBLE);
+
+//        rateCard_swipeRefreshLayout
 
         if (!MyCheckConnection.mCheckConnectivity(RateCardScreen.this)) {
             progressBar.setVisibility(View.GONE);
+            swipeRefreshLayout.setRefreshing(false);
             return;
         }
 
@@ -194,16 +204,20 @@ public class RateCardScreen extends AppCompatActivity {
                         Log.i(TAG, "Mahdi: RateCardScreen: getDashboard: res 1 " + data);
 
                         progressBar.setVisibility(View.GONE);
+                        swipeRefreshLayout.setRefreshing(false);
 
                         createTable(data);
 
 //                        settestimonialList(data);
 
                     } catch (JSONException e) {
+                        progressBar.setVisibility(View.GONE);
+                        swipeRefreshLayout.setRefreshing(false);
                         e.printStackTrace();
                     }
                 }, error -> {
             progressBar.setVisibility(View.GONE);
+            swipeRefreshLayout.setRefreshing(false);
             Log.e("Mahdi", "Mahdi: HomeScreen: getDashboard: Error " + error.getMessage());
         }) {
             @Override

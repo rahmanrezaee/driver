@@ -9,6 +9,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.databinding.DataBindingUtil;
@@ -17,6 +18,7 @@ import androidx.lifecycle.ViewModelProviders;
 import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.android.volley.NetworkResponse;
 import com.android.volley.ParseError;
@@ -57,6 +59,7 @@ public class HomeFragment extends Fragment implements View.OnClickListener {
     private DashboardAdapter dashboardAdapter;
     RecyclerView.LayoutManager mLayoutManager;
     SharedPreferences sharedPreferences;
+    SwipeRefreshLayout swipeRefreshLayout;
 
     private static String lastId;
 
@@ -70,11 +73,18 @@ public class HomeFragment extends Fragment implements View.OnClickListener {
 
         binding = DataBindingUtil.inflate(inflater, R.layout.fragment_home, container, false);
 
+//        fragmentHome_swipeRefreshLayout
+//        swipeRefreshLayout = findViewById(R.id.testing_swipeRefreshLayout);
+        binding.fragmentHomeSwipeRefreshLayout.setOnRefreshListener(() -> {
+            getDashboardItem(userToken);
+        });
+
         binding.fragmentHomeProgressBar.setVisibility(View.VISIBLE);
         binding.newRideRequest.setVisibility(View.GONE);
 
-        if(!MyCheckConnection.mCheckConnectivity(getActivity())){
+        if (!MyCheckConnection.mCheckConnectivity(getActivity())) {
             binding.fragmentHomeProgressBar.setVisibility(View.GONE);
+            binding.fragmentHomeSwipeRefreshLayout.setRefreshing(false);
             return binding.getRoot();
         }
 
@@ -112,6 +122,7 @@ public class HomeFragment extends Fragment implements View.OnClickListener {
                             binding.fragmentHomeFromTxt.setText(lastRide.getString("from"));
                             binding.fragmentHomeToTxt.setText(lastRide.getString("toWhere"));
                             binding.fragmentHomeMilesTxt.setText(lastRide.getString("miles") + " Miles");
+                            binding.fragmentHomeSwipeRefreshLayout.setRefreshing(false);
                         }
                         JSONArray todaySummery = data.getJSONArray("todaySummary");
 
@@ -126,14 +137,17 @@ public class HomeFragment extends Fragment implements View.OnClickListener {
                             binding.fragmentHomeProgressBar.setVisibility(View.GONE);
                             binding.newRideRequest.setVisibility(View.VISIBLE);
                         }
+                        binding.fragmentHomeSwipeRefreshLayout.setRefreshing(false);
 
                     } catch (JSONException e) {
                         binding.fragmentHomeProgressBar.setVisibility(View.VISIBLE);
+                        binding.fragmentHomeSwipeRefreshLayout.setRefreshing(false);
                         e.printStackTrace();
                     }
 
                 }, error -> {
             binding.fragmentHomeProgressBar.setVisibility(View.GONE);
+            binding.fragmentHomeSwipeRefreshLayout.setRefreshing(false);
             Log.e("Mahdi", "Mahdi: HomeFragment: getDashboardItem: Error " + error.getMessage());
         }) {
             @Override

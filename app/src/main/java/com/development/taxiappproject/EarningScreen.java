@@ -64,12 +64,11 @@ public class EarningScreen extends AppCompatActivity {
         sharedPreferences = getSharedPreferences(OTPScreen.MyPREFERENCES, Context.MODE_PRIVATE);
         String userToken = sharedPreferences.getString(SharedPrefKey.userToken, "defaultValue");
 
-        swipeContainer = (SwipeRefreshLayout) findViewById(R.id.earningScreen_swipeContainer);
+        swipeContainer = (SwipeRefreshLayout) findViewById(R.id.earningScreen_swipeRefreshLayout);
         progressBar = findViewById(R.id.earningScreen_progressBar);
         progressBar.setVisibility(View.VISIBLE);
 
         swipeContainer.setOnRefreshListener(() -> {
-            setRecyclerView();
             getRideItem(userToken);
         });
 
@@ -80,6 +79,7 @@ public class EarningScreen extends AppCompatActivity {
 
         if (!MyCheckConnection.mCheckConnectivity(EarningScreen.this)) {
             progressBar.setVisibility(View.GONE);
+            swipeContainer.setRefreshing(false);
             return;
         }
 
@@ -112,6 +112,7 @@ public class EarningScreen extends AppCompatActivity {
 
                         progressBar.setVisibility(View.GONE);
                         screenBinding.earningScreenMakePaidBtn.setVisibility(View.VISIBLE);
+                        swipeContainer.setRefreshing(false);
 
                         settestimonialList(data);
 
@@ -120,6 +121,7 @@ public class EarningScreen extends AppCompatActivity {
                     }
                 }, error -> {
             progressBar.setVisibility(View.GONE);
+            swipeContainer.setRefreshing(false);
             screenBinding.earningScreenMakePaidBtn.setVisibility(View.GONE);
             Log.e("Mahdi", "Mahdi: HomeScreen: getDashboard: Error " + error.getMessage());
         }) {
