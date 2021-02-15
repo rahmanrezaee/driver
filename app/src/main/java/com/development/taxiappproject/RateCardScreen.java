@@ -72,6 +72,11 @@ public class RateCardScreen extends AppCompatActivity {
         progressBar = findViewById(R.id.rateCardScreen_progressBar);
         progressBar.setVisibility(View.VISIBLE);
 
+        if (!MyCheckConnection.mCheckConnectivity(RateCardScreen.this)) {
+            progressBar.setVisibility(View.GONE);
+            return;
+        }
+
 //        setRecyclerView();
         getRideItem(userToken);
     }

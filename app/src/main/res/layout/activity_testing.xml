@@ -6,36 +6,54 @@
     android:layout_height="match_parent"
     tools:context=".Testing.Testing">
 
-<!--    For Upload image-->
-
-    <de.hdodenhof.circleimageview.CircleImageView
-        android:id="@+id/selectTestImage"
-        android:layout_width="80dp"
-        android:layout_height="80dp"
-        android:layout_gravity="center"
-        android:layout_marginTop="60dp"
-        android:onClick="onClick"
-        android:src="@drawable/ic_account_circle_black_24dp"
-        app:civ_border_color="@color/appColorSecondary"
-        app:civ_border_width="2dp" />
-
-    <Button
-        android:id="@+id/click_me"
+    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+        android:id="@+id/testing_swipeRefreshLayout"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/selectTestImage"
-        android:background="@color/appColorPrimary"
-        android:onClick="onClick"
-        android:text="hello" />
+        android:layout_height="wrap_content">
 
-    <Button
-        android:id="@+id/upload_image"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/click_me"
-        android:background="@color/appColorPrimary"
-        android:onClick="onClick"
-        android:text="upload" />
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/testing_RecyclerView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+
+    <!--    *******************************************************************-->
+    <!--    For Upload image-->
+    <!--    *******************************************************************-->
+
+    <!--    <de.hdodenhof.circleimageview.CircleImageView-->
+    <!--        android:id="@+id/selectTestImage"-->
+    <!--        android:layout_width="80dp"-->
+    <!--        android:layout_height="80dp"-->
+    <!--        android:layout_gravity="center"-->
+    <!--        android:layout_marginTop="60dp"-->
+    <!--        android:onClick="onClick"-->
+    <!--        android:src="@drawable/ic_account_circle_black_24dp"-->
+    <!--        app:civ_border_color="@color/appColorSecondary"-->
+    <!--        app:civ_border_width="2dp" />-->
+
+    <!--    <Button-->
+    <!--        android:id="@+id/click_me"-->
+    <!--        android:layout_width="wrap_content"-->
+    <!--        android:layout_height="wrap_content"-->
+    <!--        android:layout_below="@id/selectTestImage"-->
+    <!--        android:background="@color/appColorPrimary"-->
+    <!--        android:onClick="onClick"-->
+    <!--        android:text="hello" />-->
+
+    <!--    <Button-->
+    <!--        android:id="@+id/upload_image"-->
+    <!--        android:layout_width="wrap_content"-->
+    <!--        android:layout_height="wrap_content"-->
+    <!--        android:layout_below="@id/click_me"-->
+    <!--        android:background="@color/appColorPrimary"-->
+    <!--        android:onClick="onClick"-->
+    <!--        android:text="upload" />-->
+
+    <!--    *******************************************************************-->
+    <!--Location tracking-->
+    <!--    *******************************************************************-->
 
     <!--    <TextView-->
     <!--        android:layout_width="match_parent"-->

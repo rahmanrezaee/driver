@@ -28,6 +28,7 @@ import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 import com.development.taxiappproject.CompleteRiding;
 import com.development.taxiappproject.Const.SharedPrefKey;
+import com.development.taxiappproject.MyCheckConnection;
 import com.development.taxiappproject.NewRideRequest;
 import com.development.taxiappproject.OTPScreen;
 import com.development.taxiappproject.R;
@@ -71,6 +72,11 @@ public class HomeFragment extends Fragment implements View.OnClickListener {
 
         binding.fragmentHomeProgressBar.setVisibility(View.VISIBLE);
         binding.newRideRequest.setVisibility(View.GONE);
+
+        if(!MyCheckConnection.mCheckConnectivity(getActivity())){
+            binding.fragmentHomeProgressBar.setVisibility(View.GONE);
+            return binding.getRoot();
+        }
 
         setRecyclerView();
         getDashboardItem(userToken);
@@ -150,6 +156,56 @@ public class HomeFragment extends Fragment implements View.OnClickListener {
         };
         requestQueue.add(jsonObjectRequest);
     }
+
+    private void setRecyclerView() {
+        dashboardAdapter = new DashboardAdapter(getActivity(), rideList);
+        mLayoutManager = new LinearLayoutManager(getActivity());
+        binding.fragmentHomeRecyclerView.setLayoutManager(mLayoutManager);
+        binding.fragmentHomeRecyclerView.setItemAnimator(new DefaultItemAnimator());
+        binding.fragmentHomeRecyclerView.setAdapter(dashboardAdapter);
+    }
+
+
+    private void settestimonialList(JSONArray data) {
+
+        rideList.clear();
+        for (int i = 0; i < data.length(); i++) {
+            MyRideClass ride = null;
+            try {
+                JSONObject myData = data.getJSONObject(i);
+                ride = new MyRideClass(myData.getString("updatedAt"),
+                        "Total Fare:   $" + myData.getString("actualFareAmount"),
+                        "Total Miles:   " + myData.getString("miles") + " Miles",
+                        myData.getString("actualTimePassed"), myData.getString("from"),
+                        myData.getString("toWhere"), myData.getString("_id"));
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+//            MyRideClass ride = new MyRideClass(dateRide, priceRide, distanceRide, timeRide, startLocationRide, endLocationRide);
+            rideList.add(ride);
+        }
+        dashboardAdapter.notifyDataSetChanged();
+    }
+
+    @Override
+    public void onClick(View view) {
+        switch (view.getId()) {
+            case R.id.new_ride_request:
+                Intent intent = new Intent(getActivity(), CompleteRiding.class);
+                intent.putExtra("id", lastId);
+                startActivity(intent);
+
+//                startActivity(new Intent(getActivity(), NewRideRequest.class));
+                break;
+
+//            case R.id.dashboard_item_linear:
+//                Intent intent = new Intent();
+////                intent.putExtra("phone_number", email);
+//                startActivity(new Intent(getActivity(), CompleteRide.class));
+//                break;
+        }
+    }
+}
 
 //    public void getDashboardItem(String userToken) {
 //        RequestQueue requestQueue = Volley.newRequestQueue(getActivity());
@@ -314,53 +370,3 @@ public class HomeFragment extends Fragment implements View.OnClickListener {
 //        };
 //        requestQueue.add(jsonObjectRequest);
 //    }
-
-    private void setRecyclerView() {
-        dashboardAdapter = new DashboardAdapter(getActivity(), rideList);
-        mLayoutManager = new LinearLayoutManager(getActivity());
-        binding.fragmentHomeRecyclerView.setLayoutManager(mLayoutManager);
-        binding.fragmentHomeRecyclerView.setItemAnimator(new DefaultItemAnimator());
-        binding.fragmentHomeRecyclerView.setAdapter(dashboardAdapter);
-    }
-
-
-    private void settestimonialList(JSONArray data) {
-
-        rideList.clear();
-        for (int i = 0; i < data.length(); i++) {
-            MyRideClass ride = null;
-            try {
-                JSONObject myData = data.getJSONObject(i);
-                ride = new MyRideClass(myData.getString("updatedAt"),
-                        "Total Fare:   $" + myData.getString("actualFareAmount"),
-                        "Total Miles:   " + myData.getString("miles") + " Miles",
-                        myData.getString("actualTimePassed"), myData.getString("from"),
-                        myData.getString("toWhere"), myData.getString("_id"));
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-//            MyRideClass ride = new MyRideClass(dateRide, priceRide, distanceRide, timeRide, startLocationRide, endLocationRide);
-            rideList.add(ride);
-        }
-        dashboardAdapter.notifyDataSetChanged();
-    }
-
-    @Override
-    public void onClick(View view) {
-        switch (view.getId()) {
-            case R.id.new_ride_request:
-                Intent intent = new Intent(getActivity(), CompleteRiding.class);
-                intent.putExtra("id", lastId);
-                startActivity(intent);
-
-//                startActivity(new Intent(getActivity(), NewRideRequest.class));
-                break;
-
-//            case R.id.dashboard_item_linear:
-//                Intent intent = new Intent();
-////                intent.putExtra("phone_number", email);
-//                startActivity(new Intent(getActivity(), CompleteRide.class));
-//                break;
-        }
-    }
-}

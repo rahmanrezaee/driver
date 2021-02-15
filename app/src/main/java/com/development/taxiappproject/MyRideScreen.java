@@ -60,6 +60,11 @@ public class MyRideScreen extends AppCompatActivity {
         progressBar = findViewById(R.id.rideScreen_progressBar);
         progressBar.setVisibility(View.VISIBLE);
 
+        if (!MyCheckConnection.mCheckConnectivity(MyRideScreen.this)) {
+            progressBar.setVisibility(View.GONE);
+            return;
+        }
+
         setRecyclerView();
         getRideItem(userToken);
     }

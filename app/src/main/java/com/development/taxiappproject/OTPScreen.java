@@ -3,7 +3,10 @@ package com.development.taxiappproject;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.app.Activity;
 import android.app.ProgressDialog;
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -32,6 +35,7 @@ import com.development.taxiappproject.Const.SharedPrefKey;
 import com.development.taxiappproject.Service.MyFirebaseMessagingService;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.google.android.gms.tasks.TaskExecutors;
 import com.google.firebase.FirebaseException;
 import com.google.firebase.FirebaseTooManyRequestsException;
 import com.google.firebase.auth.AuthResult;
@@ -88,6 +92,11 @@ public class OTPScreen extends AppCompatActivity {
         editText6 = findViewById(R.id.edit6);
         mAuth = FirebaseAuth.getInstance();
         editTextFocusListener();
+//        pasteText();
+
+        if (!MyCheckConnection.mCheckConnectivity(OTPScreen.this)) {
+            return;
+        }
 
         type = getIntent().getStringExtra("type");
         assert type != null;
@@ -111,13 +120,32 @@ public class OTPScreen extends AppCompatActivity {
         startPhoneNumberVerification(phone_number);
     }
 
+//    private void pasteText() {
+//        ClipboardManager clipboardManager = (ClipboardManager)
+//                getSystemService(Context.CLIPBOARD_SERVICE);
+//
+//        if(clipboardManager.hasPrimaryClip()) {
+//            ClipData.Item item = clipboardManager.getPrimaryClip().getItemAt(0);
+//
+//            CharSequence ptext = item.getText();
+//            for(int i = 0 ; i <= ptext.length() ; i++){
+//                editText3.setText(ptext);
+//                // 4 cases and paste to 4 edittexts
+//            }
+//        }
+//    }
+
     private void startPhoneNumberVerification(String phoneNumber) {
-        PhoneAuthProvider.getInstance().verifyPhoneNumber(
-                phoneNumber,        // Phone number to verify
-                60,                 // Timeout duration
-                TimeUnit.SECONDS,   // Unit of timeout
-                this,               // Activity (for callback binding)
-                mCallbacks);        // OnVerificationStateChangedCallbacks
+
+        PhoneAuthOptions options =
+                PhoneAuthOptions.newBuilder(mAuth)
+                        .setPhoneNumber(phoneNumber)       // Phone number to verify
+                        .setTimeout(60L, TimeUnit.SECONDS) // Timeout and unit
+                        .setActivity(this)                 // Activity (for callback binding)
+                        .setCallbacks(mCallbacks)          // OnVerificationStateChangedCallbacks
+                        .build();
+        PhoneAuthProvider.verifyPhoneNumber(options);
+
     }
 
     // [START resend_verification]
@@ -420,7 +448,7 @@ public class OTPScreen extends AppCompatActivity {
 
             public void afterTextChanged(Editable s) {
                 if (sb.length() == 1) {
-                    editText2.requestFocus();
+                    editText1.requestFocus();
                 }
             }
         });
@@ -444,7 +472,7 @@ public class OTPScreen extends AppCompatActivity {
 
             public void afterTextChanged(Editable s) {
                 if (sb.length() == 2) {
-                    editText3.requestFocus();
+                    editText2.requestFocus();
                 }
             }
         });
@@ -468,7 +496,7 @@ public class OTPScreen extends AppCompatActivity {
 
             public void afterTextChanged(Editable s) {
                 if (sb.length() == 3) {
-                    editText4.requestFocus();
+                    editText3.requestFocus();
                 }
             }
         });
@@ -492,7 +520,7 @@ public class OTPScreen extends AppCompatActivity {
 
             public void afterTextChanged(Editable s) {
                 if (sb.length() == 4) {
-                    editText5.requestFocus();
+                    editText4.requestFocus();
                 }
             }
         });
@@ -502,6 +530,8 @@ public class OTPScreen extends AppCompatActivity {
                 if (sb.length() == 5 & editText6.length() == 1) {
                     sb.append(s);
                     editText6.clearFocus();
+                    editText6.requestFocus();
+                    editText6.setCursorVisible(true);
                 }
             }
 
@@ -514,7 +544,7 @@ public class OTPScreen extends AppCompatActivity {
 
             public void afterTextChanged(Editable s) {
                 if (sb.length() == 5) {
-                    editText6.requestFocus();
+                    editText5.requestFocus();
                 }
             }
         });

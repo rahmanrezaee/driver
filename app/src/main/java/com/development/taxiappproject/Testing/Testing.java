@@ -1,90 +1,58 @@
 package com.development.taxiappproject.Testing;
 
-import androidx.annotation.RequiresApi;
-import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
-
-import android.Manifest;
 import android.content.Context;
-import android.content.DialogInterface;
-import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
-import android.database.Cursor;
-import android.database.Observable;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
-import android.os.Environment;
-import android.provider.MediaStore;
-import android.util.Base64;
 import android.util.Log;
 import android.view.View;
-import android.widget.Toast;
+import android.view.ViewGroup;
+import android.widget.ProgressBar;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.DefaultItemAnimator;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
+
+import com.android.volley.NetworkResponse;
+import com.android.volley.ParseError;
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.toolbox.HttpHeaderParser;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.Volley;
 import com.development.taxiappproject.Const.SharedPrefKey;
+import com.development.taxiappproject.MyRideScreen;
 import com.development.taxiappproject.OTPScreen;
 import com.development.taxiappproject.R;
-import com.development.taxiappproject.Retrofit.ApiConfig;
-import com.development.taxiappproject.Retrofit.AppConfig;
-import com.development.taxiappproject.Retrofit.RetrofitClient;
-import com.development.taxiappproject.Service.MyFirebaseMessagingService;
-import com.google.gson.Gson;
+import com.development.taxiappproject.adapter.MyRideAdapter;
+import com.development.taxiappproject.databinding.ActivityMyRideScreenBinding;
+import com.development.taxiappproject.model.MyRideClass;
 
-import org.jetbrains.annotations.NotNull;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.IOException;
-import java.util.Calendar;
-import java.util.Collections;
-import java.util.Objects;
-import java.util.concurrent.Flow;
+import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
-import de.hdodenhof.circleimageview.CircleImageView;
-import io.reactivex.Scheduler;
-import io.reactivex.android.schedulers.AndroidSchedulers;
-import io.reactivex.disposables.CompositeDisposable;
-import io.reactivex.functions.Consumer;
-import io.reactivex.schedulers.Schedulers;
-import okhttp3.MediaType;
-import okhttp3.MultipartBody;
-import okhttp3.OkHttpClient;
-import okhttp3.Protocol;
-import okhttp3.RequestBody;
-import okhttp3.ResponseBody;
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
-import retrofit2.Retrofit;
+import static com.development.taxiappproject.Const.ConstantValue.baseUrl;
 
 public class Testing extends AppCompatActivity {
-    private CircleImageView circleImageView;
-
-    private final int PERMISSION_REQUEST_CODE_CAMERA = 1;
-    private final int PERMISSION_REQUEST_CODE_GALLERY = 2;
-    private Uri profileUri;
+    SwipeRefreshLayout swipeRefreshLayout;
+    RecyclerView recyclerView;
+    private MyRideAdapter rideAdapter;
+    RecyclerView.LayoutManager mLayoutManager;
+    ActivityMyRideScreenBinding screenBinding;
+    List<MyRideClass> rideList = new ArrayList<>();
     private String TAG = "MAHDI";
     SharedPreferences sharedPreferences;
-    String userToken;
-    File globalFileName;
-    byte[] globalByte;
-
-    ApiConfig apiConfig1;
-    CompositeDisposable compositeDisposable = new CompositeDisposable();
-
-    @Override
-    protected void onStop() {
-        super.onStop();
-        compositeDisposable.clear();
-    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -92,140 +60,464 @@ public class Testing extends AppCompatActivity {
         setContentView(R.layout.activity_testing);
 
         sharedPreferences = getSharedPreferences(OTPScreen.MyPREFERENCES, Context.MODE_PRIVATE);
-        userToken = sharedPreferences.getString(SharedPrefKey.userToken, "defaultValue");
+        String userToken = sharedPreferences.getString(SharedPrefKey.userToken, "defaultValue");
 
-        Log.i(TAG, "Mahdi: Testing: 1 " + userToken);
-        Log.i(TAG, "Mahdi: Testing: 2 " + MyFirebaseMessagingService.getToken(getApplicationContext()));
+        recyclerView = findViewById(R.id.testing_RecyclerView);
+//        recyclerAdapter = new RecyclerView.Adapter();
 
-        circleImageView = findViewById(R.id.selectTestImage);
+        swipeRefreshLayout = findViewById(R.id.testing_swipeRefreshLayout);
+        swipeRefreshLayout.setOnRefreshListener(() -> {
 
-        Retrofit retrofit = RetrofitClient.getInstance();
-        apiConfig1 = retrofit.create(ApiConfig.class);
-    }
-
-    public void onClick(View view) {
-        switch (view.getId()) {
-            case R.id.selectTestImage:
-                selectImage(1);
-                break;
-
-            case R.id.click_me:
-                uploadMultipleFiles();
-//                getCarList();
-//                postData();
-                break;
-        }
-    }
-
-    private void uploadFile(Uri fileUri) {
-        RequestBody descriptionPart = RequestBody.create(MultipartBody.FORM, "Hello");
-
-        fileUri = Uri.fromFile(globalFileName);
-
-        RequestBody filePart = RequestBody.create(
-                MediaType.parse(getContentResolver().getType(fileUri)),
-                globalFileName);
-
-//        MultipartBody.Part file = MultipartBody.Part.create("uploadFile",
-//                globalFileName.getName(), filePart);
-    }
-
-    private void uploadMultipleFiles() {
-
-        Log.i(TAG, "Mahdi: uploadMultipleFiles: " + globalFileName);
-
-        RequestBody requestBody1 = RequestBody.create(MediaType.parse("multipart/form- data"), globalFileName);
-
-        MultipartBody.Part fileToUpload1 = MultipartBody.Part.createFormData("uploadFile",
-                globalFileName.getName(), requestBody1);
-
-
-        RequestBody type = RequestBody.create(MediaType.parse("multipart/form-data"),
-                "documents");
-
-        RequestBody token = RequestBody.create(MediaType.parse("multipart/form-data"),
-                "7220A3B7F8D2FD2C236092E0918B4EA3");
-
-        compositeDisposable.add(apiConfig1.tempImageUpload(userToken, fileToUpload1, type, token)
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Consumer<Response<ResponseBody>>() {
-                    @Override
-                    public void accept(Response<ResponseBody> responseBodyResponse) throws Exception {
-
-                        if (responseBodyResponse.isSuccessful()) {
-
-                            String remoteResponse = responseBodyResponse.body().string();
-                            Log.d(TAG, remoteResponse);
-                            try {
-                                JSONObject forecast = new JSONObject(remoteResponse);
-                                Log.i(TAG, "Mahdi: accept: "  + forecast);
-                            } catch (JSONException e) {
-                                e.printStackTrace();
-                            }
-                        }
-                    }
-                })
-        );
-    }
-
-    private boolean checkPermissionGallery() {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
-                != PackageManager.PERMISSION_GRANTED) {
-            // Permission is not granted
-            return false;
-        }
-        return true;
-    }
-
-    private void requestPermissionCamera() {
-        ActivityCompat.requestPermissions(this,
-                new String[]{Manifest.permission.CAMERA},
-                PERMISSION_REQUEST_CODE_CAMERA);
-    }
-
-    private void requestPermissionGallery() {
-        ActivityCompat.requestPermissions(this,
-                new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
-                PERMISSION_REQUEST_CODE_GALLERY);
-    }
-
-    private boolean checkPermissionCamera() {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
-                != PackageManager.PERMISSION_GRANTED) {
-            // Permission is not granted
-            return false;
-        }
-        return true;
-    }
-
-    private void selectImage(int countImage) {
-        String cameraNum = 1 + "" + countImage;
-        String galleryNum = 2 + "" + countImage;
-        final CharSequence[] options = {"Take Photo", "Choose from Gallery", "Cancel"};
-        AlertDialog.Builder builder = new AlertDialog.Builder(Testing.this);
-        builder.setTitle("Add Photo!");
-        builder.setItems(options, (dialog, item) -> {
-            if (options[item].equals("Take Photo")) {
-                if (checkPermissionCamera()) {
-                    Intent cameraIntent = new Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
-                    startActivityForResult(cameraIntent, Integer.parseInt(cameraNum));
-                } else {
-                    requestPermissionCamera();
-                }
-            } else if (options[item].equals("Choose from Gallery")) {
-                if (checkPermissionGallery()) {
-                    Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-                    startActivityForResult(intent, Integer.parseInt(galleryNum));
-                } else {
-                    requestPermissionGallery();
-                }
-            } else if (options[item].equals("Cancel")) {
-                dialog.dismiss();
-            }
         });
-        builder.show();
+
+        setRecyclerView();
+        getRideItem(userToken);
     }
+
+    private void setRecyclerView() {
+        rideAdapter = new MyRideAdapter(Testing.this, rideList);
+        mLayoutManager = new LinearLayoutManager(Testing.this);
+        recyclerView.setLayoutManager(mLayoutManager);
+        recyclerView.setItemAnimator(new DefaultItemAnimator());
+        recyclerView.setAdapter(rideAdapter);
+    }
+
+    public void getRideItem(String userToken) {
+        RequestQueue requestQueue = Volley.newRequestQueue(Testing.this);
+        String mURL = baseUrl + "/rides";
+
+        Log.i(TAG, "Mahdi: HomeScreen: getDashboard: 1 " + userToken);
+
+        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, mURL,
+                null,
+                response -> {
+                    try {
+                        Log.i(TAG, "Mahdi: HomeScreen: getDashboard: res 0 " + response);
+                        JSONArray data = response.getJSONArray("data");
+
+                        Log.i(TAG, "Mahdi: HomeScreen: getDashboard: res 1 " + data);
+
+                        settestimonialList(data);
+
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                }, error -> {
+            Log.e("Mahdi", "Mahdi: HomeScreen: getDashboard: Error " + error.getMessage());
+        }) {
+            @Override
+            public String getBodyContentType() {
+                return "application/json; charset=utf-8";
+            }
+
+            @Override
+            public Map<String, String> getHeaders() {
+                Map<String, String> params = new HashMap<>();
+                params.put("token", userToken);
+                return params;
+            }
+
+            @Override
+            protected Response parseNetworkResponse(NetworkResponse response) {
+                try {
+                    Log.i(TAG, "Mahdi: HomeScreen: getDashboard: res 1 " + response.data);
+                    String jsonString = new String(response.data, HttpHeaderParser.parseCharset(response.headers));
+                    return Response.success(new JSONObject(jsonString), HttpHeaderParser.parseCacheHeaders(response));
+                } catch (UnsupportedEncodingException e) {
+                    return Response.error(new ParseError(e));
+                } catch (JSONException je) {
+                    return Response.error(new ParseError(je));
+                }
+            }
+        };
+        requestQueue.add(jsonObjectRequest);
+    }
+
+    private void settestimonialList(JSONArray data) {
+
+        rideList.clear();
+        for (int i = 0; i < data.length(); i++) {
+            MyRideClass ride = null;
+            try {
+                JSONObject myData = data.getJSONObject(i);
+                ride = new MyRideClass(myData.getString("eta"), myData.getString("actualFareAmount"),
+                        myData.getString("miles"), myData.getString("actualTimePassed"), myData.getString("from"),
+                        myData.getString("toWhere"), myData.getString("_id"));
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+//            MyRideClass ride = new MyRideClass(dateRide, priceRide, distanceRide, timeRide, startLocationRide, endLocationRide);
+            rideList.add(ride);
+        }
+        rideAdapter.notifyDataSetChanged();
+    }
+
+}
+
+//********************************************************************************************************
+//Upload image
+//********************************************************************************************************
+
+//package com.development.taxiappproject.Testing;
+//
+//import androidx.annotation.RequiresApi;
+//import androidx.appcompat.app.AlertDialog;
+//import androidx.appcompat.app.AppCompatActivity;
+//import androidx.core.app.ActivityCompat;
+//import androidx.core.content.ContextCompat;
+//
+//import android.Manifest;
+//import android.content.Context;
+//import android.content.DialogInterface;
+//import android.content.Intent;
+//import android.content.SharedPreferences;
+//import android.content.pm.PackageManager;
+//import android.database.Cursor;
+//import android.graphics.Bitmap;
+//import android.net.Uri;
+//import android.os.Build;
+//import android.os.Bundle;
+//import android.provider.MediaStore;
+//import android.util.Log;
+//import android.view.View;
+//import android.widget.Toast;
+//
+//import com.development.taxiappproject.Const.SharedPrefKey;
+//import com.development.taxiappproject.OTPScreen;
+//import com.development.taxiappproject.R;
+//import com.development.taxiappproject.Retrofit.ApiConfig;
+//import com.development.taxiappproject.Retrofit.RetrofitClient;
+//import com.development.taxiappproject.Service.MyFirebaseMessagingService;
+//
+//import org.json.JSONArray;
+//import org.json.JSONException;
+//import org.json.JSONObject;
+//
+//import java.io.ByteArrayOutputStream;
+//import java.io.File;
+//import java.io.IOException;
+//import java.util.Calendar;
+//import java.util.Objects;
+//
+//import de.hdodenhof.circleimageview.CircleImageView;
+//import io.reactivex.android.schedulers.AndroidSchedulers;
+//import io.reactivex.disposables.CompositeDisposable;
+//import io.reactivex.functions.Consumer;
+//import io.reactivex.schedulers.Schedulers;
+//import okhttp3.MediaType;
+//import okhttp3.MultipartBody;
+//import okhttp3.RequestBody;
+//import okhttp3.ResponseBody;
+//import retrofit2.Response;
+//import retrofit2.Retrofit;
+//
+//public class Testing extends AppCompatActivity {
+//    private CircleImageView circleImageView;
+//
+//    private final int PERMISSION_REQUEST_CODE_CAMERA = 1;
+//    private final int PERMISSION_REQUEST_CODE_GALLERY = 2;
+//    private Uri profileUri;
+//    private String TAG = "MAHDI";
+//    SharedPreferences sharedPreferences;
+//    String userToken;
+//    File globalFileName;
+//    byte[] globalByte;
+//
+//    ApiConfig apiConfig1;
+//    CompositeDisposable compositeDisposable = new CompositeDisposable();
+//
+//    @Override
+//    protected void onStop() {
+//        super.onStop();
+//        compositeDisposable.clear();
+//    }
+//
+//    @Override
+//    protected void onCreate(Bundle savedInstanceState) {
+//        super.onCreate(savedInstanceState);
+//        setContentView(R.layout.activity_testing);
+//
+//        isStoragePermissionGranted();
+//
+//        sharedPreferences = getSharedPreferences(OTPScreen.MyPREFERENCES, Context.MODE_PRIVATE);
+//        userToken = sharedPreferences.getString(SharedPrefKey.userToken, "defaultValue");
+//
+//        Log.i(TAG, "Mahdi: Testing: 1 " + userToken);
+//        Log.i(TAG, "Mahdi: Testing: 2 " + MyFirebaseMessagingService.getToken(getApplicationContext()));
+//
+//        circleImageView = findViewById(R.id.selectTestImage);
+//
+//        Retrofit retrofit = RetrofitClient.getInstance();
+//        apiConfig1 = retrofit.create(ApiConfig.class);
+//    }
+//
+//    public boolean isStoragePermissionGranted() {
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+//            if (checkSelfPermission(android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
+//                    == PackageManager.PERMISSION_GRANTED) {
+//                Log.v(TAG, "Permission is granted");
+//                return true;
+//            } else {
+//
+//                Log.v(TAG, "Permission is revoked");
+//                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1);
+//                return false;
+//            }
+//        } else { //permission is automatically granted on sdk<23 upon installation
+//            Log.v(TAG, "Permission is granted");
+//            return true;
+//        }
+//    }
+//
+//    public void onClick(View view) {
+//        switch (view.getId()) {
+//            case R.id.selectTestImage:
+//                selectImage(1);
+//                break;
+//
+//            case R.id.click_me:
+//                uploadMultipleFiles();
+////                getCarList();
+////                postData();
+//                break;
+//        }
+//    }
+//
+//    private void uploadMultipleFiles() {
+//
+//        Log.i(TAG, "Mahdi: uploadMultipleFiles: 1 " + globalFileName);
+//
+//        RequestBody requestBody1 = RequestBody.create(MediaType.parse("multipart/form- data"), globalFileName);
+//
+//        MultipartBody.Part fileToUpload1 = MultipartBody.Part.createFormData("uploadFile",
+//                globalFileName.getName(), requestBody1);
+//
+//
+//        RequestBody type = RequestBody.create(MediaType.parse("multipart/form-data"),
+//                "documents");
+//
+//        RequestBody token = RequestBody.create(MediaType.parse("multipart/form-data"),
+//                "7220A3B7F8D2FD2C236092E0918B4EA3");
+//
+//        Log.i(TAG, "Mahdi: uploadMultipleFiles: 1 " + userToken);
+//        Log.i(TAG, "Mahdi: uploadMultipleFiles: 2 " + fileToUpload1);
+//        Log.i(TAG, "Mahdi: uploadMultipleFiles: 3 " + type);
+//        Log.i(TAG, "Mahdi: uploadMultipleFiles: 4 " + token);
+//
+//        compositeDisposable.add(apiConfig1.tempImageUpload(userToken, fileToUpload1, type, token)
+//                .subscribeOn(Schedulers.io())
+//                .observeOn(AndroidSchedulers.mainThread())
+//                .subscribe(new Consumer<Response<ResponseBody>>() {
+//                    @Override
+//                    public void accept(Response<ResponseBody> responseBodyResponse) throws Exception {
+//
+//                        Log.i(TAG, "Mahdi: accept: 3 " + responseBodyResponse);
+//
+//                        Log.i(TAG, "Mahdi: accept: 1 ");
+//                        if (responseBodyResponse.isSuccessful()) {
+//
+//                            String remoteResponse = responseBodyResponse.body().string();
+//                            try {
+//                                Log.i(TAG, "Mahdi: accept: 2 ");
+//                                JSONObject forecast = new JSONObject(remoteResponse);
+//                                Log.i(TAG, "Mahdi: accept: 3 " + forecast);
+//                            } catch (JSONException e) {
+//                                Log.e(TAG, "Mahdi: accept: error 4 ", e);
+//                                e.printStackTrace();
+//                            }
+//                        } else {
+//                            Log.i(TAG, "Mahdi: accept: 5 " + responseBodyResponse.errorBody());
+//                        }
+//                    }
+//                })
+//        );
+//    }
+//
+//    private boolean checkPermissionGallery() {
+//        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
+//                != PackageManager.PERMISSION_GRANTED) {
+//            // Permission is not granted
+//            return false;
+//        }
+//        return true;
+//    }
+//
+//    private void requestPermissionCamera() {
+//        ActivityCompat.requestPermissions(this,
+//                new String[]{Manifest.permission.CAMERA},
+//                PERMISSION_REQUEST_CODE_CAMERA);
+//    }
+//
+//    private void requestPermissionGallery() {
+//        ActivityCompat.requestPermissions(this,
+//                new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
+//                PERMISSION_REQUEST_CODE_GALLERY);
+//    }
+//
+//    private boolean checkPermissionCamera() {
+//        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
+//                != PackageManager.PERMISSION_GRANTED) {
+//            return false;
+//        }
+//        return true;
+//    }
+//
+//    private void selectImage(int countImage) {
+//        String cameraNum = 1 + "" + countImage;
+//        String galleryNum = 2 + "" + countImage;
+//        final CharSequence[] options = {"Take Photo", "Choose from Gallery", "Cancel"};
+//        AlertDialog.Builder builder = new AlertDialog.Builder(Testing.this);
+//        builder.setTitle("Add Photo!");
+//        builder.setItems(options, (dialog, item) -> {
+//            if (options[item].equals("Take Photo")) {
+//                if (checkPermissionCamera()) {
+//                    Intent cameraIntent = new Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
+//                    startActivityForResult(cameraIntent, Integer.parseInt(cameraNum));
+//                } else {
+//                    requestPermissionCamera();
+//                }
+//            } else if (options[item].equals("Choose from Gallery")) {
+//                if (checkPermissionGallery()) {
+//                    Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+//                    startActivityForResult(intent, Integer.parseInt(galleryNum));
+//                } else {
+//                    requestPermissionGallery();
+//                }
+//            } else if (options[item].equals("Cancel")) {
+//                dialog.dismiss();
+//            }
+//        });
+//        builder.show();
+//    }
+//
+//    @RequiresApi(api = Build.VERSION_CODES.R)
+//    @Override
+//    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+//
+//        super.onActivityResult(requestCode, resultCode, data);
+//
+//        if (resultCode == RESULT_OK) {
+//            profileUri = data.getData();
+//            if (requestCode == 11) {
+//
+//                Bitmap filePath = (Bitmap) Objects.requireNonNull(data.getExtras()).get("data");
+//                circleImageView.setImageBitmap(filePath);
+//
+//                ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+//                filePath.compress(Bitmap.CompressFormat.JPEG, 100, byteArrayOutputStream);
+//                globalByte = byteArrayOutputStream.toByteArray();
+//
+//                Uri tempUri = getImageUri(getApplicationContext(), filePath);
+//
+//                globalFileName = new File(getRealPathFromURI(tempUri));
+//
+//                Log.i(TAG, "Mahdi: onActivityResult: " + globalFileName);
+//
+//            } else if (requestCode == 21) {
+//                Uri filePath = data.getData();
+//
+//                globalFileName = new File(getRealPathFromURI(filePath));
+//
+//                assert data != null;
+//                circleImageView.setImageURI(profileUri);
+//            }
+//        }
+//    }
+//
+//    public Uri getImageUri(Context inContext, Bitmap inImage) {
+//        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+//        inImage.compress(Bitmap.CompressFormat.JPEG, 100, bytes);
+//        String path = MediaStore.Images.Media.insertImage(inContext.getContentResolver(), inImage,
+//                "Title" + Calendar.getInstance().getTimeInMillis(), null);
+//        return Uri.parse(path);
+//    }
+//
+//    public String getRealPathFromURI(Uri uri) {
+//        String path = "";
+//        if (getContentResolver() != null) {
+//            Cursor cursor = getContentResolver().query(uri, null, null, null, null);
+//            if (cursor != null) {
+//                cursor.moveToFirst();
+//                int idx = cursor.getColumnIndex(MediaStore.Images.ImageColumns.DATA);
+//                path = cursor.getString(idx);
+//                cursor.close();
+//            }
+//        }
+//        return path;
+//    }
+//
+//    @Override
+//    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
+//        switch (requestCode) {
+//            case PERMISSION_REQUEST_CODE_CAMERA:
+//                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+//                    Toast.makeText(getApplicationContext(), "Permission Granted", Toast.LENGTH_SHORT).show();
+//                    // main logic
+//                } else {
+//                    Toast.makeText(getApplicationContext(), "Permission Denied", Toast.LENGTH_SHORT).show();
+//                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+//                        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
+//                                != PackageManager.PERMISSION_GRANTED) {
+//                            showMessageOKCancel("You need to allow access permissions",
+//                                    new DialogInterface.OnClickListener() {
+//                                        @Override
+//                                        public void onClick(DialogInterface dialog, int which) {
+//                                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+//                                                requestPermissionCamera();
+//                                            }
+//                                        }
+//                                    });
+//                        }
+//                    }
+//                }
+//                break;
+//
+//            case PERMISSION_REQUEST_CODE_GALLERY:
+//                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+//                    Toast.makeText(getApplicationContext(), "Permission Granted", Toast.LENGTH_SHORT).show();
+//                } else {
+//                    Toast.makeText(getApplicationContext(), "Permission Denied", Toast.LENGTH_SHORT).show();
+//                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+//                        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)
+//                                != PackageManager.PERMISSION_GRANTED) {
+//                            showMessageOKCancel("You need to allow access permissions",
+//                                    new DialogInterface.OnClickListener() {
+//                                        @Override
+//                                        public void onClick(DialogInterface dialog, int which) {
+//                                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+//                                                requestPermissionGallery();
+//                                            }
+//                                        }
+//                                    });
+//                        }
+//                    }
+//                }
+//        }
+//    }
+//
+//    private void showMessageOKCancel(String message, DialogInterface.OnClickListener okListener) {
+//        new AlertDialog.Builder(Testing.this)
+//                .setMessage(message)
+//                .setPositiveButton("OK", okListener)
+//                .setNegativeButton("Cancel", null)
+//                .create()
+//                .show();
+//    }
+//
+//    public JSONArray createDocument(String imageUrl) {
+//        JSONObject dlObject = new JSONObject();
+//        try {
+//            dlObject.put("uriPath", imageUrl);
+//        } catch (JSONException e) {
+//            // TODO Auto-generated catch block
+//            e.printStackTrace();
+//        }
+//        JSONArray dlArray = new JSONArray();
+//        dlArray.put(dlObject);
+//
+//        return dlArray;
+//    }
+//}
 
 //    private void saveProfileAccount() {
 //        JSONObject jsonBody = new JSONObject();
@@ -495,170 +787,10 @@ public class Testing extends AppCompatActivity {
 //        return null;
 //    }
 
-    public JSONArray createDocument(String imageUrl) {
-        JSONObject dlObject = new JSONObject();
-        try {
-            dlObject.put("uriPath", imageUrl);
-        } catch (JSONException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-        JSONArray dlArray = new JSONArray();
-        dlArray.put(dlObject);
 
-        return dlArray;
-    }
-
-    @RequiresApi(api = Build.VERSION_CODES.R)
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-
-        super.onActivityResult(requestCode, resultCode, data);
-
-        if (resultCode == RESULT_OK) {
-            profileUri = data.getData();
-            if (requestCode == 11) {
-
-                Bitmap filePath = (Bitmap) Objects.requireNonNull(data.getExtras()).get("data");
-                circleImageView.setImageBitmap(filePath);
-
-                ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-                filePath.compress(Bitmap.CompressFormat.JPEG, 100, byteArrayOutputStream);
-                globalByte = byteArrayOutputStream.toByteArray();
-
-//                globalBitmap = filePath;
-
-//                globalByte = toByteArray(filePath);
-
-//                String path = android.os.Environment
-//                        .getExternalStorageDirectory()
-//                        + File.separator
-//                        + "Phoenix" + File.separator + "default";
-
-
-                // CALL THIS METHOD TO GET THE URI FROM THE BITMAP
-                Uri tempUri = getImageUri(getApplicationContext(), filePath);
-
-                // CALL THIS METHOD TO GET THE ACTUAL PATH
-                globalFileName = new File(getRealPathFromURI(tempUri));
-
-                Log.i(TAG, "Mahdi: onActivityResult: " + globalFileName);
-
-            } else if (requestCode == 21) {
-                Uri filePath = data.getData();
-                Bitmap bitmap;
-                try {
-                    bitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(), filePath);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-
-                assert data != null;
-                circleImageView.setImageURI(profileUri);
-
-//                globalByte = toByteArray(data.getData());
-
-
-//                sendUri = filePath;
-            }
-        }
-    }
-
-    public Uri getImageUri(Context inContext, Bitmap inImage) {
-        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
-        inImage.compress(Bitmap.CompressFormat.JPEG, 100, bytes);
-        String path = MediaStore.Images.Media.insertImage(inContext.getContentResolver(), inImage,
-                "Title"  + Calendar.getInstance().getTime(), null);
-        return Uri.parse(path);
-    }
-
-    public String getRealPathFromURI(Uri uri) {
-        String path = "";
-        if (getContentResolver() != null) {
-            Cursor cursor = getContentResolver().query(uri, null, null, null, null);
-            if (cursor != null) {
-                cursor.moveToFirst();
-                int idx = cursor.getColumnIndex(MediaStore.Images.ImageColumns.DATA);
-                path = cursor.getString(idx);
-                cursor.close();
-            }
-        }
-        return path;
-    }
-
-    public static String getRealPathFromUri(Context context, Uri contentUri) {
-        Cursor cursor = null;
-        try {
-            String[] proj = {MediaStore.Images.Media.DATA};
-            cursor = context.getContentResolver().query(contentUri, proj, null, null, null);
-            int column_index = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
-            cursor.moveToFirst();
-            return cursor.getString(column_index);
-        } finally {
-            if (cursor != null) {
-                cursor.close();
-            }
-        }
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
-        switch (requestCode) {
-            case PERMISSION_REQUEST_CODE_CAMERA:
-                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    Toast.makeText(getApplicationContext(), "Permission Granted", Toast.LENGTH_SHORT).show();
-                    // main logic
-                } else {
-                    Toast.makeText(getApplicationContext(), "Permission Denied", Toast.LENGTH_SHORT).show();
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
-                                != PackageManager.PERMISSION_GRANTED) {
-                            showMessageOKCancel("You need to allow access permissions",
-                                    new DialogInterface.OnClickListener() {
-                                        @Override
-                                        public void onClick(DialogInterface dialog, int which) {
-                                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                                                requestPermissionCamera();
-                                            }
-                                        }
-                                    });
-                        }
-                    }
-                }
-                break;
-
-            case PERMISSION_REQUEST_CODE_GALLERY:
-                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    Toast.makeText(getApplicationContext(), "Permission Granted", Toast.LENGTH_SHORT).show();
-                } else {
-                    Toast.makeText(getApplicationContext(), "Permission Denied", Toast.LENGTH_SHORT).show();
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)
-                                != PackageManager.PERMISSION_GRANTED) {
-                            showMessageOKCancel("You need to allow access permissions",
-                                    new DialogInterface.OnClickListener() {
-                                        @Override
-                                        public void onClick(DialogInterface dialog, int which) {
-                                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                                                requestPermissionGallery();
-                                            }
-                                        }
-                                    });
-                        }
-                    }
-                }
-        }
-    }
-
-    private void showMessageOKCancel(String message, DialogInterface.OnClickListener okListener) {
-        new AlertDialog.Builder(Testing.this)
-                .setMessage(message)
-                .setPositiveButton("OK", okListener)
-                .setNegativeButton("Cancel", null)
-                .create()
-                .show();
-    }
-}
+//********************************************************************************************************
+//Background location
+//********************************************************************************************************
 
 //package com.development.taxiappproject.Testing;
 //

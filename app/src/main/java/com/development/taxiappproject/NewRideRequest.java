@@ -58,6 +58,11 @@ public class NewRideRequest extends FragmentActivity implements OnMapReadyCallba
         super.onCreate(savedInstanceState);
         // setContentView(R.layout.activity_new_ride_request);
         requestBinding = DataBindingUtil.setContentView(this, R.layout.activity_new_ride_request);
+
+        if (!MyCheckConnection.mCheckConnectivity(NewRideRequest.this)) {
+            return;
+        }
+
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);

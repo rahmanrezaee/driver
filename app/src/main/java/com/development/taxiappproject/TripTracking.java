@@ -48,6 +48,10 @@ public class TripTracking extends AppCompatActivity {
         tripTrackingBinding = DataBindingUtil.setContentView(this, R.layout.activity_trip_tracking);
 //        setContentView(R.layout.activity_trip_tracking);
 
+        if (!MyCheckConnection.mCheckConnectivity(TripTracking.this)) {
+            return;
+        }
+
         Bundle extras = getIntent().getExtras();
         id = extras.getString("rideId");
 

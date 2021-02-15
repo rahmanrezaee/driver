@@ -5,6 +5,7 @@ import androidx.databinding.DataBindingUtil;
 import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -51,6 +52,8 @@ public class EarningScreen extends AppCompatActivity {
     ProgressBar progressBar;
     SharedPreferences sharedPreferences;
 
+    private SwipeRefreshLayout swipeContainer;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -61,15 +64,31 @@ public class EarningScreen extends AppCompatActivity {
         sharedPreferences = getSharedPreferences(OTPScreen.MyPREFERENCES, Context.MODE_PRIVATE);
         String userToken = sharedPreferences.getString(SharedPrefKey.userToken, "defaultValue");
 
+        swipeContainer = (SwipeRefreshLayout) findViewById(R.id.earningScreen_swipeContainer);
         progressBar = findViewById(R.id.earningScreen_progressBar);
         progressBar.setVisibility(View.VISIBLE);
+
+        swipeContainer.setOnRefreshListener(() -> {
+            setRecyclerView();
+            getRideItem(userToken);
+        });
+
+        swipeContainer.setColorSchemeResources(android.R.color.holo_blue_bright,
+                android.R.color.holo_green_light,
+                android.R.color.holo_orange_light,
+                android.R.color.holo_red_light);
+
+        if (!MyCheckConnection.mCheckConnectivity(EarningScreen.this)) {
+            progressBar.setVisibility(View.GONE);
+            return;
+        }
 
         setRecyclerView();
         getRideItem(userToken);
     }
 
-    public void onClick(View view){
-        switch (view.getId()){
+    public void onClick(View view) {
+        switch (view.getId()) {
             case R.id.earningScreen_back_btn:
                 finish();
                 break;
@@ -92,7 +111,7 @@ public class EarningScreen extends AppCompatActivity {
                         Log.i(TAG, "Mahdi: HomeScreen: getDashboard: res 1 " + data);
 
                         progressBar.setVisibility(View.GONE);
-                        screenBinding.earningScreenMakePaidBtn.setVisibility(View.GONE);
+                        screenBinding.earningScreenMakePaidBtn.setVisibility(View.VISIBLE);
 
                         settestimonialList(data);
 

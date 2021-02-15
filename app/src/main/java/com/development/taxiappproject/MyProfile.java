@@ -64,9 +64,10 @@ public class MyProfile extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         profileBinding = DataBindingUtil.setContentView(this, R.layout.activity_my_profile);
+
         profileBinding.myProfileRelativeLayoutItem.setVisibility(View.GONE);
 
-        profileBinding.myProfileRelativeLayoutItem.setVisibility(View.VISIBLE);
+        profileBinding.myProfileProgressBar.setVisibility(View.VISIBLE);
 
 //        progressBar = findViewById(R.id.myProfile_progressBar);
 //        progressBar.setVisibility(View.VISIBLE);
@@ -78,9 +79,26 @@ public class MyProfile extends AppCompatActivity {
         Log.i(TAG, "Mahdi: MyProfile: token: " + userToken);
         Log.i(TAG, "Mahdi: MyProfile: userId: " + userId);
 
+        if (!MyCheckConnection.mCheckConnectivity(MyProfile.this)) {
+            profileBinding.myProfileRelativeLayoutItem.setVisibility(View.VISIBLE);
+            profileBinding.myProfileProgressBar.setVisibility(View.GONE);
+            return;
+        }
+
         setRecyclerView();
         setTestimonialList();
         getProfileItem(userToken, userId);
+    }
+
+    public void onClick(View view) {
+        switch (view.getId()) {
+            case R.id.myProfile_back_btn:
+                finish();
+                break;
+
+            case R.id.myProfile_edit_btn:
+                break;
+        }
     }
 
     public void getProfileItem(String userToken, String userId) {
@@ -179,49 +197,6 @@ public class MyProfile extends AppCompatActivity {
         }
         carAdapter.notifyDataSetChanged();
     }
-
-    public void onClick(View view) {
-        switch (view.getId()) {
-            case R.id.myProfile_back_btn:
-                finish();
-                break;
-
-            case R.id.myProfile_edit_btn:
-                break;
-        }
-    }
-
-//    static class RetrieveFeedTask extends AsyncTask<String, Void, Drawable> {
-//
-//        protected Drawable doInBackground(String... urls) {
-//            try {
-//                try {
-//                    Log.i(TAG, "Mahdi: doInBackground: " + urls[0]);
-//                    InputStream is = (InputStream) new URL(urls[0]).getContent();
-//                    Drawable d = Drawable.createFromStream(is, "src name");
-//                    MyProfile.profileBinding.myProfileCircleImage.setImageDrawable(d);
-//                    return Drawable.createFromStream(is, "src name");
-//                } catch (Exception e) {
-//                    Log.e(TAG, "LoadImageNet: ", e);
-//                    return null;
-//                }
-//            } catch (Exception e) {
-//
-//                Log.e(TAG, "Exception: ", e);
-//                return null;
-//            }
-//        }
-//
-//        @Override
-//        protected void onPostExecute(Drawable drawable) {
-//            super.onPostExecute(drawable);
-//        }
-//    }
-//
-//
-//    public static Drawable LoadImageNet(String url) {
-//        return null;
-//    }
 }
 
 //                        profileBinding.myProfileCircleImage.setImageDrawable(LoadImageNet(data.getString("profilePhoto")));
