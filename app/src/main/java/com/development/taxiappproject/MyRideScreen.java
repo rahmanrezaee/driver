@@ -25,6 +25,7 @@ import com.android.volley.toolbox.HttpHeaderParser;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 import com.development.taxiappproject.Const.SharedPrefKey;
+import com.development.taxiappproject.Global.GlobalVal;
 import com.development.taxiappproject.adapter.MyRideAdapter;
 import com.development.taxiappproject.databinding.ActivityMyRideScreenBinding;
 import com.development.taxiappproject.model.MyRideClass;
@@ -33,7 +34,9 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -67,7 +70,6 @@ public class MyRideScreen extends AppCompatActivity {
 
         swipeRefreshLayout = findViewById(R.id.myRideScreen_swipeRefreshLayout);
         swipeRefreshLayout.setOnRefreshListener(() -> {
-            Toast.makeText(getApplicationContext(), "Refreshed!", Toast.LENGTH_SHORT).show();
             getRideItem(userToken);
         });
 
@@ -160,12 +162,26 @@ public class MyRideScreen extends AppCompatActivity {
         rideList.clear();
         for (int i = 0; i < data.length(); i++) {
             MyRideClass ride = null;
+
             try {
                 JSONObject myData = data.getJSONObject(i);
-                ride = new MyRideClass(myData.getString("eta"), myData.getString("actualFareAmount"),
-                        myData.getString("miles"), myData.getString("actualTimePassed"), myData.getString("from"),
-                        myData.getString("toWhere"), myData.getString("_id"));
-            } catch (JSONException e) {
+
+                String fromJson = myData.optString("from");
+                double fromLat = Double.parseDouble(fromJson.substring(0, fromJson.indexOf(",")));
+                double fromLng = Double.parseDouble(fromJson.substring(fromJson.indexOf(" ")));
+                String fromTxt = GlobalVal.convertLatLng(MyRideScreen.this, fromLat, fromLng);
+
+                String toWhereJson = myData.optString("toWhere");
+                double toWhereLat = Double.parseDouble(toWhereJson.substring(0, toWhereJson.indexOf(",")));
+                double toWhereLng = Double.parseDouble(toWhereJson.substring(toWhereJson.indexOf(" ")));
+                String destination = GlobalVal.convertLatLng(MyRideScreen.this, toWhereLat, toWhereLng);
+
+                String value = new DecimalFormat("##.##").format(myData.optDouble("actualFareAmount"));
+                String miles = new DecimalFormat("##.##").format(myData.optDouble("miles"));
+
+                ride = new MyRideClass(myData.getString("eta"), value, miles, myData.getString("actualTimePassed"),
+                        fromTxt, destination, myData.getString("_id"));
+            } catch (JSONException | IOException e) {
                 e.printStackTrace();
             }
 //            MyRideClass ride = new MyRideClass(dateRide, priceRide, distanceRide, timeRide, startLocationRide, endLocationRide);

@@ -65,7 +65,7 @@ public class SignUpScreen extends AppCompatActivity {
 
         Log.i(TAG, "Mahdi: SignUpScreen onCreate: " + token);
 
-        mCircleImageView = findViewById(R.id.profile_image);
+        mCircleImageView = findViewById(R.id.signUp_profileImage);
         licenseImage = findViewById(R.id.license_image);
         registration = findViewById(R.id.registration_image);
         insurance = findViewById(R.id.insurance_image);
@@ -89,7 +89,7 @@ public class SignUpScreen extends AppCompatActivity {
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
     public void onClick(View view) {
         switch (view.getId()) {
-            case R.id.profile_image:
+            case R.id.signUp_profileImage:
             case R.id.image_icon:
                 selectImage(1);
                 break;
@@ -454,17 +454,8 @@ public class SignUpScreen extends AppCompatActivity {
     }
 
     private JSONObject createBody() {
-
-//        RequestQueue requestQueue = Volley.newRequestQueue(this);
-//        String url = "https://taxiappapi.webfumeprojects.online/driver/signupFirebase";
-
         JSONObject jsonBody = new JSONObject();
         try {
-//            FirebaseInstanceId.getInstance().getInstanceId().addOnSuccessListener(SignUpScreen.this,
-//                    instanceIdResult -> {
-//
-//                    });
-
             try {
                 jsonBody.put("username", userName);
                 jsonBody.put("email", email);
@@ -476,9 +467,7 @@ public class SignUpScreen extends AppCompatActivity {
             } catch (JSONException e) {
                 e.printStackTrace();
             }
-
             JSONObject document = new JSONObject();
-
             try {
                 document.put("DL", createDocument("https://st.depositphotos.com/2101611/3925/v/600/depositphotos_39258143-stock-illustration-businessman-avatar-profile-picture.jpg"));
                 document.put("Registration", createDocument("https://st.depositphotos.com/2101611/3925/v/600/depositphotos_39258143-stock-illustration-businessman-avatar-profile-picture.jpg"));
@@ -530,7 +519,6 @@ public class SignUpScreen extends AppCompatActivity {
 //        };
 //        requestQueue.add(stringRequest);
     }
-
 
     private void getRequest() {
         RequestQueue queue = Volley.newRequestQueue(SignUpScreen.this);

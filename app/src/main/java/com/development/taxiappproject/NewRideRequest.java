@@ -23,6 +23,7 @@ import com.android.volley.toolbox.HttpHeaderParser;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 import com.development.taxiappproject.Const.SharedPrefKey;
+import com.development.taxiappproject.Global.GlobalVal;
 import com.development.taxiappproject.databinding.ActivityNewRideRequestBinding;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -60,6 +61,7 @@ public class NewRideRequest extends FragmentActivity implements OnMapReadyCallba
         requestBinding = DataBindingUtil.setContentView(this, R.layout.activity_new_ride_request);
 
         if (!MyCheckConnection.mCheckConnectivity(NewRideRequest.this)) {
+            p.hide();
             return;
         }
 
@@ -96,22 +98,14 @@ public class NewRideRequest extends FragmentActivity implements OnMapReadyCallba
         switch (view.getId()) {
             case R.id.newRide_accept_btn:
 
-                p = new ProgressDialog(NewRideRequest.this);
-                p.setMessage("Please wait...");
-                p.setIndeterminate(false);
-                p.setCancelable(false);
-                p.show();
+                p = GlobalVal.mProgressDialog(NewRideRequest.this, p);
 
                 acceptRequest();
                 break;
 
             case R.id.newRide_decline_btn:
                 declineRequest();
-                p = new ProgressDialog(NewRideRequest.this);
-                p.setMessage("Please wait...");
-                p.setIndeterminate(false);
-                p.setCancelable(false);
-                p.show();
+                p = GlobalVal.mProgressDialog(NewRideRequest.this, p);
                 break;
 
             case R.id.newRequest_back_btn:

@@ -177,8 +177,6 @@ public class MyBackgroundLocationService extends Service implements LocationList
                         latitude = location.getLatitude();
                         longitude = location.getLongitude();
                         fn_update(location);
-
-                        Toast.makeText(getApplicationContext(), "NETWORK::" + location.getLatitude(), Toast.LENGTH_SHORT).show();
                         sendDriverData(location.getLatitude() + "", location.getLongitude() + "", "online");
                     }
                 }
@@ -197,8 +195,6 @@ public class MyBackgroundLocationService extends Service implements LocationList
                         latitude = location.getLatitude();
                         longitude = location.getLongitude();
                         fn_update(location);
-
-                        Toast.makeText(getApplicationContext(), "GPS::" + location.getLatitude(), Toast.LENGTH_SHORT).show();
                         sendDriverData(location.getLatitude() + "", location.getLongitude() + "", "online");
                     }
                 }

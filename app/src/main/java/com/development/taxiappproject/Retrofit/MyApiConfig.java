@@ -13,7 +13,7 @@ import retrofit2.http.Multipart;
 import retrofit2.http.POST;
 import retrofit2.http.Part;
 
-public interface ApiConfig {
+public interface MyApiConfig {
 
 //    @Multipart
 //    @POST("/upload")
@@ -34,13 +34,38 @@ public interface ApiConfig {
     );
 
     @Multipart
-    @POST("/upload")
-    Observable<Response<ResponseBody>> tempImageUpload(
+    @POST("upload")
+    Observable<Response<ResponseBody>> uploadSingleImage(
             @Header("token") String userToken,
             @Part MultipartBody.Part file,
             @Part("category") RequestBody documents,
-            @Part("token") RequestBody token
+            @Part("token") RequestBody token,
+            @Part("permission") RequestBody permission
     );
+
+    @POST("upload/multi")
+    Observable<Response<ResponseBody>> uploadMultiImage(@Body RequestBody file);
+
+//    @Multipart
+//    @POST("upload/multi")
+//    Observable<Response<ResponseBody>> uploadMultiImage(
+//            @Header("token") String userToken,
+//            @Part("uploadFiles") MultipartBody.Part[] multiImage,
+//            @Part("category") RequestBody document
+//    );
+
+//    @POST("/upload_multi_files/MultiPartUpload.php")
+//    Call<ResponseBody> uploadMultiFile(@Body RequestBody file);
+
+//    @Multipart
+//    @POST("upload")
+//    Observable<Response<ResponseBody>> uploadMultiImages(
+//            @Header("token") String userToken,
+//            @Part MultipartBody.Part file,
+//            @Part("category") RequestBody documents,
+//            @Part("token") RequestBody token,
+//            @Part("permission") RequestBody permission
+//    );
 
 //    @Multipart
 //    @POST("retrofit_example/upload_multiple_files.php")
@@ -56,9 +81,9 @@ public interface ApiConfig {
 //    @POST('user')
 //    Call<User> createAccount(@Body User user);
 
-    @Multipart
-    @POST("upload")
-    Call<ResponseBody> uploadPhoto(
-            @Part("description") RequestBody description,
-            @Part MultipartBody.Part photo);
+//    @Multipart
+//    @POST("upload")
+//    Call<ResponseBody> uploadPhoto(
+//            @Part("description") RequestBody description,
+//            @Part MultipartBody.Part photo);
 }

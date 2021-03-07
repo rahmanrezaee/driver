@@ -1,33 +1,22 @@
 package com.development.taxiappproject.Testing;
 
-import android.content.Context;
-import android.content.SharedPreferences;
-import android.os.Bundle;
-import android.util.Log;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.ProgressBar;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
-import com.android.volley.NetworkResponse;
-import com.android.volley.ParseError;
-import com.android.volley.Request;
-import com.android.volley.RequestQueue;
-import com.android.volley.Response;
-import com.android.volley.toolbox.HttpHeaderParser;
-import com.android.volley.toolbox.JsonObjectRequest;
-import com.android.volley.toolbox.Volley;
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.os.Build;
+import android.os.Bundle;
+import android.util.Log;
+
 import com.development.taxiappproject.Const.SharedPrefKey;
-import com.development.taxiappproject.MyRideScreen;
 import com.development.taxiappproject.OTPScreen;
 import com.development.taxiappproject.R;
+import com.development.taxiappproject.Retrofit.MyApiConfig;
 import com.development.taxiappproject.adapter.MyRideAdapter;
 import com.development.taxiappproject.databinding.ActivityMyRideScreenBinding;
 import com.development.taxiappproject.model.MyRideClass;
@@ -36,13 +25,20 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.UnsupportedEncodingException;
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
-import static com.development.taxiappproject.Const.ConstantValue.baseUrl;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.CompositeDisposable;
+import io.reactivex.functions.Consumer;
+import io.reactivex.schedulers.Schedulers;
+import okhttp3.MediaType;
+import okhttp3.MultipartBody;
+import okhttp3.RequestBody;
+import okhttp3.ResponseBody;
+import retrofit2.Response;
 
 public class Testing extends AppCompatActivity {
     SwipeRefreshLayout swipeRefreshLayout;
@@ -53,6 +49,10 @@ public class Testing extends AppCompatActivity {
     List<MyRideClass> rideList = new ArrayList<>();
     private String TAG = "MAHDI";
     SharedPreferences sharedPreferences;
+
+    File globalFileName;
+    MyApiConfig apiConfig1;
+    CompositeDisposable compositeDisposable = new CompositeDisposable();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -79,7 +79,7 @@ public class Testing extends AppCompatActivity {
         });
 
         setRecyclerView();
-        getRideItem(userToken);
+//        getRideItem(userToken);
     }
 
     private void setRecyclerView() {
@@ -90,56 +90,56 @@ public class Testing extends AppCompatActivity {
         recyclerView.setAdapter(rideAdapter);
     }
 
-    public void getRideItem(String userToken) {
-        RequestQueue requestQueue = Volley.newRequestQueue(Testing.this);
-        String mURL = baseUrl + "/rides";
-
-        Log.i(TAG, "Mahdi: HomeScreen: getDashboard: 1 " + userToken);
-
-        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, mURL,
-                null,
-                response -> {
-                    try {
-                        Log.i(TAG, "Mahdi: HomeScreen: getDashboard: res 0 " + response);
-                        JSONArray data = response.getJSONArray("data");
-
-                        Log.i(TAG, "Mahdi: HomeScreen: getDashboard: res 1 " + data);
-
-                        settestimonialList(data);
-
-                    } catch (JSONException e) {
-                        e.printStackTrace();
-                    }
-                }, error -> {
-            Log.e("Mahdi", "Mahdi: HomeScreen: getDashboard: Error " + error.getMessage());
-        }) {
-            @Override
-            public String getBodyContentType() {
-                return "application/json; charset=utf-8";
-            }
-
-            @Override
-            public Map<String, String> getHeaders() {
-                Map<String, String> params = new HashMap<>();
-                params.put("token", userToken);
-                return params;
-            }
-
-            @Override
-            protected Response parseNetworkResponse(NetworkResponse response) {
-                try {
-                    Log.i(TAG, "Mahdi: HomeScreen: getDashboard: res 1 " + response.data);
-                    String jsonString = new String(response.data, HttpHeaderParser.parseCharset(response.headers));
-                    return Response.success(new JSONObject(jsonString), HttpHeaderParser.parseCacheHeaders(response));
-                } catch (UnsupportedEncodingException e) {
-                    return Response.error(new ParseError(e));
-                } catch (JSONException je) {
-                    return Response.error(new ParseError(je));
-                }
-            }
-        };
-        requestQueue.add(jsonObjectRequest);
-    }
+//    public void getRideItem(String userToken) {
+//        RequestQueue requestQueue = Volley.newRequestQueue(Testing.this);
+//        String mURL = baseUrl + "/rides";
+//
+//        Log.i(TAG, "Mahdi: HomeScreen: getDashboard: 1 " + userToken);
+//
+//        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, mURL,
+//                null,
+//                response -> {
+//                    try {
+//                        Log.i(TAG, "Mahdi: HomeScreen: getDashboard: res 0 " + response);
+//                        JSONArray data = response.getJSONArray("data");
+//
+//                        Log.i(TAG, "Mahdi: HomeScreen: getDashboard: res 1 " + data);
+//
+//                        settestimonialList(data);
+//
+//                    } catch (JSONException e) {
+//                        e.printStackTrace();
+//                    }
+//                }, error -> {
+//            Log.e("Mahdi", "Mahdi: HomeScreen: getDashboard: Error " + error.getMessage());
+//        }) {
+//            @Override
+//            public String getBodyContentType() {
+//                return "application/json; charset=utf-8";
+//            }
+//
+//            @Override
+//            public Map<String, String> getHeaders() {
+//                Map<String, String> params = new HashMap<>();
+//                params.put("token", userToken);
+//                return params;
+//            }
+//
+//            @Override
+//            protected Response parseNetworkResponse(NetworkResponse response) {
+//                try {
+//                    Log.i(TAG, "Mahdi: HomeScreen: getDashboard: res 1 " + response.data);
+//                    String jsonString = new String(response.data, HttpHeaderParser.parseCharset(response.headers));
+//                    return Response.success(new JSONObject(jsonString), HttpHeaderParser.parseCacheHeaders(response));
+//                } catch (UnsupportedEncodingException e) {
+//                    return Response.error(new ParseError(e));
+//                } catch (JSONException je) {
+//                    return Response.error(new ParseError(je));
+//                }
+//            }
+//        };
+//        requestQueue.add(jsonObjectRequest);
+//    }
 
     private void settestimonialList(JSONArray data) {
 
@@ -160,10 +160,60 @@ public class Testing extends AppCompatActivity {
         rideAdapter.notifyDataSetChanged();
     }
 
+//    @RequiresApi(api = Build.VERSION_CODES.N)
+//    private void uploadMultipleFiles() {
+//
+//        Log.i(TAG, "Mahdi: uploadMultipleFiles: 1 " + globalFileName);
+//
+//        RequestBody requestBody1 = RequestBody.create(MediaType.parse("multipart/form- data"), globalFileName);
+//
+//        MultipartBody.Part fileToUpload1 = MultipartBody.Part.createFormData("uploadFile",
+//                globalFileName.getName(), requestBody1);
+//
+//
+//        RequestBody type = RequestBody.create(MediaType.parse("multipart/form-data"),
+//                "documents");
+//
+//        RequestBody token = RequestBody.create(MediaType.parse("multipart/form-data"),
+//                "7220A3B7F8D2FD2C236092E0918B4EA3");
+//
+//        Log.i(TAG, "Mahdi: uploadMultipleFiles: 1 " + "userToken");
+//        Log.i(TAG, "Mahdi: uploadMultipleFiles: 2 " + fileToUpload1);
+//        Log.i(TAG, "Mahdi: uploadMultipleFiles: 3 " + type);
+//        Log.i(TAG, "Mahdi: uploadMultipleFiles: 4 " + token);
+//
+//        compositeDisposable.add(apiConfig1.tempImageUpload("userToken", fileToUpload1, type, token)
+//                .subscribeOn(Schedulers.io())
+//                .observeOn(AndroidSchedulers.mainThread())
+//                .subscribe(new Consumer<Response<ResponseBody>>() {
+//                    @Override
+//                    public void accept(Response<ResponseBody> responseBodyResponse) {
+//
+//                        Log.i(TAG, "Mahdi: accept: 3 " + responseBodyResponse);
+//
+//                        Log.i(TAG, "Mahdi: accept: 1 ");
+//                        if (responseBodyResponse.isSuccessful()) {
+//
+//                            try {
+//                                String remoteResponse = responseBodyResponse.body().string();
+//                                Log.i(TAG, "Mahdi: accept: 2 ");
+//                                JSONObject forecast = new JSONObject(remoteResponse);
+//                                Log.i(TAG, "Mahdi: accept: 3 " + forecast);
+//                            } catch (JSONException | IOException e) {
+//                                Log.e(TAG, "Mahdi: accept: error 4 ", e);
+//                                e.printStackTrace();
+//                            }
+//                        } else {
+//                            Log.i(TAG, "Mahdi: accept: 5 " + responseBodyResponse.errorBody());
+//                        }
+//                    }
+//                })
+//        );
+//    }
 }
 
 //********************************************************************************************************
-//Upload image
+//TODO Upload image
 //********************************************************************************************************
 
 //package com.development.taxiappproject.Testing;

@@ -30,6 +30,7 @@ import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 import com.development.taxiappproject.CompleteRiding;
 import com.development.taxiappproject.Const.SharedPrefKey;
+import com.development.taxiappproject.Global.GlobalVal;
 import com.development.taxiappproject.MyCheckConnection;
 import com.development.taxiappproject.NewRideRequest;
 import com.development.taxiappproject.OTPScreen;
@@ -42,7 +43,9 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -113,19 +116,36 @@ public class HomeFragment extends Fragment implements View.OnClickListener {
                         boolean lastRideIsNull = data.get("lastRide").toString() == "null";
 
                         if (!lastRideIsNull) {
-                            JSONObject lastRide = data.getJSONObject("lastRide");
+                            JSONObject lastRide = data.optJSONObject("lastRide");
 
-                            lastId = lastRide.getString("_id");
+                            lastId = lastRide.optString("_id");
 
-                            binding.fragmentHomeDateLastTxt.setText(lastRide.getString("route"));
-                            binding.fragmentHomePriceLastTxt.setText("$ " + lastRide.getString("actualFareAmount"));
-                            binding.fragmentHomeFromTxt.setText(lastRide.getString("from"));
-                            binding.fragmentHomeToTxt.setText(lastRide.getString("toWhere"));
-                            binding.fragmentHomeMilesTxt.setText(lastRide.getString("miles") + " Miles");
+                            double miles = lastRide.optDouble("miles");
+                            double value = lastRide.optDouble("actualFareAmount");
+
+                            binding.fragmentHomeDateLastTxt.setText(lastRide.optString("updatedAt"));
+                            binding.fragmentHomePriceLastTxt.setText("$ " + new DecimalFormat("##.##").format(value));
+
+                            String fromJson = lastRide.optString("from");
+                            double fromLat = Double.parseDouble(fromJson.substring(0, fromJson.indexOf(",")));
+                            double fromLng = Double.parseDouble(fromJson.substring(fromJson.indexOf(" ")));
+                            String fromTxt = GlobalVal.convertLatLng(getActivity(), fromLat, fromLng);
+
+                            binding.fragmentHomeFromTxt.setText(fromTxt);
+
+                            String toWhereJson = lastRide.optString("toWhere");
+                            double toWhereLat = Double.parseDouble(toWhereJson.substring(0, toWhereJson.indexOf(",")));
+                            double toWhereLng = Double.parseDouble(toWhereJson.substring(toWhereJson.indexOf(" ")));
+                            String destination = GlobalVal.convertLatLng(getActivity(), toWhereLat, toWhereLng);
+
+                            binding.fragmentHomeToTxt.setText(destination);
+
+                            binding.fragmentHomeMilesTxt.setText(new DecimalFormat("##.##").format(miles) + " Miles");
                             binding.fragmentHomeSwipeRefreshLayout.setRefreshing(false);
                         }
-                        JSONArray todaySummery = data.getJSONArray("todaySummary");
+                        JSONArray todaySummery = data.optJSONArray("todaySummary");
 
+                        assert todaySummery != null;
                         if (todaySummery.length() != 0) {
                             settestimonialList(todaySummery);
                         }
@@ -139,7 +159,7 @@ public class HomeFragment extends Fragment implements View.OnClickListener {
                         }
                         binding.fragmentHomeSwipeRefreshLayout.setRefreshing(false);
 
-                    } catch (JSONException e) {
+                    } catch (JSONException | IOException e) {
                         binding.fragmentHomeProgressBar.setVisibility(View.VISIBLE);
                         binding.fragmentHomeSwipeRefreshLayout.setRefreshing(false);
                         e.printStackTrace();
@@ -185,17 +205,15 @@ public class HomeFragment extends Fragment implements View.OnClickListener {
         rideList.clear();
         for (int i = 0; i < data.length(); i++) {
             MyRideClass ride = null;
-            try {
-                JSONObject myData = data.getJSONObject(i);
-                ride = new MyRideClass(myData.getString("updatedAt"),
-                        "Total Fare:   $" + myData.getString("actualFareAmount"),
-                        "Total Miles:   " + myData.getString("miles") + " Miles",
-                        myData.getString("actualTimePassed"), myData.getString("from"),
-                        myData.getString("toWhere"), myData.getString("_id"));
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-//            MyRideClass ride = new MyRideClass(dateRide, priceRide, distanceRide, timeRide, startLocationRide, endLocationRide);
+            JSONObject myData = data.optJSONObject(i);
+            ride = new MyRideClass(myData.optString("updatedAt"),
+                    "Total Fare:   $" + new DecimalFormat("##.##")
+                            .format(myData.optDouble("actualFareAmount")),
+                    "Total Miles:   " + new DecimalFormat("##.##")
+                            .format(myData.optDouble("miles")) + " Miles",
+                    myData.optString("actualTimePassed"), myData.optString("from"),
+                    myData.optString("toWhere"), myData.optString("_id"));
+            //            MyRideClass ride = new MyRideClass(dateRide, priceRide, distanceRide, timeRide, startLocationRide, endLocationRide);
             rideList.add(ride);
         }
         dashboardAdapter.notifyDataSetChanged();

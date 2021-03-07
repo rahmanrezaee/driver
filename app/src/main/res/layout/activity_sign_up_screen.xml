@@ -52,9 +52,9 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_margin="20dp"
-                        android:inputType="text"
                         android:background="@drawable/edit_text_drawable"
                         android:hint="User name"
+                        android:inputType="text"
                         android:padding="10dp"
                         android:singleLine="true" />
 
@@ -65,9 +65,9 @@
                         android:layout_marginLeft="20dp"
                         android:layout_marginRight="20dp"
                         android:layout_marginBottom="20dp"
-                        android:inputType="textEmailAddress"
                         android:background="@drawable/edit_text_drawable"
                         android:hint="Email"
+                        android:inputType="textEmailAddress"
                         android:padding="10dp"
                         android:singleLine="true" />
 
@@ -76,11 +76,11 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginLeft="20dp"
-                        android:inputType="phone"
                         android:layout_marginRight="20dp"
                         android:layout_marginBottom="20dp"
                         android:background="@drawable/edit_text_drawable"
                         android:hint="Contact Number"
+                        android:inputType="phone"
                         android:padding="10dp"
                         android:singleLine="true" />
 
@@ -90,10 +90,10 @@
                         android:layout_height="wrap_content"
                         android:layout_marginLeft="20dp"
                         android:layout_marginRight="20dp"
-                        android:inputType="textPassword"
                         android:layout_marginBottom="20dp"
                         android:background="@drawable/edit_text_drawable"
                         android:hint="Password"
+                        android:inputType="textPassword"
                         android:padding="10dp"
                         android:singleLine="true" />
 
@@ -103,10 +103,10 @@
                         android:layout_height="wrap_content"
                         android:layout_marginLeft="20dp"
                         android:layout_marginRight="20dp"
-                        android:inputType="text"
                         android:layout_marginBottom="20dp"
                         android:background="@drawable/edit_text_drawable"
                         android:hint="Car Type"
+                        android:inputType="text"
                         android:padding="10dp"
                         android:singleLine="true" />
                 </LinearLayout>
@@ -123,7 +123,7 @@
                 android:layout_height="wrap_content">
 
                 <de.hdodenhof.circleimageview.CircleImageView
-                    android:id="@+id/profile_image"
+                    android:id="@+id/signUp_profileImage"
                     android:layout_width="96dp"
                     android:layout_height="96dp"
                     android:layout_centerHorizontal="true"
@@ -381,24 +381,24 @@
                         android:layout_width="60dp"
                         android:layout_height="80dp"
                         android:onClick="onClick"
-                        android:visibility="gone"
-                        android:src="@drawable/driving_license" />
+                        android:src="@drawable/driving_license"
+                        android:visibility="gone" />
 
                     <ImageView
                         android:id="@+id/car_in_image3"
                         android:layout_width="60dp"
                         android:layout_height="80dp"
                         android:onClick="onClick"
-                        android:visibility="gone"
-                        android:src="@drawable/driving_license" />
+                        android:src="@drawable/driving_license"
+                        android:visibility="gone" />
 
                     <ImageView
                         android:id="@+id/car_in_image4"
                         android:layout_width="60dp"
                         android:layout_height="80dp"
                         android:onClick="onClick"
-                        android:visibility="gone"
-                        android:src="@drawable/driving_license" />
+                        android:src="@drawable/driving_license"
+                        android:visibility="gone" />
 
                     <ImageView
                         android:id="@+id/car_in_icon"
@@ -467,40 +467,37 @@
                         android:layout_width="60dp"
                         android:layout_height="80dp"
                         android:onClick="onClick"
-                        android:visibility="gone"
-                        android:src="@drawable/driving_license" />
+                        android:src="@drawable/driving_license"
+                        android:visibility="gone" />
 
                     <ImageView
                         android:id="@+id/car_out_image3"
                         android:layout_width="60dp"
                         android:layout_height="80dp"
                         android:onClick="onClick"
-                        android:visibility="gone"
-                        android:src="@drawable/driving_license" />
+                        android:src="@drawable/driving_license"
+                        android:visibility="gone" />
 
                     <ImageView
                         android:id="@+id/car_out_image4"
                         android:layout_width="60dp"
                         android:layout_height="80dp"
                         android:onClick="onClick"
-                        android:visibility="gone"
-                        android:src="@drawable/driving_license" />
+                        android:src="@drawable/driving_license"
+                        android:visibility="gone" />
 
                     <ImageView
                         android:id="@+id/car_out_icon"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_gravity="center_vertical"
-                        android:onClick="onClick"
                         android:layout_marginLeft="20dp"
+                        android:onClick="onClick"
                         android:src="@drawable/ic_add_circle_black_24dp"
                         android:tint="@color/appColorSecondary" />
+
                 </LinearLayout>
-
-
             </RelativeLayout>
-
-
         </androidx.cardview.widget.CardView>
 
         <TextView
@@ -523,11 +520,10 @@
             android:layout_marginLeft="20dp"
             android:layout_marginRight="20dp"
             android:layout_marginBottom="20dp"
-            android:onClick="onClick"
             android:background="@drawable/button_background"
+            android:onClick="onClick"
             android:text="@string/signup_text"
             android:textColor="@android:color/black" />
 
     </RelativeLayout>
-
 </ScrollView>

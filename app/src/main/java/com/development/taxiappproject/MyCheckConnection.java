@@ -13,7 +13,6 @@ public class MyCheckConnection {
         if (connectivityManager.getNetworkInfo(ConnectivityManager.TYPE_MOBILE).getState() == NetworkInfo.State.CONNECTED ||
                 connectivityManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI).getState() == NetworkInfo.State.CONNECTED) {
             connected = true;
-            Toast.makeText(context, "connection", Toast.LENGTH_SHORT).show();
         } else {
             connected = false;
             Toast.makeText(context, "No connection!", Toast.LENGTH_SHORT).show();

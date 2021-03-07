@@ -32,6 +32,7 @@ import com.android.volley.toolbox.HttpHeaderParser;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 import com.development.taxiappproject.Const.SharedPrefKey;
+import com.development.taxiappproject.Global.GlobalVal;
 import com.development.taxiappproject.Service.MyFirebaseMessagingService;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
@@ -229,11 +230,7 @@ public class OTPScreen extends AppCompatActivity {
         if (code.isEmpty()) {
             Toast.makeText(getApplicationContext(), "Please enter your code", Toast.LENGTH_SHORT).show();
         } else {
-            p = new ProgressDialog(OTPScreen.this);
-            p.setMessage("Please wait...");
-            p.setIndeterminate(false);
-            p.setCancelable(false);
-            p.show();
+            p = GlobalVal.mProgressDialog(OTPScreen.this, p);
             try {
                 PhoneAuthCredential credential = PhoneAuthProvider.getCredential(verificationId, code);
                 signInWithPhoneAuthCredential(credential);
@@ -265,47 +262,61 @@ public class OTPScreen extends AppCompatActivity {
         JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.POST, mURL,
                 null,
                 response -> {
-                    try {
-                        SharedPreferences sharedpreferences = getSharedPreferences(MyPREFERENCES, Context.MODE_PRIVATE);
+                    SharedPreferences sharedpreferences = getSharedPreferences(MyPREFERENCES, Context.MODE_PRIVATE);
+                    String message = response.optString("message");
 
-                        Log.i(TAG, "Mahdi: OTPScreen: signUp: res 0 " + response);
-                        JSONObject data = response.getJSONObject("data");
-                        JSONObject user = data.getJSONObject("user");
-                        String userToken = data.getString("token");
-                        String firebaseToken = data.getString("firebaseToken");
-
-                        String userName = user.getString("username");
-                        String profilePath = user.getString("profilePhoto");
-
-                        String userId = user.getString("_id");
-                        String isOnline = user.getString("isOnline");
-
-                        Log.i(TAG, "Mahdi: OTPScreen: signUp: res 00 " + userId);
-                        Log.i(TAG, "Mahdi: OTPScreen: signUp: res 00 " + isOnline);
-
-                        Log.i(TAG, "Mahdi: OTPScreen: signUp: res 1 " + data);
-                        Log.i(TAG, "Mahdi: OTPScreen: signUp: res 2 " + firebaseToken);
-
-                        SharedPreferences.Editor editor = sharedpreferences.edit();
-
-                        editor.putString(SharedPrefKey.firebaseToken, firebaseToken);
-                        editor.putString(SharedPrefKey.userToken, userToken);
-                        editor.putString(SharedPrefKey.userId, userId);
-                        editor.putString(SharedPrefKey.isOnline, isOnline);
-                        editor.putString(SharedPrefKey.userName, userName);
-                        editor.putString(SharedPrefKey.profilePath, profilePath);
-                        editor.apply();
-
-                        startActivity(new Intent(getApplicationContext(), HomeScreen.class));
-
-                    } catch (JSONException e) {
-                        Log.e("Mahdi", "Mahdi: OTPScreen: signUp: Error 1 " + e);
-                        e.printStackTrace();
+                    if (type.equalsIgnoreCase("signIn") && message.equalsIgnoreCase("New user")) {
+                        Toast.makeText(getApplicationContext(), "Your account not found!", Toast.LENGTH_SHORT).show();
+                        p.hide();
+                        return;
                     }
+
+                    Log.i(TAG, "Mahdi: OTPScreen: signUp: res 0 " + response);
+                    JSONObject data = response.optJSONObject("data");
+
+                    JSONObject user = data.optJSONObject("user");
+                    String userToken = data.optString("token");
+                    String firebaseToken = data.optString("firebaseToken");
+
+                    String userName = user.optString("username");
+                    String profilePath = user.optString("profilePhoto");
+
+                    String userId = user.optString("_id");
+                    String isOnline = user.optString("isOnline");
+
+                    Log.i(TAG, "Mahdi: OTPScreen: signUp: res 00 " + userId);
+                    Log.i(TAG, "Mahdi: OTPScreen: signUp: res 00 " + isOnline);
+
+                    Log.i(TAG, "Mahdi: OTPScreen: signUp: res 1 " + data);
+                    Log.i(TAG, "Mahdi: OTPScreen: signUp: res 2 " + firebaseToken);
+
+                    SharedPreferences.Editor editor = sharedpreferences.edit();
+
+                    editor.putString(SharedPrefKey.firebaseToken, firebaseToken);
+                    editor.putString(SharedPrefKey.userToken, userToken);
+                    editor.putString(SharedPrefKey.userId, userId);
+                    editor.putString(SharedPrefKey.isOnline, isOnline);
+                    editor.putString(SharedPrefKey.userName, userName);
+                    editor.putString(SharedPrefKey.profilePath, profilePath);
+                    editor.apply();
+
+                    startActivity(new Intent(getApplicationContext(), HomeScreen.class));
+
                     p.hide();
                 }, error -> {
             p.hide();
-            Log.e("Mahdi", "Mahdi: OTPScreen: signUp: Error 2 " + error);
+
+            String responseBody = null;
+            try {
+                responseBody = new String(error.networkResponse.data, "utf-8");
+                JSONObject data = new JSONObject(responseBody);
+                Log.i(TAG, "Mahdi: OTPScreen: signUp: Error 2 " + data);
+                Toast.makeText(getApplicationContext(), data.optString("message"), Toast.LENGTH_LONG).show();
+            } catch (UnsupportedEncodingException | JSONException e) {
+                e.printStackTrace();
+                Toast.makeText(getApplicationContext(), "Something went wrong!", Toast.LENGTH_LONG).show();
+            }
+            Log.e("Mahdi", "Mahdi: OTPScreen: signUp: Error 2 " + error.getMessage());
         }) {
             @Override
             public String getBodyContentType() {

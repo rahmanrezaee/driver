@@ -22,6 +22,7 @@ import com.android.volley.toolbox.HttpHeaderParser;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 import com.development.taxiappproject.Const.SharedPrefKey;
+import com.development.taxiappproject.Global.GlobalVal;
 import com.development.taxiappproject.databinding.ActivityTripTrackingBinding;
 
 import org.json.JSONException;
@@ -65,11 +66,7 @@ public class TripTracking extends AppCompatActivity {
 
         switch (view.getId()) {
             case R.id.tripTracking_paidAndComp_btn:
-                p = new ProgressDialog(TripTracking.this);
-                p.setMessage("Please wait...");
-                p.setIndeterminate(false);
-                p.setCancelable(false);
-                p.show();
+                p = GlobalVal.mProgressDialog(TripTracking.this, p);
 
                 if (tripTrackingBinding.tripTrackingPaidAndCompBtn.getText().toString().equalsIgnoreCase("Paid and Start Ride")) {
                     paidAndComp("paid");

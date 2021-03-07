@@ -14,9 +14,11 @@ import com.development.taxiappproject.Const.SharedPrefKey;
 import com.development.taxiappproject.Service.MyFirebaseMessagingService;
 import com.development.taxiappproject.Service.TestService;
 import com.development.taxiappproject.databinding.ActivityHomeScreenBinding;
+import com.github.nkzawa.emitter.Emitter;
 import com.github.nkzawa.engineio.client.transports.WebSocket;
 import com.github.nkzawa.socketio.client.IO;
 import com.github.nkzawa.socketio.client.Socket;
+import com.google.firebase.auth.FirebaseAuth;
 import com.squareup.picasso.Picasso;
 
 import androidx.appcompat.app.ActionBarDrawerToggle;
@@ -38,6 +40,7 @@ import java.net.URISyntaxException;
 import de.hdodenhof.circleimageview.CircleImageView;
 
 import static com.development.taxiappproject.Const.ConstantValue.socketBaseUrl;
+import static com.development.taxiappproject.Service.MyFirebaseMessagingService.fcmToken;
 
 public class HomeScreen extends AppCompatActivity implements View.OnClickListener {
     private TextView navMenuGoTxt, profileTxt;
@@ -81,7 +84,39 @@ public class HomeScreen extends AppCompatActivity implements View.OnClickListene
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        mSocket.on(Socket.EVENT_CONNECT, new Emitter.Listener() {
+
+            @Override
+            public void call(Object... args) {
+                Log.i(TAG, "Mahdi: Socket Connected: ");
+            }
+
+        }).on(Socket.EVENT_DISCONNECT, new Emitter.Listener() {
+
+            @Override
+            public void call(Object... args) {
+                Log.i(TAG, "Mahdi: Socket DISCONNECT: ");
+            }
+
+        }).on(Socket.EVENT_CONNECT_ERROR, new Emitter.Listener() {
+            @Override
+            public void call(Object... args) {
+                Log.i(TAG, "Mahdi: Socket EVENT_CONNECT_ERROR: ");
+            }
+        }).on(Socket.EVENT_CONNECT_TIMEOUT, new Emitter.Listener() {
+            @Override
+            public void call(Object... args) {
+                Log.i(TAG, "Mahdi: Socket EVENT_CONNECT_TIMEOUT: ");
+            }
+        }).on("ride", new Emitter.Listener() {
+            @Override
+            public void call(Object... args) {
+                Log.i(TAG, "Mahdi: Socket ride: " + args[0]);
+            }
+        });
+
         mSocket.connect();
+
         sharedPreferences = getSharedPreferences(OTPScreen.MyPREFERENCES, Context.MODE_PRIVATE);
         String userToken = sharedPreferences.getString(SharedPrefKey.userToken, "defaultValue");
         String firebaseToken = sharedPreferences.getString(SharedPrefKey.firebaseToken, "defaultValue");
@@ -91,7 +126,8 @@ public class HomeScreen extends AppCompatActivity implements View.OnClickListene
 
         String switchFlag = sharedPreferences.getString("isOnline", "null");
 
-        boolean switchFlagBool = switchFlag.equalsIgnoreCase("null") ? false : true;
+        assert switchFlag != null;
+        boolean switchFlagBool = switchFlag.equalsIgnoreCase("true");
 
         Log.i(TAG, "Mahdi: HomeScreen: 4 " + switchFlagBool + switchFlag);
 
@@ -296,9 +332,13 @@ public class HomeScreen extends AppCompatActivity implements View.OnClickListene
                 break;
 
             case R.id.navMenu_logOut_btn:
+                FirebaseAuth.getInstance().signOut();
                 SharedPreferences preferences = getSharedPreferences(OTPScreen.MyPREFERENCES, Context.MODE_PRIVATE);
+                String getFcmToken = sharedPreferences.getString(fcmToken, "defaultValue");
+                Log.i(TAG, "HomeScreen: LogOut btn: " + getFcmToken);
                 SharedPreferences.Editor editor = preferences.edit();
                 editor.clear();
+                editor.putString(fcmToken, getFcmToken);
                 editor.apply();
                 Intent intent = new Intent(HomeScreen.this, LoginScreen.class);
                 startActivity(intent);
