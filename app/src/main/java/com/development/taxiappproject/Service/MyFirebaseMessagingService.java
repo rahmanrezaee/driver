@@ -64,6 +64,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                 Intent intent = new Intent(MyFirebaseMessagingService.this, NewRideRequest.class);
 
                 intent.putExtra("rideId", remoteMessage.getData().get("rideId"));
+                intent.putExtra("user", remoteMessage.getData().get("user"));
                 intent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);
 
                 PendingIntent localIntent = PendingIntent.getActivity(MyFirebaseMessagingService.this,
@@ -102,7 +103,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
             } catch (Exception e) {
                 Log.e(TAG, "Mahdi: onMessageReceived: error: 1 ", e);
             }
-        }catch (Exception e){
+        } catch (Exception e) {
             Log.e(TAG, "Mahdi: onMessageReceived: error: 2 ", e);
         }
     }

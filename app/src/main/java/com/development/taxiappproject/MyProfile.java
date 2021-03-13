@@ -85,6 +85,7 @@ public class MyProfile extends AppCompatActivity {
 
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     @Override
     protected void onStart() {
         super.onStart();
@@ -144,6 +145,7 @@ public class MyProfile extends AppCompatActivity {
                         String carPlateNumber = data.optString("carPlateNumber");
                         String email = data.optString("email");
                         String profilePhoto = data.optString("profilePhoto");
+                        String _id = data.optString("_id");
 
                         profileBinding.myProfileNameTxt.setText(userName);
                         profileBinding.myProfilePlateNoTxt.setText("PlateNo: " + carPlateNumber);
@@ -153,18 +155,18 @@ public class MyProfile extends AppCompatActivity {
                         userInfo.put("carPlateNumber", carPlateNumber);
                         userInfo.put("email", email);
                         userInfo.put("profilePhoto", profilePhoto);
+                        userInfo.put("_id", _id);
 
                         JSONObject dl = data.optJSONObject("DL");
                         JSONObject registration = data.optJSONObject("Registration");
                         JSONObject insurance = data.optJSONObject("Insurance");
 
-                        JSONObject carInside = data.optJSONObject("CarInside");
-                        JSONObject carOutside = data.optJSONObject("CarOutside");
+                        JSONArray carInside = data.optJSONArray("CarInside");
+                        JSONArray carOutside = data.optJSONArray("CarOutside");
 
                         userInfo.put("DL", dl);
                         userInfo.put("Registration", registration);
                         userInfo.put("Insurance", insurance);
-
 
                         userInfo.put("CarInside", carInside);
                         userInfo.put("CarOutside", carOutside);
@@ -239,12 +241,12 @@ public class MyProfile extends AppCompatActivity {
     }
 
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
-    public static void setMultiImageView(JSONObject mJsonObject, List<ImageView> imageViews) {
+    public static void setMultiImageView(JSONArray mJsonObject, List<ImageView> imageViews) {
         Log.i(TAG, "setMultiImageView: Mahdi: " + mJsonObject);
         try {
-            Log.i(TAG, "setMultiImageView: Mahdi: " + mJsonObject.optJSONArray("uriPath"));
-            for (int i = 0; i < mJsonObject.optJSONArray("uriPath").length(); i++) {
-                Picasso.get().load(mJsonObject.optJSONArray("uriPath").getString(i)).into(imageViews.get(i));
+            Log.i(TAG, "setMultiImageView: Mahdi: " + mJsonObject);
+            for (int i = 0; i < mJsonObject.length(); i++) {
+                Picasso.get().load(mJsonObject.getString(i)).into(imageViews.get(i));
             }
         } catch (JSONException e) {
             Log.i(TAG, "setMultiImageView: Mahdi: Error " + e.getMessage());

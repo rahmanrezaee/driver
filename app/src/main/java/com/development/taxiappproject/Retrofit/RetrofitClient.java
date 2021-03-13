@@ -22,7 +22,7 @@ public class RetrofitClient {
                     .connectTimeout(100, TimeUnit.SECONDS)
                     .writeTimeout(100, TimeUnit.SECONDS)
                     .readTimeout(100, TimeUnit.SECONDS)
-                    .protocols(Util.immutableList(Protocol.HTTP_1_1))
+//                    .protocols(Util.immutableList(Protocol.HTTP_1_1))
                     .build();
 //            OkHttpClient client = new OkHttpClient.Builder()
 //                    .connectTimeout(100, TimeUnit.SECONDS)
@@ -39,6 +39,7 @@ public class RetrofitClient {
         }
         return ourInstance;
     }
+
     private RetrofitClient() {
     }
 }

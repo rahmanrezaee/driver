@@ -93,7 +93,6 @@ public class OTPScreen extends AppCompatActivity {
         editText6 = findViewById(R.id.edit6);
         mAuth = FirebaseAuth.getInstance();
         editTextFocusListener();
-//        pasteText();
 
         if (!MyCheckConnection.mCheckConnectivity(OTPScreen.this)) {
             return;
@@ -137,7 +136,6 @@ public class OTPScreen extends AppCompatActivity {
 //    }
 
     private void startPhoneNumberVerification(String phoneNumber) {
-
         PhoneAuthOptions options =
                 PhoneAuthOptions.newBuilder(mAuth)
                         .setPhoneNumber(phoneNumber)       // Phone number to verify
@@ -146,7 +144,6 @@ public class OTPScreen extends AppCompatActivity {
                         .setCallbacks(mCallbacks)          // OnVerificationStateChangedCallbacks
                         .build();
         PhoneAuthProvider.verifyPhoneNumber(options);
-
     }
 
     // [START resend_verification]
@@ -155,7 +152,7 @@ public class OTPScreen extends AppCompatActivity {
         PhoneAuthOptions options =
                 PhoneAuthOptions.newBuilder(mAuth)
                         .setPhoneNumber(phoneNumber)       // Phone number to verify
-                        .setTimeout(60L, TimeUnit.SECONDS) // Timeout and unit
+                        .setTimeout(60L, TimeUnit.SECONDS) // Tximeout and unit
                         .setActivity(this)                 // Activity (for callback binding)
                         .setCallbacks(mCallbacks)          // OnVerificationStateChangedCallbacks
                         .setForceResendingToken(token)     // ForceResendingToken from callbacks
@@ -230,7 +227,7 @@ public class OTPScreen extends AppCompatActivity {
         if (code.isEmpty()) {
             Toast.makeText(getApplicationContext(), "Please enter your code", Toast.LENGTH_SHORT).show();
         } else {
-            p = GlobalVal.mProgressDialog(OTPScreen.this, p);
+            p = GlobalVal.mProgressDialog(OTPScreen.this, p, "Please wait...");
             try {
                 PhoneAuthCredential credential = PhoneAuthProvider.getCredential(verificationId, code);
                 signInWithPhoneAuthCredential(credential);
@@ -296,10 +293,16 @@ public class OTPScreen extends AppCompatActivity {
                     editor.putString(SharedPrefKey.userToken, userToken);
                     editor.putString(SharedPrefKey.userId, userId);
                     editor.putString(SharedPrefKey.isOnline, isOnline);
+
                     editor.putString(SharedPrefKey.userName, userName);
                     editor.putString(SharedPrefKey.profilePath, profilePath);
+
                     editor.apply();
 
+                    if (type.equalsIgnoreCase("signUp")) {
+                        Toast.makeText(getApplicationContext(), "Your profile successfully registered! and must be approved", Toast.LENGTH_SHORT).show();
+                        startActivity(new Intent(getApplicationContext(), LoginScreen.class));
+                    }
                     startActivity(new Intent(getApplicationContext(), HomeScreen.class));
 
                     p.hide();
@@ -389,27 +392,13 @@ public class OTPScreen extends AppCompatActivity {
                                     final String requestBody = jsonObject.toString();
                                     signUpAndSignInToServer(requestBody, idToken, type);
                                 }
-
-                                //Do whatever
                                 Log.d(TAG, "GetTokenResult result = " + idToken);
                             });
-
-                            // [START_EXCLUDE]
-//                            updateUI(STATE_SIGNIN_SUCCESS, user);
-                            // [END_EXCLUDE]
                         } else {
                             p.hide();
                             if (task.getException() instanceof FirebaseAuthInvalidCredentialsException) {
                                 Toast.makeText(getApplicationContext(), "Your code is not correct!", Toast.LENGTH_SHORT).show();
-                                // The verification code entered was invalid
-                                // [START_EXCLUDE silent]
-//                                mBinding.fieldVerificationCode.setError("Invalid code.");
-                                // [END_EXCLUDE]
                             }
-                            // [START_EXCLUDE silent]
-                            // Update UI
-//                            updateUI(STATE_SIGNIN_FAILED);
-                            // [END_EXCLUDE]
                         }
                     }
                 });

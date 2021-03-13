@@ -54,7 +54,7 @@
                 android:name="com.google.android.gms.maps.SupportMapFragment"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                tools:context=".NewRideRequest" />
+                tools:context=".TripTracking" />
 
             <LinearLayout
                 android:id="@+id/btn_layout"
@@ -95,6 +95,7 @@
                 android:weightSum="1">
 
                 <TextView
+                    android:id="@+id/tripTracking_price_txt"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="0.3"
@@ -112,6 +113,7 @@
 
 
                 <TextView
+                    android:id="@+id/tripTracking_miles_txt"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="0.3"
@@ -127,6 +129,7 @@
                     android:background="@color/view_background" />
 
                 <TextView
+                    android:id="@+id/tripTracking_minutes_txt"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="0.3"
@@ -149,6 +152,7 @@
                 android:weightSum="1">
 
                 <TextView
+                    android:id="@+id/tripTracking_from_txt"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="0.4"
@@ -170,6 +174,7 @@
                     android:textStyle="bold" />
 
                 <TextView
+                    android:id="@+id/tripTracking_to_txt"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="0.4"
@@ -194,6 +199,7 @@
                 android:padding="10dp">
 
                 <TextView
+                    android:id="@+id/tripTracking_passengerName_txt"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_marginLeft="10dp"
@@ -202,6 +208,7 @@
                     android:textColor="@android:color/black" />
 
                 <TextView
+                    android:id="@+id/tripTracking_userTimePicked_txt"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginRight="10dp"
@@ -217,10 +224,12 @@
             android:orientation="horizontal">
 
             <Button
+                android:id="@+id/tripTracking_call_btn"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginRight="10dp"
                 android:layout_weight="1"
+                android:onClick="onClick"
                 android:background="@drawable/button_background"
                 android:text="CALL USER"
                 android:textColor="@android:color/black" />

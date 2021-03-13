@@ -1,12 +1,19 @@
 package com.development.taxiappproject;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.databinding.DataBindingUtil;
 
+import android.Manifest;
 import android.app.ProgressDialog;
+import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -24,6 +31,17 @@ import com.android.volley.toolbox.Volley;
 import com.development.taxiappproject.Const.SharedPrefKey;
 import com.development.taxiappproject.Global.GlobalVal;
 import com.development.taxiappproject.databinding.ActivityTripTrackingBinding;
+import com.development.taxiappproject.helper.FetchURL;
+import com.development.taxiappproject.helper.TaskLoadedCallback;
+import com.google.android.gms.location.LocationListener;
+import com.google.android.gms.maps.CameraUpdateFactory;
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.Polyline;
+import com.google.android.gms.maps.model.PolylineOptions;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -33,15 +51,29 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static com.development.taxiappproject.Const.ConstantValue.baseUrl;
+import static com.development.taxiappproject.Global.GlobalVal.GOOGLE_MAP_API_KEY;
 import static com.development.taxiappproject.OTPScreen.MyPREFERENCES;
 
-public class TripTracking extends AppCompatActivity {
+public class TripTracking extends AppCompatActivity implements OnMapReadyCallback, TaskLoadedCallback {
+    private static final int MY_PERMISSIONS_REQUEST_CALL_PHONE = 99;
     private ActivityTripTrackingBinding tripTrackingBinding;
     private String TAG = "MAHDI";
     String userToken;
     String id;
     SharedPreferences sharedPreferences;
     ProgressDialog p;
+    private GoogleMap mMap;
+
+    MarkerOptions place1, place2;
+
+    //    Polyline driverPolyLine;
+    Polyline currentPolyLine;
+    JSONObject notificationData;
+
+    @Override
+    public void onMapReady(GoogleMap googleMap) {
+        mMap = googleMap;
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,18 +87,30 @@ public class TripTracking extends AppCompatActivity {
 
         Bundle extras = getIntent().getExtras();
         id = extras.getString("rideId");
+        try {
+            notificationData = new JSONObject(extras.getString("Data"));
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        tripTrackingBinding.tripTrackingPassengerNameTxt.setText(notificationData.optString("Data"));
 
         sharedPreferences = getSharedPreferences(MyPREFERENCES, Context.MODE_PRIVATE);
         userToken = sharedPreferences.getString(SharedPrefKey.userToken, "defaultValue");
 
+        // Obtain the SupportMapFragment and get notified when the map is ready to be used.
+        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
+                .findFragmentById(R.id.map);
+        mapFragment.getMapAsync(this);
+
         Log.i(TAG, "Mahdi: TripTracking: onCreate: 1 " + id + " : " + extras);
+        getSingleRideItem(userToken, id);
     }
 
     public void onClick(View view) {
 
         switch (view.getId()) {
             case R.id.tripTracking_paidAndComp_btn:
-                p = GlobalVal.mProgressDialog(TripTracking.this, p);
+                p = GlobalVal.mProgressDialog(TripTracking.this, p, "Please wait...");
 
                 if (tripTrackingBinding.tripTrackingPaidAndCompBtn.getText().toString().equalsIgnoreCase("Paid and Start Ride")) {
                     paidAndComp("paid");
@@ -78,7 +122,145 @@ public class TripTracking extends AppCompatActivity {
             case R.id.tripTracking_back_btn:
                 finish();
                 break;
+
+            case R.id.tripTracking_call_btn:
+                try {
+                    Intent callIntent = new Intent(Intent.ACTION_CALL);
+                    callIntent.setData(Uri.parse("tel:" + notificationData.optString("phone")));
+                    if (ContextCompat.checkSelfPermission(TripTracking.this,
+                            Manifest.permission.CALL_PHONE)
+                            != PackageManager.PERMISSION_GRANTED) {
+
+                        ActivityCompat.requestPermissions(TripTracking.this,
+                                new String[]{Manifest.permission.CALL_PHONE},
+                                MY_PERMISSIONS_REQUEST_CALL_PHONE);
+
+                        // MY_PERMISSIONS_REQUEST_CALL_PHONE is an
+                        // app-defined int constant. The callback method gets the
+                        // result of the request.
+                    } else {
+                        //You already have permission
+                        try {
+                            startActivity(callIntent);
+                        } catch (SecurityException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                } catch (ActivityNotFoundException activityException) {
+                    Log.e("Calling a Phone Number", "Call failed", activityException);
+                    Toast.makeText(getApplicationContext(), "Call failed", Toast.LENGTH_SHORT).show();
+                }
+                break;
         }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        switch (requestCode) {
+            case MY_PERMISSIONS_REQUEST_CALL_PHONE: {
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    Intent callIntent = new Intent(Intent.ACTION_CALL);
+                    callIntent.setData(Uri.parse("tel:" + notificationData.optString("phone")));
+                    startActivity(callIntent);
+                    // permission was granted, yay! Do the phone call
+
+                } else {
+
+                    // permission denied, boo! Disable the
+                    // functionality that depends on this permission.
+                }
+                return;
+            }
+            // other 'case' lines to check for other
+            // permissions this app might request
+        }
+    }
+
+    public void getSingleRideItem(String userToken, String rideId) {
+        RequestQueue requestQueue = Volley.newRequestQueue(TripTracking.this);
+        String mURL = baseUrl + "/ride/list/" + rideId;
+
+        Log.i(TAG, "Mahdi: TripTracking:  getSingleRideItem: 1 " + userToken);
+        Log.i(TAG, "Mahdi: TripTracking:  getSingleRideItem: 10 " + mURL);
+
+        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, mURL,
+                null,
+                response -> {
+                    Log.i(TAG, "Mahdi: TripTracking:  getSingleRideItem: res 0 " + response);
+                    JSONObject data = response.optJSONObject("data");
+
+//                        JSONObject singleRide = data.getJSONObject();
+
+                    Log.i(TAG, "Mahdi: TripTracking:  getSingleRideItem: res 00 " + data);
+                    Log.i(TAG, "Mahdi: TripTracking:  getSingleRideItem: res 01 " + data.optString("actualFareAmount")
+                            + " : ");
+
+                    assert data != null;
+                    tripTrackingBinding.tripTrackingPriceTxt.setText("$ " + data.optString("actualFareAmount"));
+                    tripTrackingBinding.tripTrackingMilesTxt.setText(data.optString("miles") + " Miles");
+                    tripTrackingBinding.tripTrackingMinutesTxt.setText(data.optString("actualTimePassed") + " Mins");
+                    tripTrackingBinding.tripTrackingFromTxt.setText(data.optString("fromLabel"));
+                    tripTrackingBinding.tripTrackingToTxt.setText(data.optString("toWhereLabel"));
+                    tripTrackingBinding.tripTrackingUserTimePickedTxt.setText(data.optString("eta"));
+//                        requestBinding.completeRidingTimeStartTxt.setText(singleRide.getString("paidIn"));
+//                        ridingBinding.completeRidingTimeEndTxt.setText(singleRide.getString("updatedAt"));
+
+                    //************************************************************
+
+                    String fromJson = data.optString("from");
+                    double fromLat = Double.parseDouble(fromJson.substring(0, fromJson.indexOf(",")));
+                    double fromLng = Double.parseDouble(fromJson.substring(fromJson.indexOf(" ")));
+
+                    String toWhereJson = data.optString("toWhere");
+                    double toWhereLat = Double.parseDouble(toWhereJson.substring(0, toWhereJson.indexOf(",")));
+                    double toWhereLng = Double.parseDouble(toWhereJson.substring(toWhereJson.indexOf(" ")));
+
+                    place1 = new MarkerOptions().position(new LatLng(fromLat, fromLng)).title("Origin");
+                    place2 = new MarkerOptions().position(new LatLng(toWhereLat, toWhereLng)).title("Destination");
+
+                    new FetchURL(TripTracking.this).execute("https://maps.googleapis.com/maps/api/directions/json?origin=" +
+                            place1.getPosition().latitude + "," + place1.getPosition().longitude
+                            + "&destination=" + place2.getPosition().latitude + "," + place2.getPosition().longitude +
+                            "&key=" + GOOGLE_MAP_API_KEY, "driving");
+
+                    mMap.addMarker(new MarkerOptions().position(place1.getPosition()).title("Origin"));
+                    mMap.addMarker(new MarkerOptions().position(place2.getPosition()).title("Destination"));
+                    mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(place1.getPosition(), 14f));
+
+                }, error -> {
+//            ridingBinding.completeRidingProgressBar.setVisibility(View.GONE);
+            Toast.makeText(getApplicationContext(), "Not connection!", Toast.LENGTH_SHORT).show();
+            Log.e("Mahdi", "Mahdi: TripTracking:  getSingleRideItem: Error 1 " + error.getMessage());
+        }) {
+            @Override
+            public String getBodyContentType() {
+                return "application/json; charset=utf-8";
+            }
+
+            @Override
+            public Map<String, String> getHeaders() {
+                Map<String, String> params = new HashMap<>();
+                params.put("token", userToken);
+                return params;
+            }
+
+            @Override
+            protected Response parseNetworkResponse(NetworkResponse response) {
+                try {
+                    Log.i(TAG, "Mahdi: TripTracking:  getSingleRideItem: res 1 " + response.data);
+                    String jsonString = new String(response.data, HttpHeaderParser.parseCharset(response.headers));
+                    return Response.success(new JSONObject(jsonString), HttpHeaderParser.parseCacheHeaders(response));
+                } catch (UnsupportedEncodingException e) {
+                    return Response.error(new ParseError(e));
+                } catch (JSONException je) {
+                    return Response.error(new ParseError(je));
+                }
+            }
+        };
+        requestQueue.add(jsonObjectRequest);
     }
 
     public void paidAndComp(String status) {
@@ -164,5 +346,13 @@ public class TripTracking extends AppCompatActivity {
             }
         };
         requestQueue.add(jsonObjectRequest);
+    }
+
+    @Override
+    public void onTaskDone(Object... values) {
+        if (currentPolyLine != null) {
+            currentPolyLine.remove();
+        }
+        currentPolyLine = mMap.addPolyline((PolylineOptions) values[0]);
     }
 }

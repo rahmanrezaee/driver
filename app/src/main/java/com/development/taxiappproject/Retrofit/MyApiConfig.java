@@ -36,7 +36,6 @@ public interface MyApiConfig {
     @Multipart
     @POST("upload")
     Observable<Response<ResponseBody>> uploadSingleImage(
-            @Header("token") String userToken,
             @Part MultipartBody.Part file,
             @Part("category") RequestBody documents,
             @Part("token") RequestBody token,

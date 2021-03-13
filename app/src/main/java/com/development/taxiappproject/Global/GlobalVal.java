@@ -10,6 +10,8 @@ import java.util.List;
 import java.util.Locale;
 
 public class GlobalVal {
+    public static final String GOOGLE_MAP_API_KEY = "AIzaSyBY1nLDcGY1NNgV89rnDR8jg_eBsQBJ39E";
+
     public static String convertLatLng(Context context, double latitude, double longitude) throws IOException {
         Geocoder geocoder;
         List<Address> addresses;
@@ -26,9 +28,9 @@ public class GlobalVal {
         return address;
     }
 
-    public static ProgressDialog mProgressDialog(Context context, ProgressDialog progressDialog) {
+    public static ProgressDialog mProgressDialog(Context context, ProgressDialog progressDialog, String message) {
         progressDialog = new ProgressDialog(context);
-        progressDialog.setMessage("Please wait...");
+        progressDialog.setMessage(message);
         progressDialog.setIndeterminate(false);
         progressDialog.setCancelable(false);
         progressDialog.show();

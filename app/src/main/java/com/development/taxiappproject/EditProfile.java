@@ -12,6 +12,7 @@ import android.annotation.SuppressLint;
 import android.app.ProgressDialog;
 import android.content.ClipData;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -39,6 +40,7 @@ import com.android.volley.ParseError;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
+import com.android.volley.VolleyLog;
 import com.android.volley.toolbox.HttpHeaderParser;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
@@ -51,6 +53,7 @@ import com.development.taxiappproject.databinding.ActivityEditProfileBinding;
 import com.squareup.picasso.Picasso;
 import com.yalantis.ucrop.util.FileUtils;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -85,7 +88,8 @@ public class EditProfile extends AppCompatActivity {
     ActivityEditProfileBinding editProfileBinding;
     private final int PERMISSION_REQUEST_CODE_CAMERA = 1;
     private final int PERMISSION_REQUEST_CODE_GALLERY = 2;
-    String userName, email, contactNumber, plateNo, profilePhoto;
+    private final int PERMISSION_REQUEST_CODE_WRITE_GALLERY = 3;
+    String userName, email, contactNumber, plateNo, profilePhoto, _id;
 
     MyApiConfig apiConfig1;
     CompositeDisposable compositeDisposable = new CompositeDisposable();
@@ -94,8 +98,6 @@ public class EditProfile extends AppCompatActivity {
     JSONObject uploadUserInfo = new JSONObject();
 
     ProgressDialog p;
-
-    private boolean isUploading = false;
 
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     @Override
@@ -109,8 +111,10 @@ public class EditProfile extends AppCompatActivity {
 
         Bundle extra = getIntent().getExtras();
         String mUserInfo = extra.getString("userInfo");
+        Log.i(TAG, "EditProfile: onCreate: " + mUserInfo);
         try {
             userInfo = new JSONObject(mUserInfo);
+            _id = userInfo.optString("_id");
             userName = userInfo.optString("username");
             email = userInfo.optString("email");
             plateNo = userInfo.optString("carPlateNumber");
@@ -130,8 +134,8 @@ public class EditProfile extends AppCompatActivity {
             setImageView(registration, editProfileBinding.editProfileRegistrationImage);
             setImageView(insurance, editProfileBinding.editProfileInsuranceImage);
 
-            JSONObject carInside = userInfo.optJSONObject("CarInside");
-            JSONObject carOutside = userInfo.optJSONObject("CarOutside");
+            JSONArray carInside = userInfo.optJSONArray("CarInside");
+            JSONArray carOutside = userInfo.optJSONArray("CarOutside");
 
             List<ImageView> carInsideViews = new ArrayList<>();
             carInsideViews.add(editProfileBinding.editProfileCarInImage1);
@@ -162,15 +166,21 @@ public class EditProfile extends AppCompatActivity {
         }
         Retrofit retrofit = RetrofitClient.getInstance();
         apiConfig1 = retrofit.create(MyApiConfig.class);
+
+        if (checkPermissionWriteGallery()) {
+
+        } else {
+            requestPermissionWriteGallery();
+        }
     }
 
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
-    public static void setMultiImageView(JSONObject mJsonObject, List<ImageView> imageViews) {
+    public static void setMultiImageView(JSONArray mJsonObject, List<ImageView> imageViews) {
         Log.i(TAG, "setMultiImageView: Mahdi: " + mJsonObject);
         try {
-            Log.i(TAG, "setMultiImageView: Mahdi: " + mJsonObject.optJSONArray("uriPath"));
-            for (int i = 0; i < mJsonObject.optJSONArray("uriPath").length(); i++) {
-                Picasso.get().load(mJsonObject.optJSONArray("uriPath").getString(i)).into(imageViews.get(i));
+            Log.i(TAG, "setMultiImageView: Mahdi: " + mJsonObject);
+            for (int i = 0; i < mJsonObject.length(); i++) {
+                Picasso.get().load(mJsonObject.getString(i)).into(imageViews.get(i));
             }
         } catch (JSONException e) {
             Log.i(TAG, "setMultiImageView: Mahdi: Error " + e.getMessage());
@@ -219,14 +229,14 @@ public class EditProfile extends AppCompatActivity {
 
             case R.id.editProfile_edit_btn:
                 if (validate()) {
-                    if (isUploading) {
-                        Toast.makeText(getApplicationContext(), "Uploading image please wait...", Toast.LENGTH_SHORT).show();
-                        return;
-                    }
+//                    if (isUploading) {
+//                        Toast.makeText(getApplicationContext(), "Uploading image please wait...", Toast.LENGTH_SHORT).show();
+//                        return;
+//                    }
 
                     final String requestBody = uploadUserInfo.toString();
                     updateProfile(requestBody);
-                    p = GlobalVal.mProgressDialog(EditProfile.this, p);
+                    p = GlobalVal.mProgressDialog(EditProfile.this, p, "Uploading profile...");
                 }
                 break;
         }
@@ -236,25 +246,28 @@ public class EditProfile extends AppCompatActivity {
         RequestQueue requestQueue = Volley.newRequestQueue(EditProfile.this);
         String mURL;
 
-        mURL = baseUrl + "/driver/profile/";
-        Log.i(TAG, "MahdiMahdi: TripTracking: sendRequest: 2 " + userToken);
+//        requestBody
 
-        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.POST, mURL,
+        mURL = baseUrl + "/driver/profile/" + _id;
+        Log.i(TAG, "Mahdi: EditProfile: sendRequest: 1 " + requestBody);
+        Log.i(TAG, "Mahdi: EditProfile: sendRequest: 2 " + userToken);
+        Log.i(TAG, "Mahdi: EditProfile: sendRequest: 3 " + mURL);
+
+        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.PUT, mURL,
                 null,
                 response -> {
                     try {
-                        Log.i(TAG, "Mahdi: TripTracking: sendRequest: res 0 " + response);
-
+                        Log.i(TAG, "Mahdi: EditProfile: sendRequest: res 0 " + response);
+                        Toast.makeText(getApplicationContext(), response.getString("message"), Toast.LENGTH_SHORT).show();
                         p.hide();
-
-                        Toast.makeText(EditProfile.this, response.getString("message"), Toast.LENGTH_SHORT).show();
+                        finish();
                     } catch (JSONException e) {
                         p.hide();
                         e.printStackTrace();
                     }
                 }, error -> {
             p.hide();
-            Log.e("Mahdi", "Mahdi: TripTracking: sendRequest: Error 0 " + error.getMessage());
+            Log.e("Mahdi", "Mahdi: EditProfile: sendRequest: Error 0 " + error);
         }) {
             @Override
             public String getBodyContentType() {
@@ -264,32 +277,30 @@ public class EditProfile extends AppCompatActivity {
             @Override
             public Map<String, String> getHeaders() {
                 Map<String, String> params = new HashMap<>();
-                params.put("Content-Type", "application/json");
+                params.put("Content-Type", "application/json; charset=utf-8");
+//                params.put("Content-Type", "application/json");
                 params.put("token", userToken);
                 return params;
             }
 
             @Override
-            protected Map<String, String> getParams() throws AuthFailureError {
-                return super.getParams();
-            }
-
-            @Override
             public byte[] getBody() {
-                return null;
+                try {
+                    return requestBody == null ? null : requestBody.getBytes("utf-8");
+                } catch (UnsupportedEncodingException uee) {
+                    VolleyLog.wtf("Unsupported Encoding while trying to get the bytes of %s using %s", requestBody, "utf-8");
+                    return null;
+                }
             }
 
             @Override
             protected Response parseNetworkResponse(NetworkResponse response) {
                 try {
-                    Log.i(TAG, "Mahdi: TripTracking: sendRequest: res 1 " + response.data);
+                    Log.i(TAG, "Mahdi: EditProfile: updateProfile: res 1 " + response.data);
                     String jsonString = new String(response.data, HttpHeaderParser.parseCharset(response.headers));
                     return Response.success(new JSONObject(jsonString), HttpHeaderParser.parseCacheHeaders(response));
-                } catch (UnsupportedEncodingException e) {
+                } catch (UnsupportedEncodingException | JSONException e) {
                     return Response.error(new ParseError(e));
-                } catch (JSONException je) {
-                    Log.e("Mahdi", "Mahdi: TripTracking: sendRequest: Error 1 " + je.getMessage());
-                    return Response.error(new ParseError(je));
                 }
             }
         };
@@ -302,12 +313,19 @@ public class EditProfile extends AppCompatActivity {
         compositeDisposable.clear();
     }
 
-    private void uploadImage(String typeDocument, File globalFileName) {
-        Log.i(TAG, "Mahdi: EditProfile: uploadImage: 1 " + globalFileName);
-        RequestBody requestBody1 = RequestBody.create(MediaType.parse("multipart/form-data"), globalFileName);
+    private void uploadImage(String typeDocument, File globalFileNam) {
+        p = GlobalVal.mProgressDialog(EditProfile.this, p, "Uploading image...");
+
+        String forDec = compressImage(FileUtils.getPath(getApplicationContext(),
+                Uri.fromFile(new File(globalFileNam.getPath()))));
+
+        File file = new File(forDec);
+
+        Log.i(TAG, "Mahdi: EditProfile: uploadImage: 1 " + file);
+        RequestBody requestBody1 = RequestBody.create(MediaType.parse("multipart/form-data"), file);
 
         MultipartBody.Part fileToUpload1 = MultipartBody.Part.createFormData("uploadFile",
-                globalFileName.getName(), requestBody1);
+                file.getName(), requestBody1);
 
         RequestBody category = RequestBody.create(MediaType.parse("multipart/form-data"), "documents");
         RequestBody permission = RequestBody.create(MediaType.parse("multipart/form-data"), "true");
@@ -315,16 +333,14 @@ public class EditProfile extends AppCompatActivity {
         RequestBody token = RequestBody.create(MediaType.parse("multipart/form-data"),
                 "7220A3B7F8D2FD2C236092E0918B4EA3");
 
-        Log.i(TAG, "Mahdi: EditProfile: uploadImage: 1 " + userToken);
         Log.i(TAG, "Mahdi: EditProfile: uploadImage: 2 " + fileToUpload1);
         Log.i(TAG, "Mahdi: EditProfile: uploadImage: 3 " + category);
         Log.i(TAG, "Mahdi: EditProfile: uploadImage: 4 " + token);
 
-        compositeDisposable.add(apiConfig1.uploadSingleImage(userToken, fileToUpload1, category, token, permission)
+        compositeDisposable.add(apiConfig1.uploadSingleImage(fileToUpload1, category, token, permission)
                         .subscribeOn(Schedulers.io())
                         .observeOn(AndroidSchedulers.mainThread())
                         .subscribe(responseBodyResponse -> {
-                            isUploading = false;
                             Log.i(TAG, "Mahdi: EditProfile: uploadImage: accept: 1 ");
 
                             Log.i(TAG, "Mahdi: EditProfile: uploadImage: accept: 3 " + responseBodyResponse);
@@ -355,12 +371,16 @@ public class EditProfile extends AppCompatActivity {
                             } else {
                                 Log.i(TAG, "Mahdi: EditProfile: uploadImage: accept: error 5 " + responseBodyResponse.errorBody());
                             }
+                            p.hide();
+                        }, error -> {
+                            Log.i(TAG, "Mahdi: EditProfile: uploadImage: accept: error 3 " + error.getMessage());
+                            p.hide();
                         })
         );
     }
 
     private void uploadMultiImages(String typeDocument, File file1, File file2, File file3, File file4) {
-
+        p = GlobalVal.mProgressDialog(EditProfile.this, p, "Uploading images...");
 
         MultipartBody.Builder builder = new MultipartBody.Builder();
         builder.setType(MultipartBody.FORM);
@@ -378,27 +398,35 @@ public class EditProfile extends AppCompatActivity {
                         .subscribeOn(Schedulers.io())
                         .observeOn(AndroidSchedulers.mainThread())
                         .subscribe(responseBodyResponse -> {
-                            isUploading = false;
                             Log.i(TAG, "Mahdi: EditProfile: uploadMultiImages: accept: 1 ");
 
-                            Log.i(TAG, "Mahdi: EditProfile: uploadMultiImages: accept: 3 " + responseBodyResponse);
+                            Log.i(TAG, "Mahdi: EditProfile: uploadMultiImages: accept: 2 " + responseBodyResponse);
 
                             if (responseBodyResponse.isSuccessful()) {
                                 try {
                                     assert responseBodyResponse.body() != null;
                                     String remoteResponse = responseBodyResponse.body().string();
-                                    Log.i(TAG, "Mahdi: EditProfile: uploadMultiImages: accept: 2 ");
+                                    Log.i(TAG, "Mahdi: EditProfile: uploadMultiImages: accept: 3 " + remoteResponse);
                                     JSONObject forecast = new JSONObject(remoteResponse);
-                                    Log.i(TAG, "Mahdi: EditProfile: uploadMultiImages: accept: 3 " +
-                                            forecast.getJSONObject("data").getString("uriPath"));
+//                                    Log.i(TAG, "Mahdi: EditProfile: uploadMultiImages: accept: 3 " +
+//                                            forecast.getJSONArray("data").getString("uriPath"));
 
-                                    JSONObject data = new JSONObject();
+                                    JSONArray multiImageUri = new JSONArray();
+
+                                    for (int i = 0; i < forecast.optJSONArray("data").length(); i++) {
+                                        String uriPath = forecast.optJSONArray("data").optJSONObject(i).optString("uriPath");
+                                        multiImageUri.put(uriPath);
+                                    }
+                                    uploadUserInfo.put(typeDocument, multiImageUri);
+                                    Log.i(TAG, "Mahdi: EditProfile: uploadMultiImages: accept: 4 " + uploadUserInfo);
+
+//                                    JSONObject data = new JSONObject();
 
 //                            TODO Image pick
-                                    JSONObject imageBody = new JSONObject();
-                                    imageBody.put("uriPath", data.optString("uriPath"));
-                                    imageBody.put("_id", data.optString("_id"));
-                                    uploadUserInfo.put(typeDocument, imageBody);
+//                                    JSONObject imageBody = new JSONObject();
+//                                    imageBody.put("uriPath", data.optString("uriPath"));
+//                                    imageBody.put("_id", data.optString("_id"));
+//                                    uploadUserInfo.put(typeDocument, imageBody);
 
                                     //TODO for loading image
 //                            isUploading = false;
@@ -409,8 +437,10 @@ public class EditProfile extends AppCompatActivity {
                             } else {
                                 Log.i(TAG, "Mahdi: EditProfile: uploadMultiImages: accept: error 2 " + responseBodyResponse.errorBody());
                             }
+                            p.hide();
                         }, error -> {
                             Log.i(TAG, "Mahdi: EditProfile: uploadMultiImages: accept: error 3 " + error.getMessage());
+                            p.hide();
                         })
         );
 
@@ -713,13 +743,18 @@ public class EditProfile extends AppCompatActivity {
 
         FileOutputStream out = null;
         String filename = getFilename();
+        File file = new File(filename);
+        if (file.exists()) file.delete();
         try {
-            out = new FileOutputStream(filename);
+            file.createNewFile();
+            out = new FileOutputStream(file);
 
 //          write the compressed bitmap at the destination specified by filename.
             scaledBitmap.compress(Bitmap.CompressFormat.JPEG, 80, out);
 
         } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
             e.printStackTrace();
         }
 
@@ -774,7 +809,6 @@ public class EditProfile extends AppCompatActivity {
         super.onActivityResult(requestCode, resultCode, data);
 
         if (resultCode == RESULT_OK) {
-            isUploading = true;
             if (requestCode == 11) {
                 Bitmap photo = (Bitmap) Objects.requireNonNull(data.getExtras()).get("data");
                 editProfileBinding.editProfileCircleImage.setImageBitmap(photo);
@@ -811,7 +845,6 @@ public class EditProfile extends AppCompatActivity {
                 editProfileBinding.editProfileLicenseImage.setImageURI(data.getData());
 
                 File globalFileName = new File(getRealPathFromURITemp(data.getData()));
-                editProfileBinding.editProfileCircleImage.setImageURI(data.getData());
                 uploadImage("DL", globalFileName);
             }
 
@@ -875,32 +908,32 @@ public class EditProfile extends AppCompatActivity {
                     editProfileBinding.editProfileCarInImage3.setImageURI(clipData.getItemAt(2).getUri());
                     editProfileBinding.editProfileCarInImage4.setImageURI(clipData.getItemAt(3).getUri());
 
-//                    String forDec1 = compressImage(FileUtils.getPath(getApplicationContext(), clipData.getItemAt(0).getUri()));
-//                    File file1 = new File(forDec1);
-//
-//                    String forDec2 = compressImage(FileUtils.getPath(getApplicationContext(), clipData.getItemAt(1).getUri()));
-//                    File file2 = new File(forDec2);
-//
-//                    String forDec3 = compressImage(FileUtils.getPath(getApplicationContext(), clipData.getItemAt(2).getUri()));
-//                    File file3 = new File(forDec3);
-//
-//                    String forDec4 = compressImage(FileUtils.getPath(getApplicationContext(), clipData.getItemAt(2).getUri()));
-//                    File file4 = new File(forDec4);
+                    String forDec1 = compressImage(FileUtils.getPath(getApplicationContext(), clipData.getItemAt(0).getUri()));
+                    File file1 = new File(forDec1);
+
+                    String forDec2 = compressImage(FileUtils.getPath(getApplicationContext(), clipData.getItemAt(1).getUri()));
+                    File file2 = new File(forDec2);
+
+                    String forDec3 = compressImage(FileUtils.getPath(getApplicationContext(), clipData.getItemAt(2).getUri()));
+                    File file3 = new File(forDec3);
+
+                    String forDec4 = compressImage(FileUtils.getPath(getApplicationContext(), clipData.getItemAt(2).getUri()));
+                    File file4 = new File(forDec4);
 //
 //                    //TODO Something
-//                    uploadMultiImages("CarInside", file1, file2, file3, file4);
+                    uploadMultiImages("CarInside", file1, file2, file3, file4);
 
 //                    File fileTemp2 = new File(forDec1);
 //                    long length2 = fileTemp2.length() / 1024;
 
 //                    Log.i("Hello: Mahdi", "onActivityResult: image length: 2 " + length2);
 
-                    File file1 = new File(FileUtils.getPath(getApplicationContext(), clipData.getItemAt(0).getUri()));
-                    File file2 = new File(FileUtils.getPath(getApplicationContext(), clipData.getItemAt(1).getUri()));
-                    File file3 = new File(FileUtils.getPath(getApplicationContext(), clipData.getItemAt(2).getUri()));
-                    File file4 = new File(FileUtils.getPath(getApplicationContext(), clipData.getItemAt(3).getUri()));
-
-                    uploadMultiImages("CarInside", file1, file2, file3, file4);
+//                    File file1 = new File(FileUtils.getPath(getApplicationContext(), clipData.getItemAt(0).getUri()));
+//                    File file2 = new File(FileUtils.getPath(getApplicationContext(), clipData.getItemAt(1).getUri()));
+//                    File file3 = new File(FileUtils.getPath(getApplicationContext(), clipData.getItemAt(2).getUri()));
+//                    File file4 = new File(FileUtils.getPath(getApplicationContext(), clipData.getItemAt(3).getUri()));
+//
+//                    uploadMultiImages("CarInside", file1, file2, file3, file4);
 
 
 //                    for (int i = 0; i < clipData.getItemCount(); i++) {
@@ -909,7 +942,7 @@ public class EditProfile extends AppCompatActivity {
 //                        Log.i("Hello: Mahdi", "onActivityResult: " + clipData.toString());
 //                    }
                 } else {
-                    Toast.makeText(getApplicationContext(), "You must chose just four!", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getApplicationContext(), "You must chose just four images!", Toast.LENGTH_SHORT).show();
                 }
             }
             if (requestCode == 32) {
@@ -931,12 +964,27 @@ public class EditProfile extends AppCompatActivity {
                     editProfileBinding.editProfileCarOutImage3.setImageURI(clipData.getItemAt(2).getUri());
                     editProfileBinding.editProfileCarOutImage4.setImageURI(clipData.getItemAt(3).getUri());
 
-                    File file1 = new File(clipData.getItemAt(0).getUri().getPath());
-                    File file2 = new File(clipData.getItemAt(1).getUri().getPath());
-                    File file3 = new File(clipData.getItemAt(2).getUri().getPath());
-                    File file4 = new File(clipData.getItemAt(3).getUri().getPath());
+                    String forDec1 = compressImage(FileUtils.getPath(getApplicationContext(), clipData.getItemAt(0).getUri()));
+                    File file1 = new File(forDec1);
 
+                    String forDec2 = compressImage(FileUtils.getPath(getApplicationContext(), clipData.getItemAt(1).getUri()));
+                    File file2 = new File(forDec2);
+
+                    String forDec3 = compressImage(FileUtils.getPath(getApplicationContext(), clipData.getItemAt(2).getUri()));
+                    File file3 = new File(forDec3);
+
+                    String forDec4 = compressImage(FileUtils.getPath(getApplicationContext(), clipData.getItemAt(2).getUri()));
+                    File file4 = new File(forDec4);
+//
+//                    //TODO Something
                     uploadMultiImages("CarOutside", file1, file2, file3, file4);
+
+//                    File file1 = new File(clipData.getItemAt(0).getUri().getPath());
+//                    File file2 = new File(clipData.getItemAt(1).getUri().getPath());
+//                    File file3 = new File(clipData.getItemAt(2).getUri().getPath());
+//                    File file4 = new File(clipData.getItemAt(3).getUri().getPath());
+//
+//                    uploadMultiImages("CarOutside", file1, file2, file3, file4);
 
                     for (int i = 0; i < clipData.getItemCount(); i++) {
                         ClipData.Item item = clipData.getItemAt(i);
@@ -944,9 +992,88 @@ public class EditProfile extends AppCompatActivity {
                         Log.e("Hello: Mahdi", "onActivityResult: " + clipData.toString());
                     }
                 } else {
-                    Toast.makeText(getApplicationContext(), "You must chose just four!", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getApplicationContext(), "You must chose just four images!", Toast.LENGTH_SHORT).show();
                 }
             }
+        }
+    }
+
+    private void showMessageOKCancel(String message, DialogInterface.OnClickListener okListener) {
+        new AlertDialog.Builder(EditProfile.this)
+                .setMessage(message)
+                .setPositiveButton("OK", okListener)
+                .setNegativeButton("Cancel", null)
+                .create()
+                .show();
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
+        switch (requestCode) {
+            case PERMISSION_REQUEST_CODE_CAMERA:
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    Toast.makeText(getApplicationContext(), "Permission Granted", Toast.LENGTH_SHORT).show();
+                    // main logic
+                } else {
+                    Toast.makeText(getApplicationContext(), "Permission Denied", Toast.LENGTH_SHORT).show();
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
+                                != PackageManager.PERMISSION_GRANTED) {
+                            showMessageOKCancel("You need to allow access permissions",
+                                    new DialogInterface.OnClickListener() {
+                                        @Override
+                                        public void onClick(DialogInterface dialog, int which) {
+                                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                                                requestPermissionCamera();
+                                            }
+                                        }
+                                    });
+                        }
+                    }
+                }
+                break;
+
+            case PERMISSION_REQUEST_CODE_GALLERY:
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    Toast.makeText(getApplicationContext(), "Permission Granted", Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(getApplicationContext(), "Permission Denied", Toast.LENGTH_SHORT).show();
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)
+                                != PackageManager.PERMISSION_GRANTED) {
+                            showMessageOKCancel("You need to allow access permissions",
+                                    new DialogInterface.OnClickListener() {
+                                        @Override
+                                        public void onClick(DialogInterface dialog, int which) {
+                                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                                                requestPermissionGallery();
+                                            }
+                                        }
+                                    });
+                        }
+                    }
+                }
+
+            case PERMISSION_REQUEST_CODE_WRITE_GALLERY:
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    Toast.makeText(getApplicationContext(), "Permission Granted", Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(getApplicationContext(), "Permission Denied", Toast.LENGTH_SHORT).show();
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)
+                                != PackageManager.PERMISSION_GRANTED) {
+                            showMessageOKCancel("You need to allow access permissions",
+                                    new DialogInterface.OnClickListener() {
+                                        @Override
+                                        public void onClick(DialogInterface dialog, int which) {
+                                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                                                requestPermissionWriteGallery();
+                                            }
+                                        }
+                                    });
+                        }
+                    }
+                }
         }
     }
 
@@ -960,7 +1087,7 @@ public class EditProfile extends AppCompatActivity {
     }
 
     private boolean checkPermissionGallery() {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)
                 != PackageManager.PERMISSION_GRANTED) {
             // Permission is not granted
             return false;
@@ -979,6 +1106,23 @@ public class EditProfile extends AppCompatActivity {
         ActivityCompat.requestPermissions(this,
                 new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
                 PERMISSION_REQUEST_CODE_GALLERY);
+    }
+
+
+    private void requestPermissionWriteGallery() {
+
+        ActivityCompat.requestPermissions(this,
+                new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                PERMISSION_REQUEST_CODE_WRITE_GALLERY);
+    }
+
+    private boolean checkPermissionWriteGallery() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                != PackageManager.PERMISSION_GRANTED) {
+            // Permission is not granted
+            return false;
+        }
+        return true;
     }
 }
 
