@@ -92,6 +92,7 @@ public class OTPScreen extends AppCompatActivity {
         editText5 = findViewById(R.id.edit5);
         editText6 = findViewById(R.id.edit6);
         mAuth = FirebaseAuth.getInstance();
+        mAuth.getFirebaseAuthSettings().setAppVerificationDisabledForTesting(true);
         editTextFocusListener();
 
         if (!MyCheckConnection.mCheckConnectivity(OTPScreen.this)) {

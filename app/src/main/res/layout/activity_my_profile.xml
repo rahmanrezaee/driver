@@ -120,12 +120,37 @@
                                     android:padding="5dp"
                                     android:text="Plate No:- AB01ASD" />
 
-                                <androidx.recyclerview.widget.RecyclerView
-                                    android:id="@+id/recycler_view"
-                                    android:layout_width="match_parent"
+                                <TextView
+                                    android:id="@+id/myProfile_carQuantity_txt"
+                                    android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
-                                    android:layout_below="@id/header_layout"
-                                    android:layout_marginTop="20dp" />
+                                    android:layout_gravity="center"
+                                    android:gravity="center_horizontal"
+                                    android:text="3" />
+
+                                <ImageView
+                                    android:id="@+id/myProfile_carIcon"
+                                    android:layout_width="60dp"
+                                    android:layout_height="40dp"
+                                    android:layout_gravity="center"
+                                    android:adjustViewBounds="true"
+                                    android:src="@drawable/car_image" />
+
+                                <TextView
+                                    android:id="@+id/myProfile_model_txt"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_gravity="center"
+                                    android:gravity="center_horizontal"
+                                    android:text="Car (Sedan)"
+                                    android:textColor="@android:color/black" />
+
+                                <!--                                <androidx.recyclerview.widget.RecyclerView-->
+                                <!--                                    android:id="@+id/recycler_view"-->
+                                <!--                                    android:layout_width="match_parent"-->
+                                <!--                                    android:layout_height="wrap_content"-->
+                                <!--                                    android:layout_below="@id/header_layout"-->
+                                <!--                                    android:layout_marginTop="20dp" />-->
 
                             </LinearLayout>
                         </androidx.cardview.widget.CardView>
@@ -220,13 +245,13 @@
                                     android:layout_height="60dp"
                                     android:src="@drawable/driving_license" />
 
-<!--                                <ImageView-->
-<!--                                    android:layout_width="wrap_content"-->
-<!--                                    android:layout_height="wrap_content"-->
-<!--                                    android:layout_gravity="center_vertical"-->
-<!--                                    android:layout_marginLeft="20dp"-->
-<!--                                    android:src="@drawable/ic_add_circle_black_24dp"-->
-<!--                                    android:tint="@color/appColorSecondary" />-->
+                                <!--                                <ImageView-->
+                                <!--                                    android:layout_width="wrap_content"-->
+                                <!--                                    android:layout_height="wrap_content"-->
+                                <!--                                    android:layout_gravity="center_vertical"-->
+                                <!--                                    android:layout_marginLeft="20dp"-->
+                                <!--                                    android:src="@drawable/ic_add_circle_black_24dp"-->
+                                <!--                                    android:tint="@color/appColorSecondary" />-->
 
                             </LinearLayout>
                         </RelativeLayout>
@@ -275,13 +300,13 @@
                                     android:layout_height="60dp"
                                     android:src="@drawable/driving_license" />
 
-<!--                                <ImageView-->
-<!--                                    android:layout_width="wrap_content"-->
-<!--                                    android:layout_height="wrap_content"-->
-<!--                                    android:layout_gravity="center_vertical"-->
-<!--                                    android:layout_marginLeft="20dp"-->
-<!--                                    android:src="@drawable/ic_add_circle_black_24dp"-->
-<!--                                    android:tint="@color/appColorSecondary" />-->
+                                <!--                                <ImageView-->
+                                <!--                                    android:layout_width="wrap_content"-->
+                                <!--                                    android:layout_height="wrap_content"-->
+                                <!--                                    android:layout_gravity="center_vertical"-->
+                                <!--                                    android:layout_marginLeft="20dp"-->
+                                <!--                                    android:src="@drawable/ic_add_circle_black_24dp"-->
+                                <!--                                    android:tint="@color/appColorSecondary" />-->
 
                             </LinearLayout>
                         </RelativeLayout>
@@ -331,13 +356,13 @@
                                     android:src="@drawable/driving_license" />
 
 
-<!--                                <ImageView-->
-<!--                                    android:layout_width="wrap_content"-->
-<!--                                    android:layout_height="wrap_content"-->
-<!--                                    android:layout_gravity="center_vertical"-->
-<!--                                    android:layout_marginLeft="20dp"-->
-<!--                                    android:src="@drawable/ic_add_circle_black_24dp"-->
-<!--                                    android:tint="@color/appColorSecondary" />-->
+                                <!--                                <ImageView-->
+                                <!--                                    android:layout_width="wrap_content"-->
+                                <!--                                    android:layout_height="wrap_content"-->
+                                <!--                                    android:layout_gravity="center_vertical"-->
+                                <!--                                    android:layout_marginLeft="20dp"-->
+                                <!--                                    android:src="@drawable/ic_add_circle_black_24dp"-->
+                                <!--                                    android:tint="@color/appColorSecondary" />-->
 
                             </LinearLayout>
                         </RelativeLayout>
@@ -384,44 +409,41 @@
                                     android:id="@+id/myProfile_car_in_image1"
                                     android:layout_width="60dp"
                                     android:layout_height="80dp"
-                                    android:onClick="onClick"
                                     android:layout_marginRight="10dp"
+                                    android:onClick="onClick"
                                     android:src="@drawable/driving_license" />
 
                                 <ImageView
                                     android:id="@+id/myProfile_car_in_image2"
                                     android:layout_width="60dp"
                                     android:layout_height="80dp"
-                                    android:onClick="onClick"
-                                    android:src="@drawable/driving_license"
                                     android:layout_marginRight="10dp"
-                                    />
+                                    android:onClick="onClick"
+                                    android:src="@drawable/driving_license" />
 
                                 <ImageView
                                     android:id="@+id/myProfile_car_in_image3"
                                     android:layout_width="60dp"
                                     android:layout_height="80dp"
-                                    android:onClick="onClick"
-                                    android:src="@drawable/driving_license"
                                     android:layout_marginRight="10dp"
-                                    />
+                                    android:onClick="onClick"
+                                    android:src="@drawable/driving_license" />
 
                                 <ImageView
                                     android:id="@+id/myProfile_car_in_image4"
                                     android:layout_width="60dp"
                                     android:layout_height="80dp"
-                                    android:onClick="onClick"
-                                    android:src="@drawable/driving_license"
                                     android:layout_marginRight="10dp"
-                                    />
+                                    android:onClick="onClick"
+                                    android:src="@drawable/driving_license" />
 
-<!--                                <ImageView-->
-<!--                                    android:layout_width="wrap_content"-->
-<!--                                    android:layout_height="wrap_content"-->
-<!--                                    android:layout_gravity="center_vertical"-->
-<!--                                    android:layout_marginLeft="20dp"-->
-<!--                                    android:src="@drawable/ic_add_circle_black_24dp"-->
-<!--                                    android:tint="@color/appColorSecondary" />-->
+                                <!--                                <ImageView-->
+                                <!--                                    android:layout_width="wrap_content"-->
+                                <!--                                    android:layout_height="wrap_content"-->
+                                <!--                                    android:layout_gravity="center_vertical"-->
+                                <!--                                    android:layout_marginLeft="20dp"-->
+                                <!--                                    android:src="@drawable/ic_add_circle_black_24dp"-->
+                                <!--                                    android:tint="@color/appColorSecondary" />-->
                             </LinearLayout>
                         </RelativeLayout>
                     </androidx.cardview.widget.CardView>
@@ -467,44 +489,41 @@
                                     android:id="@+id/myProfile_car_out_image1"
                                     android:layout_width="60dp"
                                     android:layout_height="80dp"
-                                    android:onClick="onClick"
                                     android:layout_marginRight="10dp"
+                                    android:onClick="onClick"
                                     android:src="@drawable/driving_license" />
 
                                 <ImageView
                                     android:id="@+id/myProfile_car_out_image2"
                                     android:layout_width="60dp"
                                     android:layout_height="80dp"
-                                    android:onClick="onClick"
-                                    android:src="@drawable/driving_license"
                                     android:layout_marginRight="10dp"
-                                     />
+                                    android:onClick="onClick"
+                                    android:src="@drawable/driving_license" />
 
                                 <ImageView
                                     android:id="@+id/myProfile_car_out_image3"
                                     android:layout_width="60dp"
                                     android:layout_height="80dp"
-                                    android:onClick="onClick"
-                                    android:src="@drawable/driving_license"
                                     android:layout_marginRight="10dp"
-                                    />
+                                    android:onClick="onClick"
+                                    android:src="@drawable/driving_license" />
 
                                 <ImageView
                                     android:id="@+id/myProfile_car_out_image4"
                                     android:layout_width="60dp"
                                     android:layout_height="80dp"
-                                    android:onClick="onClick"
-                                    android:src="@drawable/driving_license"
                                     android:layout_marginRight="10dp"
-                                    />
+                                    android:onClick="onClick"
+                                    android:src="@drawable/driving_license" />
 
-<!--                                <ImageView-->
-<!--                                    android:layout_width="wrap_content"-->
-<!--                                    android:layout_height="wrap_content"-->
-<!--                                    android:layout_gravity="center_vertical"-->
-<!--                                    android:layout_marginLeft="20dp"-->
-<!--                                    android:src="@drawable/ic_add_circle_black_24dp"-->
-<!--                                    android:tint="@color/appColorSecondary" />-->
+                                <!--                                <ImageView-->
+                                <!--                                    android:layout_width="wrap_content"-->
+                                <!--                                    android:layout_height="wrap_content"-->
+                                <!--                                    android:layout_gravity="center_vertical"-->
+                                <!--                                    android:layout_marginLeft="20dp"-->
+                                <!--                                    android:src="@drawable/ic_add_circle_black_24dp"-->
+                                <!--                                    android:tint="@color/appColorSecondary" />-->
 
                             </LinearLayout>
                         </RelativeLayout>

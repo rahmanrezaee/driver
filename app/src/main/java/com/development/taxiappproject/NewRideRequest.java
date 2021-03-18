@@ -11,9 +11,16 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
 import android.location.Location;
 import android.location.LocationManager;
+import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Looper;
 import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
@@ -33,13 +40,23 @@ import com.development.taxiappproject.Global.GlobalVal;
 import com.development.taxiappproject.databinding.ActivityNewRideRequestBinding;
 import com.development.taxiappproject.helper.FetchURL;
 import com.development.taxiappproject.helper.TaskLoadedCallback;
+import com.development.taxiappproject.model.CircleTransform;
+import com.development.taxiappproject.model.PicassoMarker;
 import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationListener;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationResult;
+import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptor;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+import com.google.android.gms.maps.model.GroundOverlayOptions;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
@@ -52,19 +69,32 @@ import com.karumi.dexter.listener.PermissionDeniedResponse;
 import com.karumi.dexter.listener.PermissionGrantedResponse;
 import com.karumi.dexter.listener.PermissionRequest;
 import com.karumi.dexter.listener.single.PermissionListener;
+import com.squareup.picasso.Picasso;
+import com.squareup.picasso.Target;
+import com.squareup.picasso.Transformation;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.JSONString;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
 import static com.development.taxiappproject.Const.ConstantValue.baseUrl;
 import static com.development.taxiappproject.Global.GlobalVal.GOOGLE_MAP_API_KEY;
+import static com.development.taxiappproject.Global.GlobalVal.destinationIcon;
+import static com.development.taxiappproject.Global.GlobalVal.drawCircle;
+import static com.development.taxiappproject.Global.GlobalVal.originIcon;
 import static com.development.taxiappproject.OTPScreen.MyPREFERENCES;
 
 public class NewRideRequest extends FragmentActivity implements OnMapReadyCallback, View.OnClickListener, TaskLoadedCallback {
@@ -78,11 +108,18 @@ public class NewRideRequest extends FragmentActivity implements OnMapReadyCallba
     String id;
     JSONObject notificationData;
     private FusedLocationProviderClient fusedLocationProviderClient;
+    private boolean currentPolyLineFlag = false;
+
+    HashMap<String, String> header = new HashMap();
+    private LocationRequest locationRequest;
+    private LocationCallback locationCallback;
 
     MarkerOptions place1, place2;
+    LatLng driverLatLng;
 
     //    Polyline driverPolyLine;
     Polyline currentPolyLine;
+    LocationManager mLocationManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -125,87 +162,6 @@ public class NewRideRequest extends FragmentActivity implements OnMapReadyCallba
         mMap = googleMap;
     }
 
-    //    @Override
-//    public void onMapReady(GoogleMap googleMap) {
-//
-//        mMap = googleMap;
-//
-//        Dexter.withContext(NewRideRequest.this).withPermission(Manifest.permission.ACCESS_FINE_LOCATION)
-//                .withListener(new PermissionListener() {
-//                    @Override
-//                    public void onPermissionGranted(PermissionGrantedResponse permissionGrantedResponse) {
-//                        if (ActivityCompat.checkSelfPermission(NewRideRequest.this,
-//                                android.Manifest.permission.ACCESS_FINE_LOCATION)
-//                                != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
-//                                NewRideRequest.this, android.Manifest.permission.ACCESS_COARSE_LOCATION
-//                        ) != PackageManager.PERMISSION_GRANTED) {
-//                            return;
-//                        }
-//                        mMap.setMyLocationEnabled(true);
-//                        mMap.getUiSettings().setMyLocationButtonEnabled(true);
-//                        mMap.setOnMyLocationButtonClickListener(new GoogleMap.OnMyLocationButtonClickListener() {
-//                            @Override
-//                            public boolean onMyLocationButtonClick() {
-//                                if (ActivityCompat.checkSelfPermission(NewRideRequest.this,
-//                                        Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
-//                                        ActivityCompat.checkSelfPermission(NewRideRequest.this, Manifest.permission.ACCESS_COARSE_LOCATION) !=
-//                                                PackageManager.PERMISSION_GRANTED) {
-//                                    // TODO: Consider calling
-//                                    //    ActivityCompat#requestPermissions
-//                                    // here to request the missing permissions, and then overriding
-//                                    //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-//                                    //                                          int[] grantResults)
-//                                    // to handle the case where the user grants the permission. See the documentation
-//                                    // for ActivityCompat#requestPermissions for more details.
-//                                    return false;
-//                                }
-//                                fusedLocationProviderClient.getLastLocation().addOnFailureListener(new OnFailureListener() {
-//                                    @Override
-//                                    public void onFailure(@NonNull Exception e) {
-////                                        Snackbar.make(requireView(), Objects.requireNonNull(e.getMessage()), Snackbar.LENGTH_SHORT).show();
-////                                        homeBinding.progressBar.setVisibility(View.GONE);
-//                                    }
-//                                }).addOnSuccessListener(new OnSuccessListener<Location>() {
-//                                    @Override
-//                                    public void onSuccess(Location location) {
-//                                        LatLng userLatLng = new LatLng(location.getLatitude(), location.getLongitude());
-//                                        body.clear();
-//                                        body.put("lat", location.getLatitude() + "");
-//                                        body.put("lng", location.getLongitude() + "");
-//                                        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(userLatLng, 10f));
-////                                        homeBinding.progressBar.setVisibility(View.GONE);
-//                                        getRideItem(userToken, userLatLng);
-////                                        body["lat"] = "${location.latitude}";
-////                                        body["lng"] = "${location.longitude}";
-//                                    }
-//                                });
-//                                return true;
-//                            }
-////                            (mapFragment()!!.findViewById<View>("1".toInt())!!.parent!! as View)
-////                                    .findViewById<View>("2".toInt());
-//                        });
-//                    }
-//
-//                    @Override
-//                    public void onPermissionDenied(PermissionDeniedResponse permissionDeniedResponse) {
-////                        Snackbar.make(requireView(), permissionDeniedResponse.
-////                                getPermissionName() + "needed for run app", Snackbar.LENGTH_SHORT).show();
-////                        homeBinding.progressBar.setVisibility(View.VISIBLE);
-//                    }
-//
-//                    @Override
-//                    public void onPermissionRationaleShouldBeShown(PermissionRequest permissionRequest, PermissionToken permissionToken) {
-////                        homeBinding.progressBar.setVisibility(View.VISIBLE);
-//                    }
-//                }).check();
-//        mMap.getUiSettings().setZoomControlsEnabled(true);
-//
-//        // Add a marker in Sydney and move the camera
-////        LatLng sydney = new LatLng(-34, 151);
-////        mMap.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney"));
-////        mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
-//    }
-
     @Override
     public void onClick(View view) {
         switch (view.getId()) {
@@ -237,11 +193,6 @@ public class NewRideRequest extends FragmentActivity implements OnMapReadyCallba
 
         RequestQueue requestQueue = Volley.newRequestQueue(NewRideRequest.this);
         String mURL;
-
-//        accepted
-//        rejected
-//        completed
-//        paid
 
         if (status.equalsIgnoreCase("accepted")) {
             mURL = baseUrl + "/rides/" + id + "?status=" + status;
@@ -363,28 +314,27 @@ public class NewRideRequest extends FragmentActivity implements OnMapReadyCallba
                     place1 = new MarkerOptions().position(new LatLng(fromLat, fromLng)).title("Origin");
                     place2 = new MarkerOptions().position(new LatLng(toWhereLat, toWhereLng)).title("Destination");
 
-                    final LocationListener mLocationListener = location -> {
-                        MarkerOptions driverLocatin = new MarkerOptions().
-                                position(new LatLng(location.getLatitude(), location.getLongitude()));
-                        mMap.addMarker(new MarkerOptions().position(driverLocatin.getPosition()).title("Driver Location"));
+                    currentPolyLineFlag = true;
 
-                        new FetchURL(NewRideRequest.this).execute("https://maps.googleapis.com/maps/api/directions/json?origin=" +
-                                location.getLatitude() + "," + location.getLongitude() + "&destination=" +
-                                place1.getPosition().latitude + "," + place1.getPosition().longitude +
-                                "&key=" + GOOGLE_MAP_API_KEY, "driving");
-                    };
-
-                    new FetchURL(NewRideRequest.this).execute("https://maps.googleapis.com/maps/api/directions/json?origin=" +
-                            place1.getPosition().latitude + "," + place1.getPosition().longitude
+                    new FetchURL(NewRideRequest.this).execute("https://maps.googleapis.com/maps/api/directions/json?origin="
+                            + place1.getPosition().latitude + "," + place1.getPosition().longitude
                             + "&destination=" + place2.getPosition().latitude + "," + place2.getPosition().longitude +
                             "&key=" + GOOGLE_MAP_API_KEY, "driving");
 
-                    mMap.addMarker(new MarkerOptions().position(place1.getPosition()).title("Origin"));
-                    mMap.addMarker(new MarkerOptions().position(place2.getPosition()).title("Destination"));
+                    mMap.addMarker(new MarkerOptions().position(place1.getPosition()).title("Origin")
+                            .icon(BitmapDescriptorFactory.fromBitmap(originIcon(getApplicationContext()))));
+
+                    mMap.addMarker(new MarkerOptions().position(place2.getPosition()).title("Destination")
+                            .icon(BitmapDescriptorFactory.fromBitmap(destinationIcon())));
+
                     mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(place1.getPosition(), 14f));
 
+                    mMap.addGroundOverlay(new GroundOverlayOptions().
+                            image(drawCircle(getApplicationContext())).
+                            position(place1.getPosition(), 250 * 2, 250 * 2).
+                            transparency(0.4f));
+
                 }, error -> {
-//            ridingBinding.completeRidingProgressBar.setVisibility(View.GONE);
             Toast.makeText(getApplicationContext(), "Not connection!", Toast.LENGTH_SHORT).show();
             Log.e("Mahdi", "Mahdi: NewRideRequest:  getSingleRideItem: Error 1 " + error.getMessage());
         }) {
@@ -418,14 +368,171 @@ public class NewRideRequest extends FragmentActivity implements OnMapReadyCallba
 
     @Override
     public void onTaskDone(Object... values) {
-//        if (driverPolyLine != null) {
-//            driverPolyLine.remove();
-//        }
-//        driverPolyLine = mMap.addPolyline((PolylineOptions) values[0]);
+        //TODO What is it? I don't know
+        if (currentPolyLineFlag) {
+            Log.i(TAG, "onTaskDone: I did it!");
 
-        if (currentPolyLine != null) {
-            currentPolyLine.remove();
+            init();
+            currentPolyLineFlag = false;
         }
         currentPolyLine = mMap.addPolyline((PolylineOptions) values[0]);
+    }
+
+
+    private void init() {
+        header.clear();
+        header.put("Content-Type", "application/json");
+
+        locationRequest = new LocationRequest();
+        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+        locationRequest.setFastestInterval(3000);
+        locationRequest.setSmallestDisplacement(10f);
+        locationRequest.setInterval(5000);
+
+        locationCallback = new LocationCallback() {
+            @Override
+            public void onLocationResult(LocationResult locationResult) {
+                super.onLocationResult(locationResult);
+
+                String profilePath = sharedPreferences.getString(SharedPrefKey.profilePath, "defaultValue");
+
+                driverLatLng = new LatLng(locationResult.getLastLocation().getLatitude(),
+                        locationResult.getLastLocation().getLongitude());
+
+                new FetchURL(NewRideRequest.this).execute("https://maps.googleapis.com/maps/api/directions/json?origin="
+                        + driverLatLng.latitude + "," + driverLatLng.longitude + "&destination=" +
+                        place1.getPosition().latitude + "," + place1.getPosition().longitude +
+                        "&key=" + GOOGLE_MAP_API_KEY, "driving");
+
+                MarkerOptions markerOption = new MarkerOptions().position(driverLatLng);
+
+                Marker location_marker = mMap.addMarker(markerOption);
+
+                Target target = new PicassoMarker(location_marker);
+
+                Picasso.get().load(profilePath).resize(100, 100).transform(new CircleTransform())
+                        .into(target);
+
+                Log.i(TAG, "onTaskDone: I did it! 3");
+
+//                Paint color = new Paint();
+//                color.setColor(Color.TRANSPARENT);
+//
+//                Bitmap.Config conf = Bitmap.Config.ARGB_8888;
+//                Bitmap bmp = Bitmap.createBitmap(200, 200, conf);
+//                Canvas canvas1 = new Canvas(bmp);
+//                canvas1.drawCircle(40f, 40f, 40f, color);
+            }
+        };
+
+        fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(NewRideRequest.this);
+        if (ActivityCompat.checkSelfPermission(getApplicationContext(), android.Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
+                getApplicationContext(), android.Manifest.permission.ACCESS_COARSE_LOCATION
+        ) != PackageManager.PERMISSION_GRANTED) {
+            return;
+        }
+        fusedLocationProviderClient.requestLocationUpdates(locationRequest, locationCallback, Objects.requireNonNull(Looper.myLooper()));
+    }
+
+//    private void loadMarkerIcon(final Marker marker) {
+//        String burlImg = "Url_imagePath;
+//        Glide.with(this).load(burlImg)
+//                .asBitmap().fitCenter().into(new SimpleTarget<Bitmap>() {
+//            @Override
+//            public void onResourceReady(Bitmap bitmap, GlideAnimation<? super Bitmap> glideAnimation) {
+//
+//                if(bitmap!=null){
+//                    //  Bitmap circularBitmap = getRoundedCornerBitmap(bitmap, 150);
+//                    Bitmap mBitmap = getCircularBitmap(bitmap);
+//                    mBitmap = addBorderToCircularBitmap(mBitmap, 2, Color.WHITE,squareBitmapWidth);
+//                    BitmapDescriptor icon = BitmapDescriptorFactory.fromBitmap(mBitmap);
+//                    marker.setIcon(icon);
+//                }
+//
+//            }
+//        });
+//
+//    }
+
+    private class MyTask extends AsyncTask<Void, Void, Bitmap> {
+        String result;
+
+        @Override
+        protected Bitmap doInBackground(Void... voids) {
+
+            Bitmap overlay;
+            try {
+                URL url = new URL("https://webfume-onionai.s3.amazonaws.com/guest/public/documents/173117-1615312785756.jpg");
+                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                connection.setDoInput(true);
+                connection.connect();
+                InputStream input = connection.getInputStream();
+                overlay = BitmapFactory.decodeStream(input);
+            } catch (IOException e) {
+                e.printStackTrace();
+                return null;
+            }
+            return overlay;
+
+//            String profilePath = sharedPreferences.getString(SharedPrefKey.profilePath, "defaultValue");
+//            String profilePath = "https://webfume-onionai.s3.amazonaws.com/guest/public/documents/173117-1615312785756.jpg";
+//
+//            Bitmap.Config conf = Bitmap.Config.ARGB_8888;
+//            Bitmap bmp = Bitmap.createBitmap(200, 200, conf);
+//            Canvas canvas1 = new Canvas(bmp);
+//            canvas1.drawCircle(40f, 40f, 40f, color);
+
+//
+//            Paint color = new Paint();
+//            color.setTextSize(35);
+//            color.setColor(Color.TRANSPARENT);
+//            try {
+//                URL url = new URL(profilePath);
+//                canvas1.drawBitmap(BitmapFactory.decodeStream(url.openConnection().getInputStream()), 0, 0, color);
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//            }
+//            return bmp;
+
+//                url = new URL(strMessage);
+//                BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(url.openStream()));
+//                String stringBuffer;
+//                String string = "";
+//                while ((stringBuffer = bufferedReader.readLine()) != null) {
+//                    string = String.format("%s%s", string, stringBuffer);
+//                }
+//                bufferedReader.close();
+//                result = string;
+        }
+
+        @Override
+        protected void onPostExecute(Bitmap bitmap) {
+            super.onPostExecute(bitmap);
+            // If received bitmap successfully, draw it on our drawable
+            Log.i(TAG, "onPostExecute: 0 ");
+            if (bitmap != null) {
+                Log.i(TAG, "onPostExecute: 1 ");
+
+//                Bitmap marker = BitmapFactory.decodeResource(getResources(), R.drawable.custom_marker);
+//                Bitmap newMarker = marker.copy(Bitmap.Config.ARGB_8888, true);
+//                Canvas canvas = new Canvas(newMarker);
+//                // Offset the drawing by 25x25
+//                canvas.drawBitmap(bitmap, 25, 25, null);
+//                // Add the new marker to the map
+//                mMap.addMarker(new MarkerOptions()
+//                        .position(position)
+//                        .title(title)
+//                        .snippet(snippetText)
+//                        .icon(BitmapDescriptorFactory.fromBitmap(newMarker)));
+            }
+//            Picasso
+        }
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        fusedLocationProviderClient.removeLocationUpdates(locationCallback);
     }
 }

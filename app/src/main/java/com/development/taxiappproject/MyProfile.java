@@ -56,12 +56,9 @@ import static com.development.taxiappproject.Const.ConstantValue.baseUrl;
 
 public class MyProfile extends AppCompatActivity {
     private static final String TAG = "MAHDI";
-    private CarAdapter carAdapter;
-    RecyclerView.LayoutManager mLayoutManager;
-    public static ActivityMyProfileBinding profileBinding;
-    List<MyRideClass> rideList = new ArrayList<>();
 
     JSONObject userInfo = new JSONObject();
+    public static ActivityMyProfileBinding profileBinding;
 
     SharedPreferences sharedPreferences;
 
@@ -98,8 +95,6 @@ public class MyProfile extends AppCompatActivity {
             getProfileItem(userToken, userId);
         });
 
-        setRecyclerView();
-        setTestimonialList();
         getProfileItem(userToken, userId);
     }
 
@@ -136,6 +131,13 @@ public class MyProfile extends AppCompatActivity {
                     try {
                         Log.i(TAG, "Mahdi: MyProfile: getProfileItem: res 0 " + response);
                         JSONObject data = response.getJSONObject("data");
+
+                        userInfo.put("carType", data.optJSONObject("carType").optString("_id"));
+
+                        Picasso.get().load(data.optJSONObject("carType").optString("carIcon"))
+                                .into(profileBinding.myProfileCarIcon);
+                        profileBinding.myProfileCarQuantityTxt.setText(data.optJSONObject("carType").optString("quantityCars"));
+                        profileBinding.myProfileModelTxt.setText(data.optJSONObject("carType").optString("carTypeName"));
 
                         profileBinding.myProfileRelativeLayoutItem.setVisibility(View.VISIBLE);
                         profileBinding.myProfileRelativeLayoutProgress.setVisibility(View.GONE);
@@ -261,25 +263,6 @@ public class MyProfile extends AppCompatActivity {
         } catch (JSONException e) {
             e.printStackTrace();
         }
-    }
-
-    private void setRecyclerView() {
-        carAdapter = new CarAdapter(MyProfile.this, rideList);
-        mLayoutManager = new LinearLayoutManager(MyProfile.this, LinearLayoutManager.HORIZONTAL, false);
-        profileBinding.recyclerView.setLayoutManager(mLayoutManager);
-        profileBinding.recyclerView.setItemAnimator(new DefaultItemAnimator());
-        profileBinding.recyclerView.setAdapter(carAdapter);
-
-    }
-
-    private void setTestimonialList() {
-        rideList.clear();
-        for (int i = 0; i < 4; i++) {
-            MyRideClass ride = new MyRideClass("dateRide", "priceRide", "distanceRide", "timeRide",
-                    "startLocationRide", "endLocationRide", "id");
-            rideList.add(ride);
-        }
-        carAdapter.notifyDataSetChanged();
     }
 }
 

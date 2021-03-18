@@ -135,7 +135,9 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content">
 
-                        https://taxiapp.webfumeprojects.online/api/driver/profile/60476991b47088d5571fe331<de.hdodenhof.circleimageview.CircleImageView
+                        https://taxiapp.webfumeprojects.online/api/driver/profile/60476991b47088d5571fe331
+
+                        <de.hdodenhof.circleimageview.CircleImageView
                             android:id="@+id/editProfile_circleImage"
                             android:layout_width="96dp"
                             android:layout_height="96dp"

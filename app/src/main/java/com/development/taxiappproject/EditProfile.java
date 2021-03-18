@@ -6,6 +6,9 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.databinding.DataBindingUtil;
+import androidx.recyclerview.widget.DefaultItemAnimator;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
@@ -46,10 +49,13 @@ import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 import com.development.taxiappproject.Const.SharedPrefKey;
 import com.development.taxiappproject.Global.GlobalVal;
+import com.development.taxiappproject.MyInterface.OnTextClickListener;
 import com.development.taxiappproject.Retrofit.MyApiConfig;
 import com.development.taxiappproject.Retrofit.RetrofitClient;
 import com.development.taxiappproject.Service.MyFirebaseMessagingService;
+import com.development.taxiappproject.adapter.CarAdapter;
 import com.development.taxiappproject.databinding.ActivityEditProfileBinding;
+import com.development.taxiappproject.model.MyRideClass;
 import com.squareup.picasso.Picasso;
 import com.yalantis.ucrop.util.FileUtils;
 
@@ -99,6 +105,12 @@ public class EditProfile extends AppCompatActivity {
 
     ProgressDialog p;
 
+    String carTypeId;
+
+    private CarAdapter carAdapter;
+    RecyclerView.LayoutManager mLayoutManager;
+    List<MyRideClass> rideList = new ArrayList<>();
+
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -119,6 +131,12 @@ public class EditProfile extends AppCompatActivity {
             email = userInfo.optString("email");
             plateNo = userInfo.optString("carPlateNumber");
             profilePhoto = userInfo.getString("profilePhoto");
+
+            carTypeId = userInfo.optString("carType");
+
+            Log.i(TAG, "EditProfile: onCreate: 1 " + carTypeId);
+
+//            carTypeId = userInfo.optJSONObject("carType");
 
             editProfileBinding.editProfileNameEdt.setText(userName);
             editProfileBinding.editProfileEmailEdt.setText(email);
@@ -152,15 +170,17 @@ public class EditProfile extends AppCompatActivity {
             setMultiImageView(carInside, carInsideViews);
             setMultiImageView(carOutside, carOutsideViews);
 
-            uploadUserInfo.put("username", userName);
-            uploadUserInfo.put("email", email);
-            uploadUserInfo.put("carType", plateNo);
+            uploadUserInfo.put("username", editProfileBinding.editProfileNameEdt.getText());
+            uploadUserInfo.put("email", editProfileBinding.editProfileEmailEdt.getText());
+            uploadUserInfo.put("plateNo", editProfileBinding.editProfilePlateNoEdt.getText());
             uploadUserInfo.put("fcmToken", MyFirebaseMessagingService.getToken(getApplicationContext()));
 
             uploadUserInfo.put("profilePhoto", profilePhoto);
             uploadUserInfo.put("DL", dl);
             uploadUserInfo.put("Registration", registration);
             uploadUserInfo.put("Insurance", insurance);
+            uploadUserInfo.put("CarInside", carInside);
+            uploadUserInfo.put("CarOutside", carOutside);
         } catch (JSONException e) {
             e.printStackTrace();
         }
@@ -172,6 +192,84 @@ public class EditProfile extends AppCompatActivity {
         } else {
             requestPermissionWriteGallery();
         }
+        getCarsType();
+
+        setRecyclerView(carTypeId);
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
+    private void getCarsType() {
+//        /public/carTypes
+        RequestQueue requestQueue = Volley.newRequestQueue(EditProfile.this);
+        String mURL = baseUrl + "/public/carTypes";
+
+        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, mURL,
+                null,
+                response -> {
+
+                    Log.i(TAG, "Mahdi: EditProfile: getCarsType: res 0 " + response);
+                    JSONArray data = null;
+                    data = response.optJSONArray("data");
+
+                    Log.i(TAG, "Mahdi: EditProfile: getCarsType: res 1 " + data);
+                    setTestimonialList(data);
+                }, error -> {
+//            profileBinding.myProfileRelativeLayoutProgress.setVisibility(View.GONE);
+//            profileBinding.myProfileSwipeRefreshLayout.setRefreshing(false);
+            Log.e("Mahdi", "Mahdi: EditProfile: getCarsType: Error 1 " + error.getMessage());
+        }) {
+
+            @Override
+            public Map<String, String> getHeaders() {
+                Map<String, String> params = new HashMap<>();
+                params.put("token", userToken);
+                return params;
+            }
+
+            @Override
+            protected Response parseNetworkResponse(NetworkResponse response) {
+                try {
+                    Log.i(TAG, "Mahdi: EditProfile: getCarsType: res 1 " + response.data);
+                    String jsonString = new String(response.data, HttpHeaderParser.parseCharset(response.headers));
+                    return Response.success(new JSONObject(jsonString), HttpHeaderParser.parseCacheHeaders(response));
+                } catch (UnsupportedEncodingException e) {
+                    return Response.error(new ParseError(e));
+                } catch (JSONException je) {
+                    return Response.error(new ParseError(je));
+                }
+            }
+        };
+        requestQueue.add(jsonObjectRequest);
+    }
+
+    private void setTestimonialList(JSONArray carItems) {
+        rideList.clear();
+        for (int i = 0; i < carItems.length(); i++) {
+            JSONObject carItem = carItems.optJSONObject(i);
+            MyRideClass ride = new MyRideClass("dateRide", "priceRide", carItem.optString("quantityCars"),
+                    carItem.optString("carTypeName"), carItem.optString("carIcon"), "endLocationRide",
+                    carItem.optString("_id"));
+            rideList.add(ride);
+        }
+        carAdapter.notifyDataSetChanged();
+    }
+
+    OnTextClickListener onTextClickListener = carId -> {
+        try {
+            uploadUserInfo.put("carType", carId);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+//        mCarId = carId;
+    };
+
+    private void setRecyclerView(String carTypeId) {
+        carAdapter = new CarAdapter(EditProfile.this, rideList, onTextClickListener, carTypeId);
+        mLayoutManager = new LinearLayoutManager(EditProfile.this, LinearLayoutManager.HORIZONTAL, false);
+        editProfileBinding.recyclerView.setLayoutManager(mLayoutManager);
+        editProfileBinding.recyclerView.setItemAnimator(new DefaultItemAnimator());
+        editProfileBinding.recyclerView.setAdapter(carAdapter);
+
     }
 
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)

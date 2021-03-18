@@ -2,8 +2,16 @@ package com.development.taxiappproject.Global;
 
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
 import android.location.Address;
 import android.location.Geocoder;
+
+import com.development.taxiappproject.R;
+import com.google.android.gms.maps.model.BitmapDescriptor;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 
 import java.io.IOException;
 import java.util.List;
@@ -36,5 +44,47 @@ public class GlobalVal {
         progressDialog.show();
 
         return progressDialog;
+    }
+
+    public static Bitmap destinationIcon() {
+        Bitmap.Config conf = Bitmap.Config.ARGB_8888;
+        Bitmap bmp = Bitmap.createBitmap(40, 40, conf);
+        Canvas canvas1 = new Canvas(bmp);
+
+        Paint color = new Paint();
+        color.setTextSize(35);
+        color.setColor(Color.RED);
+
+        canvas1.drawCircle(20f, 20f, 20f, color);
+        return bmp;
+    }
+
+    public static Bitmap originIcon(Context context) {
+
+        Bitmap.Config conf = Bitmap.Config.ARGB_8888;
+        Bitmap bmp = Bitmap.createBitmap(40, 40, conf);
+        Canvas canvas1 = new Canvas(bmp);
+
+        Paint color = new Paint();
+        color.setTextSize(35);
+        color.setColor(context.getResources().getColor(R.color.colorAccent));
+
+        canvas1.drawCircle(20f, 20f, 20f, color);
+        return bmp;
+    }
+
+    public static BitmapDescriptor drawCircle(Context context) {
+        //TODO draw circle
+        int d = 500; // diameter
+        Bitmap bm = Bitmap.createBitmap(d, d, Bitmap.Config.ARGB_8888);
+        Canvas c = new Canvas(bm);
+        Paint p = new Paint();
+        p.setColor(context.getResources().getColor(R.color.colorAccent));
+        p.setAlpha(128);
+        c.drawCircle(d / 2, d / 2, d / 2, p);
+
+        // generate BitmapDescriptor from circle Bitmap
+        BitmapDescriptor bmD = BitmapDescriptorFactory.fromBitmap(bm);
+        return bmD;
     }
 }
