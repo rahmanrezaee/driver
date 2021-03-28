@@ -11,7 +11,6 @@
     <string name="registration">Registration</string>
     <string name="insurance">Insurance</string>
     <string name="verify">Verify</string>
-    <string name="forgot_text"><u>Forgot Password</u></string>
     <string name="resend"><u>Resend</u></string>
     <string name="otp_desc_2">Didn\'t Receive an OTP?</string>
     <string name="otp_desc">Enter the 6 Digit OTP received on your registered phone number to Verify your number</string>

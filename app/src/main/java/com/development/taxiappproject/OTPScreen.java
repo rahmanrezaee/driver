@@ -220,6 +220,10 @@ public class OTPScreen extends AppCompatActivity {
                 mLastClickTime = SystemClock.elapsedRealtime();
                 resendVerificationCode(phone_number, mResendToken);
                 break;
+
+            case R.id.back:
+                finish();
+                break;
         }
     }
 

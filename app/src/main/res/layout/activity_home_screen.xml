@@ -2,46 +2,46 @@
 <layout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools">
-<androidx.drawerlayout.widget.DrawerLayout
-    android:id="@+id/drawer_layout"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:fitsSystemWindows="true"
-    tools:openDrawer="start">
 
-    <include
-        android:id="@+id/app_bar"
-        layout="@layout/app_bar_home_screen"
+    <androidx.drawerlayout.widget.DrawerLayout
+        android:id="@+id/drawer_layout"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
-
-    <com.google.android.material.navigation.NavigationView
-        android:id="@+id/nav_view"
-        android:layout_width="wrap_content"
         android:layout_height="match_parent"
-        android:layout_gravity="start"
         android:fitsSystemWindows="true"
-        android:background="@color/header_background"
-        app:itemIconTint="@android:color/white"
-        app:itemTextColor="@android:color/white"
-        >
+        tools:openDrawer="start">
 
-        <LinearLayout
+        <include
+            android:id="@+id/app_bar"
+            layout="@layout/app_bar_home_screen"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:layout_height="match_parent" />
 
-            <include
-                android:id="@+id/header_layout"
-                layout="@layout/nav_header_show_home_screen"/>
+        <com.google.android.material.navigation.NavigationView
+            android:id="@+id/nav_view"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_gravity="start"
+            android:background="@color/header_background"
+            android:fitsSystemWindows="true"
+            app:itemIconTint="@android:color/white"
+            app:itemTextColor="@android:color/white">
 
-            <include
-                android:id="@+id/custom_navigation_drawer"
-                layout="@layout/nav_menu_layout"/>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
 
-        </LinearLayout>
+                <include
+                    android:id="@+id/header_layout"
+                    layout="@layout/nav_header_show_home_screen" />
 
-    </com.google.android.material.navigation.NavigationView>
+                <include
+                    android:id="@+id/custom_navigation_drawer"
+                    layout="@layout/nav_menu_layout" />
 
-</androidx.drawerlayout.widget.DrawerLayout>
+            </LinearLayout>
+
+        </com.google.android.material.navigation.NavigationView>
+
+    </androidx.drawerlayout.widget.DrawerLayout>
 </layout>

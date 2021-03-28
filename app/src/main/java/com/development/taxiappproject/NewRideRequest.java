@@ -414,14 +414,6 @@ public class NewRideRequest extends FragmentActivity implements OnMapReadyCallba
                         .into(target);
 
                 Log.i(TAG, "onTaskDone: I did it! 3");
-
-//                Paint color = new Paint();
-//                color.setColor(Color.TRANSPARENT);
-//
-//                Bitmap.Config conf = Bitmap.Config.ARGB_8888;
-//                Bitmap bmp = Bitmap.createBitmap(200, 200, conf);
-//                Canvas canvas1 = new Canvas(bmp);
-//                canvas1.drawCircle(40f, 40f, 40f, color);
             }
         };
 
@@ -433,101 +425,6 @@ public class NewRideRequest extends FragmentActivity implements OnMapReadyCallba
             return;
         }
         fusedLocationProviderClient.requestLocationUpdates(locationRequest, locationCallback, Objects.requireNonNull(Looper.myLooper()));
-    }
-
-//    private void loadMarkerIcon(final Marker marker) {
-//        String burlImg = "Url_imagePath;
-//        Glide.with(this).load(burlImg)
-//                .asBitmap().fitCenter().into(new SimpleTarget<Bitmap>() {
-//            @Override
-//            public void onResourceReady(Bitmap bitmap, GlideAnimation<? super Bitmap> glideAnimation) {
-//
-//                if(bitmap!=null){
-//                    //  Bitmap circularBitmap = getRoundedCornerBitmap(bitmap, 150);
-//                    Bitmap mBitmap = getCircularBitmap(bitmap);
-//                    mBitmap = addBorderToCircularBitmap(mBitmap, 2, Color.WHITE,squareBitmapWidth);
-//                    BitmapDescriptor icon = BitmapDescriptorFactory.fromBitmap(mBitmap);
-//                    marker.setIcon(icon);
-//                }
-//
-//            }
-//        });
-//
-//    }
-
-    private class MyTask extends AsyncTask<Void, Void, Bitmap> {
-        String result;
-
-        @Override
-        protected Bitmap doInBackground(Void... voids) {
-
-            Bitmap overlay;
-            try {
-                URL url = new URL("https://webfume-onionai.s3.amazonaws.com/guest/public/documents/173117-1615312785756.jpg");
-                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-                connection.setDoInput(true);
-                connection.connect();
-                InputStream input = connection.getInputStream();
-                overlay = BitmapFactory.decodeStream(input);
-            } catch (IOException e) {
-                e.printStackTrace();
-                return null;
-            }
-            return overlay;
-
-//            String profilePath = sharedPreferences.getString(SharedPrefKey.profilePath, "defaultValue");
-//            String profilePath = "https://webfume-onionai.s3.amazonaws.com/guest/public/documents/173117-1615312785756.jpg";
-//
-//            Bitmap.Config conf = Bitmap.Config.ARGB_8888;
-//            Bitmap bmp = Bitmap.createBitmap(200, 200, conf);
-//            Canvas canvas1 = new Canvas(bmp);
-//            canvas1.drawCircle(40f, 40f, 40f, color);
-
-//
-//            Paint color = new Paint();
-//            color.setTextSize(35);
-//            color.setColor(Color.TRANSPARENT);
-//            try {
-//                URL url = new URL(profilePath);
-//                canvas1.drawBitmap(BitmapFactory.decodeStream(url.openConnection().getInputStream()), 0, 0, color);
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//            }
-//            return bmp;
-
-//                url = new URL(strMessage);
-//                BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(url.openStream()));
-//                String stringBuffer;
-//                String string = "";
-//                while ((stringBuffer = bufferedReader.readLine()) != null) {
-//                    string = String.format("%s%s", string, stringBuffer);
-//                }
-//                bufferedReader.close();
-//                result = string;
-        }
-
-        @Override
-        protected void onPostExecute(Bitmap bitmap) {
-            super.onPostExecute(bitmap);
-            // If received bitmap successfully, draw it on our drawable
-            Log.i(TAG, "onPostExecute: 0 ");
-            if (bitmap != null) {
-                Log.i(TAG, "onPostExecute: 1 ");
-
-//                Bitmap marker = BitmapFactory.decodeResource(getResources(), R.drawable.custom_marker);
-//                Bitmap newMarker = marker.copy(Bitmap.Config.ARGB_8888, true);
-//                Canvas canvas = new Canvas(newMarker);
-//                // Offset the drawing by 25x25
-//                canvas.drawBitmap(bitmap, 25, 25, null);
-//                // Add the new marker to the map
-//                mMap.addMarker(new MarkerOptions()
-//                        .position(position)
-//                        .title(title)
-//                        .snippet(snippetText)
-//                        .icon(BitmapDescriptorFactory.fromBitmap(newMarker)));
-            }
-//            Picasso
-        }
     }
 
     @Override

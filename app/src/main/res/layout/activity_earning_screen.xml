@@ -3,85 +3,124 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-        android:id="@+id/earningScreen_swipeRefreshLayout"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content">
+    <androidx.drawerlayout.widget.DrawerLayout
+        android:id="@+id/drawer_layout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fitsSystemWindows="true"
+        tools:openDrawer="start">
 
-        <androidx.core.widget.NestedScrollView
-            android:layout_width="match_parent"
-            android:layout_height="match_parent">
+        <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+            android:id="@+id/earningScreen_swipeRefreshLayout"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
 
-            <RelativeLayout
+            <androidx.core.widget.NestedScrollView
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                tools:context=".LoginScreen">
+                android:layout_height="match_parent">
 
-                <ProgressBar
-                    android:id="@+id/earningScreen_progressBar"
-                    style="@style/Spinner"
+                <RelativeLayout
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:layout_marginTop="120dp"
-                    android:visibility="gone" />
+                    tools:context=".LoginScreen">
 
-                <LinearLayout
-                    android:id="@+id/header_layout"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:background="@color/appColorPrimary"
-                    android:orientation="horizontal">
+                    <ProgressBar
+                        android:id="@+id/earningScreen_progressBar"
+                        style="@style/Spinner"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_marginTop="120dp"
+                        android:visibility="gone" />
 
-                    <ImageView
-                        android:id="@+id/earningScreen_back_btn"
-                        android:layout_width="36dp"
-                        android:layout_height="36dp"
-                        android:layout_gravity="center_vertical"
-                        android:onClick="onClick"
-                        android:src="@drawable/ic_chevron_left_black_24dp" />
-
-                    <TextView
-                        android:id="@+id/login_head"
-                        android:layout_width="0dp"
-                        android:layout_height="50dp"
-                        android:layout_weight="1"
+                    <androidx.appcompat.widget.Toolbar
+                        android:id="@+id/header_layout_appBar"
+                        android:layout_width="match_parent"
+                        android:layout_height="?attr/actionBarSize"
                         android:background="@color/appColorPrimary"
-                        android:gravity="center"
-                        android:text="@string/earning"
-                        android:textColor="@android:color/black"
-                        android:textSize="18sp"
-                        android:textStyle="bold" />
+                        app:popupTheme="@style/AppTheme.PopupOverlay">
 
-                    <ImageView
-                        android:layout_width="36dp"
-                        android:layout_height="36dp"
-                        android:layout_gravity="center_vertical"
-                        android:src="@drawable/ic_chevron_left_black_24dp"
-                        android:visibility="invisible" />
+                        <LinearLayout
+                            android:id="@+id/header_layout"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:background="@color/appColorPrimary"
+                            android:orientation="horizontal">
 
-                </LinearLayout>
+                            <TextView
+                                android:id="@+id/login_head"
+                                android:layout_width="0dp"
+                                android:layout_height="50dp"
+                                android:layout_weight="1"
+                                android:background="@color/appColorPrimary"
+                                android:gravity="center"
+                                android:text="@string/earning"
+                                android:textColor="@android:color/black"
+                                android:textSize="18sp"
+                                android:textStyle="bold" />
 
-                <androidx.recyclerview.widget.RecyclerView
-                    android:id="@+id/earning_recycler_view"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_below="@id/earningScreen_makePaid_btn"
-                    android:layout_marginTop="10dp" />
+                            <ImageView
+                                android:id="@+id/earningScreen_back_btn"
+                                android:layout_width="36dp"
+                                android:layout_height="36dp"
+                                android:layout_gravity="center_vertical"
+                                android:onClick="onClick"
+                                android:visibility="invisible"
+                                android:src="@drawable/ic_chevron_left_black_24dp" />
 
-                <Button
-                    android:id="@+id/earningScreen_makePaid_btn"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_below="@+id/header_layout"
-                    android:layout_marginLeft="20dp"
-                    android:layout_marginTop="8dp"
-                    android:layout_marginRight="20dp"
-                    android:layout_marginBottom="20dp"
-                    android:background="@drawable/button_background"
-                    android:text="Make Paid the Day"
-                    android:textColor="@android:color/black" />
+                        </LinearLayout>
+                    </androidx.appcompat.widget.Toolbar>
 
-            </RelativeLayout>
-        </androidx.core.widget.NestedScrollView>
-    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/earning_recycler_view"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_below="@id/earningScreen_makePaid_btn"
+                        android:layout_marginTop="10dp" />
+
+                    <Button
+                        android:id="@+id/earningScreen_makePaid_btn"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_below="@+id/header_layout_appBar"
+                        android:layout_marginLeft="20dp"
+                        android:layout_marginTop="8dp"
+                        android:layout_marginRight="20dp"
+                        android:layout_marginBottom="20dp"
+                        android:background="@drawable/button_background"
+                        android:text="Mark Paid the Day"
+                        android:textColor="@android:color/black" />
+
+                </RelativeLayout>
+            </androidx.core.widget.NestedScrollView>
+        </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+
+        <com.google.android.material.navigation.NavigationView
+            android:id="@+id/nav_view"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_gravity="start"
+            android:background="@color/header_background"
+            android:fitsSystemWindows="true"
+            app:itemIconTint="@android:color/white"
+            app:itemTextColor="@android:color/white">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <include
+                    android:id="@+id/header_layout_ride"
+                    layout="@layout/nav_header_show_home_screen" />
+
+                <include
+                    android:id="@+id/custom_navigation_drawer"
+                    layout="@layout/nav_menu_layout" />
+
+            </LinearLayout>
+
+        </com.google.android.material.navigation.NavigationView>
+
+    </androidx.drawerlayout.widget.DrawerLayout>
+
 </layout>

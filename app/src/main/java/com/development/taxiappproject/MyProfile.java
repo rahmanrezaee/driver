@@ -1,8 +1,12 @@
 package com.development.taxiappproject;
 
 import androidx.annotation.RequiresApi;
+import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
+import androidx.core.view.GravityCompat;
 import androidx.databinding.DataBindingUtil;
+import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -31,9 +35,11 @@ import com.android.volley.toolbox.HttpHeaderParser;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 import com.development.taxiappproject.Const.SharedPrefKey;
+import com.development.taxiappproject.Service.MyFirebaseMessagingService;
 import com.development.taxiappproject.adapter.CarAdapter;
 import com.development.taxiappproject.databinding.ActivityMyProfileBinding;
 import com.development.taxiappproject.model.MyRideClass;
+import com.google.firebase.auth.FirebaseAuth;
 import com.squareup.picasso.Picasso;
 
 import org.json.JSONArray;
@@ -52,15 +58,19 @@ import java.util.Map;
 
 import javax.xml.parsers.SAXParserFactory;
 
+import de.hdodenhof.circleimageview.CircleImageView;
+
 import static com.development.taxiappproject.Const.ConstantValue.baseUrl;
 
-public class MyProfile extends AppCompatActivity {
+public class MyProfile extends AppCompatActivity implements View.OnClickListener {
     private static final String TAG = "MAHDI";
 
     JSONObject userInfo = new JSONObject();
     public static ActivityMyProfileBinding profileBinding;
 
     SharedPreferences sharedPreferences;
+    private TextView profileTxt;
+    private CircleImageView circleImageView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -69,6 +79,56 @@ public class MyProfile extends AppCompatActivity {
 
         profileBinding.myProfileRelativeLayoutItem.setVisibility(View.GONE);
         profileBinding.myProfileProgressBar.setVisibility(View.VISIBLE);
+
+        View headerLayout = getWindow().findViewById(R.id.header_layout_ride);
+
+        profileTxt = headerLayout.findViewById(R.id.navHeader_email);
+        circleImageView = findViewById(R.id.navHeader_profile_image);
+
+        Toolbar toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+
+        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
+                this, profileBinding.drawerLayout, profileBinding.headerLayoutAppBar,
+                R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+
+        profileBinding.drawerLayout.addDrawerListener(toggle);
+        toggle.setHomeAsUpIndicator(R.drawable.ic_hamburger);
+        toggle.setDrawerIndicatorEnabled(false);
+        toggle.syncState();
+
+        toggle.setToolbarNavigationClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                DrawerLayout drawer = findViewById(R.id.drawer_layout);
+                if (drawer.isDrawerOpen(GravityCompat.START)) {
+                    drawer.closeDrawer(GravityCompat.START);
+                } else {
+                    drawer.openDrawer(GravityCompat.START);
+                }
+            }
+        });
+
+        profileBinding.customNavigationDrawer.testimonialLayout.setOnClickListener(this);
+        profileBinding.customNavigationDrawer.ridesLayout.setOnClickListener(this);
+        profileBinding.customNavigationDrawer.earningLayout.setOnClickListener(this);
+        profileBinding.customNavigationDrawer.rateLayout.setOnClickListener(this);
+
+        profileBinding.customNavigationDrawer.navMenuLogOutBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                FirebaseAuth.getInstance().signOut();
+                SharedPreferences preferences = getSharedPreferences(OTPScreen.MyPREFERENCES, Context.MODE_PRIVATE);
+                String fcmToken = sharedPreferences.getString(MyFirebaseMessagingService.fcmToken, "defaultValue");
+                SharedPreferences.Editor editor = preferences.edit();
+                editor.clear();
+                editor.putString(MyFirebaseMessagingService.fcmToken, fcmToken);
+                editor.apply();
+                Intent intent = new Intent(MyProfile.this, LoginScreen.class);
+                startActivity(intent);
+                finish();
+            }
+        });
 
 //        progressBar = findViewById(R.id.myProfile_progressBar);
 //        progressBar.setVisibility(View.VISIBLE);
@@ -91,6 +151,12 @@ public class MyProfile extends AppCompatActivity {
         String userToken = sharedPreferences.getString(SharedPrefKey.userToken, "defaultValue");
         String userId = sharedPreferences.getString(SharedPrefKey.userId, "defaultValue");
 
+        String userName = sharedPreferences.getString(SharedPrefKey.userName, "defaultValue");
+        String profilePath = sharedPreferences.getString(SharedPrefKey.profilePath, "defaultValue");
+
+        profileTxt.setText(userName);
+        Picasso.get().load(profilePath).into(circleImageView);
+
         profileBinding.myProfileSwipeRefreshLayout.setOnRefreshListener(() -> {
             getProfileItem(userToken, userId);
         });
@@ -100,9 +166,6 @@ public class MyProfile extends AppCompatActivity {
 
     public void onClick(View view) {
         switch (view.getId()) {
-            case R.id.myProfile_back_btn:
-                finish();
-                break;
 
             case R.id.myProfile_edit_btn:
                 Intent intent = new Intent(MyProfile.this, EditProfile.class);
@@ -110,8 +173,41 @@ public class MyProfile extends AppCompatActivity {
                 startActivity(intent);
                 break;
 
+            case R.id.testimonial_layout:
+                startActivity(new Intent(this, HomeScreen.class));
+                finish();
+                checkDrawer();
+                break;
+
+            case R.id.rides_layout:
+                startActivity(new Intent(this, MyRideScreen.class));
+                finish();
+                checkDrawer();
+                break;
+
+            case R.id.earning_layout:
+                startActivity(new Intent(this, EarningScreen.class));
+                finish();
+                checkDrawer();
+                break;
+
+            case R.id.rate_layout:
+                startActivity(new Intent(this, RateCardScreen.class));
+                finish();
+                checkDrawer();
+                break;
+
 //            case R.id.myProfile_edit_btn:
 
+        }
+    }
+
+    private void checkDrawer() {
+        DrawerLayout drawer = findViewById(R.id.drawer_layout);
+        if (drawer.isDrawerOpen(GravityCompat.START)) {
+            drawer.closeDrawer(GravityCompat.START);
+        } else {
+            super.onBackPressed();
         }
     }
 

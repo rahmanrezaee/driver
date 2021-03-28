@@ -194,10 +194,6 @@ public class LoginScreen extends AppCompatActivity {
             case R.id.signup:
                 startActivity(new Intent(getApplicationContext(), SignUpScreen.class));
                 break;
-
-            case R.id.forgot_password:
-                startActivity(new Intent(getApplicationContext(), ForgotPassword.class));
-                break;
         }
     }
 

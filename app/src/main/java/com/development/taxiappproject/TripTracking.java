@@ -15,6 +15,7 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Looper;
 import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
@@ -33,15 +34,27 @@ import com.development.taxiappproject.Global.GlobalVal;
 import com.development.taxiappproject.databinding.ActivityTripTrackingBinding;
 import com.development.taxiappproject.helper.FetchURL;
 import com.development.taxiappproject.helper.TaskLoadedCallback;
+import com.development.taxiappproject.model.CircleTransform;
+import com.development.taxiappproject.model.PicassoMarker;
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationListener;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationResult;
+import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+import com.google.android.gms.maps.model.GroundOverlayOptions;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
+import com.squareup.picasso.Picasso;
+import com.squareup.picasso.Target;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -49,9 +62,13 @@ import org.json.JSONObject;
 import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 import static com.development.taxiappproject.Const.ConstantValue.baseUrl;
 import static com.development.taxiappproject.Global.GlobalVal.GOOGLE_MAP_API_KEY;
+import static com.development.taxiappproject.Global.GlobalVal.destinationIcon;
+import static com.development.taxiappproject.Global.GlobalVal.drawCircle;
+import static com.development.taxiappproject.Global.GlobalVal.originIcon;
 import static com.development.taxiappproject.OTPScreen.MyPREFERENCES;
 
 public class TripTracking extends AppCompatActivity implements OnMapReadyCallback, TaskLoadedCallback {
@@ -68,7 +85,15 @@ public class TripTracking extends AppCompatActivity implements OnMapReadyCallbac
 
     //    Polyline driverPolyLine;
     Polyline currentPolyLine;
+    private boolean currentPolyLineFlag = false;
     JSONObject notificationData;
+
+    private FusedLocationProviderClient fusedLocationProviderClient;
+    HashMap<String, String> header = new HashMap();
+    private LocationRequest locationRequest;
+    private LocationCallback locationCallback;
+
+    private boolean paidClicked = false;
 
     @Override
     public void onMapReady(GoogleMap googleMap) {
@@ -221,14 +246,25 @@ public class TripTracking extends AppCompatActivity implements OnMapReadyCallbac
                     place1 = new MarkerOptions().position(new LatLng(fromLat, fromLng)).title("Origin");
                     place2 = new MarkerOptions().position(new LatLng(toWhereLat, toWhereLng)).title("Destination");
 
+                    currentPolyLineFlag = true;
+
                     new FetchURL(TripTracking.this).execute("https://maps.googleapis.com/maps/api/directions/json?origin=" +
                             place1.getPosition().latitude + "," + place1.getPosition().longitude
                             + "&destination=" + place2.getPosition().latitude + "," + place2.getPosition().longitude +
                             "&key=" + GOOGLE_MAP_API_KEY, "driving");
 
-                    mMap.addMarker(new MarkerOptions().position(place1.getPosition()).title("Origin"));
-                    mMap.addMarker(new MarkerOptions().position(place2.getPosition()).title("Destination"));
+                    mMap.addMarker(new MarkerOptions().position(place1.getPosition()).title("Origin")
+                            .icon(BitmapDescriptorFactory.fromBitmap(originIcon(getApplicationContext()))));
+
+                    mMap.addMarker(new MarkerOptions().position(place2.getPosition()).title("Destination")
+                            .icon(BitmapDescriptorFactory.fromBitmap(destinationIcon())));
+
                     mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(place1.getPosition(), 14f));
+
+                    mMap.addGroundOverlay(new GroundOverlayOptions().
+                            image(drawCircle(getApplicationContext())).
+                            position(place1.getPosition(), 250 * 2, 250 * 2).
+                            transparency(0.4f));
 
                 }, error -> {
 //            ridingBinding.completeRidingProgressBar.setVisibility(View.GONE);
@@ -295,6 +331,8 @@ public class TripTracking extends AppCompatActivity implements OnMapReadyCallbac
 
                         Toast.makeText(TripTracking.this, message, Toast.LENGTH_SHORT).show();
 
+                        paidClicked = true;
+
                         if (status.equalsIgnoreCase("paid") && serverStatus) {
                             tripTrackingBinding.tripTrackingPaidAndCompBtn.setText("Complete Trip");
                         } else if (!status.equalsIgnoreCase("paid") && serverStatus) {
@@ -350,9 +388,67 @@ public class TripTracking extends AppCompatActivity implements OnMapReadyCallbac
 
     @Override
     public void onTaskDone(Object... values) {
-        if (currentPolyLine != null) {
-            currentPolyLine.remove();
+        if (currentPolyLineFlag) {
+            Log.i(TAG, "onTaskDone: I did it!");
+
+            init();
+            currentPolyLineFlag = false;
         }
         currentPolyLine = mMap.addPolyline((PolylineOptions) values[0]);
+    }
+
+
+    private void init() {
+        header.clear();
+        header.put("Content-Type", "application/json");
+
+        locationRequest = new LocationRequest();
+        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+        locationRequest.setFastestInterval(3000);
+        locationRequest.setSmallestDisplacement(10f);
+        locationRequest.setInterval(5000);
+
+        locationCallback = new LocationCallback() {
+            @Override
+            public void onLocationResult(LocationResult locationResult) {
+                super.onLocationResult(locationResult);
+
+                String profilePath = sharedPreferences.getString(SharedPrefKey.profilePath, "defaultValue");
+
+                LatLng driverLatLng = new LatLng(locationResult.getLastLocation().getLatitude(),
+                        locationResult.getLastLocation().getLongitude());
+
+                new FetchURL(TripTracking.this).execute("https://maps.googleapis.com/maps/api/directions/json?origin="
+                        + driverLatLng.latitude + "," + driverLatLng.longitude + "&destination=" +
+                        place1.getPosition().latitude + "," + place1.getPosition().longitude +
+                        "&key=" + GOOGLE_MAP_API_KEY, "driving");
+
+                MarkerOptions markerOption = new MarkerOptions().position(driverLatLng);
+
+                Marker location_marker = mMap.addMarker(markerOption);
+
+                Target target = new PicassoMarker(location_marker);
+
+                Picasso.get().load(profilePath).resize(100, 100).transform(new CircleTransform())
+                        .into(target);
+
+                Log.i(TAG, "onTaskDone: I did it! 3");
+            }
+        };
+
+        fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(TripTracking.this);
+        if (ActivityCompat.checkSelfPermission(getApplicationContext(), android.Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
+                getApplicationContext(), android.Manifest.permission.ACCESS_COARSE_LOCATION
+        ) != PackageManager.PERMISSION_GRANTED) {
+            return;
+        }
+        fusedLocationProviderClient.requestLocationUpdates(locationRequest, locationCallback, Objects.requireNonNull(Looper.myLooper()));
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        fusedLocationProviderClient.removeLocationUpdates(locationCallback);
     }
 }

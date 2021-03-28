@@ -289,6 +289,10 @@ public class EditProfile extends AppCompatActivity {
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
     public void onClick(View view) {
         switch (view.getId()) {
+            case R.id.editProfile_back_btn:
+                finish();
+                break;
+
             case R.id.editProfile_circleImage:
             case R.id.editProfile_cameraImage:
                 selectImage(1);
@@ -426,7 +430,7 @@ public class EditProfile extends AppCompatActivity {
                 file.getName(), requestBody1);
 
         RequestBody category = RequestBody.create(MediaType.parse("multipart/form-data"), "documents");
-        RequestBody permission = RequestBody.create(MediaType.parse("multipart/form-data"), "true");
+        RequestBody permission = RequestBody.create(MediaType.parse("multipart/form-data"), "false");
 
         RequestBody token = RequestBody.create(MediaType.parse("multipart/form-data"),
                 "7220A3B7F8D2FD2C236092E0918B4EA3");
@@ -452,13 +456,15 @@ public class EditProfile extends AppCompatActivity {
                                     Log.i(TAG, "Mahdi: EditProfile: uploadImage: accept: 3 " +
                                             forecast.getJSONObject("data").getString("uriPath"));
 
-                                    JSONObject data = new JSONObject();
+                                    JSONObject data = forecast.optJSONObject("data");
 
 //                            TODO Image pick
                                     JSONObject imageBody = new JSONObject();
                                     imageBody.put("uriPath", data.optString("uriPath"));
                                     imageBody.put("_id", data.optString("_id"));
                                     uploadUserInfo.put(typeDocument, imageBody);
+
+                                    Log.i(TAG, "Mahdi: EditProfile: uploadImage: accept: 4 " + uploadUserInfo);
 
                                     //TODO for loading image
 //                            isUploading = false;

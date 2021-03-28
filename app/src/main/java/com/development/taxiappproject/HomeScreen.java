@@ -313,21 +313,25 @@ public class HomeScreen extends AppCompatActivity implements View.OnClickListene
 
             case R.id.profile_layout:
                 startActivity(new Intent(HomeScreen.this, MyProfile.class));
+                finish();
                 checkDrawer();
                 break;
 
             case R.id.rides_layout:
                 startActivity(new Intent(HomeScreen.this, MyRideScreen.class));
+                finish();
                 checkDrawer();
                 break;
 
             case R.id.earning_layout:
                 startActivity(new Intent(HomeScreen.this, EarningScreen.class));
+                finish();
                 checkDrawer();
                 break;
 
             case R.id.rate_layout:
                 startActivity(new Intent(HomeScreen.this, RateCardScreen.class));
+                finish();
                 checkDrawer();
                 break;
 
