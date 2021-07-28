@@ -27,5 +27,39 @@
         <item name="android:textColor">@color/appColorPrimary</item>
         <item name="android:textSize">14sp</item>
     </style>
+    <style name="border_spinner" parent="@android:style/TextAppearance.DeviceDefault.Widget.PopupMenu.Small">
+        <item name="android:textColor">@color/appColorPrimary</item>
+        <item name="android:textSize">12sp</item>
+    </style>
 
+    <style name="spinnerStyle"  parent="@android:style/Widget.TextView.SpinnerItem">
+        <item name="android:padding">5sp</item>
+    </style>
+    <style name="spinner_style">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:background">@drawable/gradient_spinner</item>
+        <item name="android:layout_margin">10dp</item>
+        <item name="android:paddingLeft">8dp</item>
+        <item name="android:paddingRight">20dp</item>
+        <item name="android:paddingTop">5dp</item>
+        <item name="android:paddingBottom">5dp</item>
+        <item name="android:popupBackground">#DFF4EBEB</item>
+    </style>
+    <style name="spinnerItemStyle">
+        <item name="android:textAppearance">@style/TextAppearance.AppCompat.Subhead</item>
+        <item name="android:background">@drawable/spinner_border</item>
+        <item name="android:textColor">#000</item>
+    </style>
+    <style name="CheckboxStyle" parent="AppTheme">
+        <item name="colorAccent">@color/green</item>  // for checked
+        <item name="android:textColorSecondary">@color/gray</item>  // for unchecked
+
+        <item name="android:minHeight">33dp</item>
+        <item name="android:minWidth">70dp</item>
+        <item name="android:gravity">center</item>
+        <item name="android:button">@null</item>
+        <item name="android:paddingLeft">5dp</item>
+        <item name="android:paddingRight">5dp</item>
+    </style>
 </resources>

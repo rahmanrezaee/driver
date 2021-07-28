@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">TaxiAppProject</string>
+    <string name="app_name">Driver App</string>
     <string name="login">Login</string>
     <string name="or">Or</string>
     <string name="new_user">New User ?</string>
@@ -26,7 +26,7 @@
     <string name="old_password">Enter your old password</string>
     <string name="new_password">Enter your new password</string>
     <string name="confirm_password">Confirm your new password</string>
-    <string name="complete_ride">Complete Ride</string>
+    <string name="complete_ride">Completed Ride</string>
     <string name="my_ride">My Rides</string>
     <string name="my_profile">My Profile</string>
     <string name="title_activity_home_screen">HomeScreen</string>
@@ -58,6 +58,9 @@
     <string name="invalid_username">Not a valid username</string>
     <string name="invalid_password">Password must be >5 characters</string>
     <string name="login_failed">"Login failed"</string>
+    <string name="demo">demo</string>
+    <string name="Notificatios">Notifications</string>
+    <string name="no_data_available">No Data</string>
 
     <!--    <string name="default_notification_channel_id">"all"</string>-->
 </resources>

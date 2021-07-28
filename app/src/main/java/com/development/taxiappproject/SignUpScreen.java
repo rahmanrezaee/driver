@@ -1,5 +1,6 @@
 package com.development.taxiappproject;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
@@ -10,13 +11,17 @@ import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.ProgressDialog;
 import android.content.ClipData;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentSender;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.media.ExifInterface;
@@ -26,22 +31,60 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.telephony.PhoneNumberUtils;
+import android.text.Editable;
+import android.text.InputType;
+import android.text.Selection;
+import android.text.TextWatcher;
+import android.text.method.HideReturnsTransformationMethod;
+import android.text.method.PasswordTransformationMethod;
 import android.util.Log;
 import android.util.TypedValue;
+import android.view.KeyEvent;
 import android.view.Menu;
+import android.view.MotionEvent;
 import android.view.View;
+import android.view.inputmethod.EditorInfo;
+import android.widget.AdapterView;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.Spinner;
+import android.widget.TextView;
 import android.widget.Toast;
 
+import com.android.volley.AuthFailureError;
+import com.android.volley.NetworkResponse;
+import com.android.volley.NoConnectionError;
+import com.android.volley.ParseError;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.TimeoutError;
+import com.android.volley.VolleyError;
+import com.android.volley.VolleyLog;
+import com.android.volley.toolbox.HttpHeaderParser;
+import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
+import com.development.taxiappproject.Const.SharedPrefKey;
 import com.development.taxiappproject.Global.GlobalVal;
 import com.development.taxiappproject.Retrofit.MyApiConfig;
 import com.development.taxiappproject.Retrofit.RetrofitClient;
 import com.development.taxiappproject.Service.MyFirebaseMessagingService;
+import com.development.taxiappproject.adapter.CarSpinnerAdapter;
+import com.development.taxiappproject.model.CarModel;
+import com.google.android.gms.common.api.ApiException;
+import com.google.android.gms.common.api.ResolvableApiException;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.location.LocationSettingsRequest;
+import com.google.android.gms.location.LocationSettingsResponse;
+import com.google.android.gms.location.LocationSettingsStatusCodes;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.iid.FirebaseInstanceId;
+import com.sangcomz.fishbun.FishBun;
+import com.sangcomz.fishbun.adapter.image.impl.GlideAdapter;
 import com.yalantis.ucrop.util.FileUtils;
 
 import org.json.JSONArray;
@@ -52,7 +95,12 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 import de.hdodenhof.circleimageview.CircleImageView;
@@ -64,6 +112,9 @@ import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
 import retrofit2.Retrofit;
 
+import static com.development.taxiappproject.Const.ConstantValue.baseUrl;
+import static com.development.taxiappproject.Service.MyFirebaseMessagingService.fcmToken;
+
 public class SignUpScreen extends AppCompatActivity {
     private CircleImageView mCircleImageView;
     private ImageView licenseImage, registration, insurance, car_in1, car_in2, car_in3, car_in4, car_out1, car_out2, car_out3, car_out4;
@@ -73,16 +124,24 @@ public class SignUpScreen extends AppCompatActivity {
     String imageEncoded;
     List<String> imagesEncodedList;
 
+    SharedPreferences sharedPreferences;
+    boolean isCarInSelection = false;
+
+    public static final int MY_PERMISSIONS_REQUEST_LOCATION = 999;
     ProgressDialog p;
     String newToken;
     private final int PERMISSION_REQUEST_CODE_CAMERA = 1;
     private final int PERMISSION_REQUEST_CODE_GALLERY = 2;
     private final int PERMISSION_REQUEST_CODE_WRITE_GALLERY = 3;
     private String TAG = "MAHDI";
-
+    private Spinner spinner;
     CompositeDisposable compositeDisposable = new CompositeDisposable();
     MyApiConfig apiConfig1;
     JSONObject uploadUserInfo = new JSONObject();
+    boolean isPasswordVisible = false;
+    FirebaseAuth auth;
+
+    ArrayList<CarModel> car_list = new ArrayList();
 
     @Override
     protected void onStop() {
@@ -90,10 +149,141 @@ public class SignUpScreen extends AppCompatActivity {
         compositeDisposable.clear();
     }
 
+    public boolean checkLocationPermission() {
+        if (ContextCompat.checkSelfPermission(this,
+                Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED) {
+
+            // Should we show an explanation?
+            if (ActivityCompat.shouldShowRequestPermissionRationale(this,
+                    Manifest.permission.ACCESS_FINE_LOCATION)) {
+
+                // Show an explanation to the user *asynchronously* -- don't block
+                // this thread waiting for the user's response! After the user
+                // sees the explanation, try again to request the permission.
+                new AlertDialog.Builder(this)
+                        .setTitle("Location Permission!")
+                        .setMessage("For the driver to find your position")
+                        .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                                //Prompt the user once explanation has been shown
+                                ActivityCompat.requestPermissions(SignUpScreen.this,
+                                        new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                                        MY_PERMISSIONS_REQUEST_LOCATION);
+                            }
+                        })
+                        .create()
+                        .show();
+            } else {
+                // No explanation needed, we can request the permission.
+                ActivityCompat.requestPermissions(this,
+                        new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                        MY_PERMISSIONS_REQUEST_LOCATION);
+            }
+            return false;
+        } else {
+            return true;
+        }
+    }
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_sign_up_screen);
+
+        auth = FirebaseAuth.getInstance();
+
+
+        p = new ProgressDialog(SignUpScreen.this);
+        p.setMessage("Loading...");
+
+        p.show();
+
+        sharedPreferences = getSharedPreferences(OTPScreen.MyPREFERENCES, Context.MODE_PRIVATE);
+        String userToken = sharedPreferences.getString(SharedPrefKey.userToken, "defaultValue");
+        String expireDate = sharedPreferences.getString(SharedPrefKey.expireDate, "defaultValue");
+        FirebaseInstanceId.getInstance().getInstanceId().addOnSuccessListener(this, instanceIdResult -> {
+            String newToken = instanceIdResult.getToken();
+            sharedPreferences.edit().putString(fcmToken, newToken).apply();
+        });
+
+        assert userToken != null;
+        if (!userToken.equalsIgnoreCase("defaultValue")) {
+
+            Date d = SharedPrefKey.convertStringToDate(expireDate);
+
+            if (SharedPrefKey.isAfterNow(d)) {
+
+
+                startActivity(new Intent(this, HomeScreen.class));
+                finish();
+                return;
+
+            } else {
+                String getFcmToken = sharedPreferences.getString(fcmToken, "defaultValue");
+                SharedPreferences.Editor editor = sharedPreferences.edit();
+                editor.clear();
+                editor.putString(fcmToken, getFcmToken);
+
+                if (auth.getCurrentUser() != null)
+                    auth.signOut();
+
+                editor.apply();
+
+
+            }
+
+
+        }
+
+        checkLocationPermission();
+
+
+        LocationRequest locationRequest = LocationRequest.create();
+        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+        LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder()
+                .addLocationRequest(locationRequest);
+
+        Task<LocationSettingsResponse> result =
+                LocationServices.getSettingsClient(SignUpScreen.this).checkLocationSettings(builder.build());
+
+        result.addOnCompleteListener(new OnCompleteListener<LocationSettingsResponse>() {
+            @Override
+            public void onComplete(@NonNull Task<LocationSettingsResponse> task) {
+                try {
+                    LocationSettingsResponse response = task.getResult(ApiException.class);
+                    // All location settings are satisfied. The client can initialize location
+                    // requests here.
+                } catch (ApiException exception) {
+                    switch (exception.getStatusCode()) {
+                        case LocationSettingsStatusCodes.RESOLUTION_REQUIRED:
+                            // Location settings are not satisfied. But could be fixed by showing the
+                            // user a dialog.
+                            try {
+                                // Cast to a resolvable exception.
+                                ResolvableApiException resolvable = (ResolvableApiException) exception;
+                                // Show the dialog by calling startResolutionForResult(),
+                                // and check the result in onActivityResult().
+                                resolvable.startResolutionForResult(
+                                        SignUpScreen.this,
+                                        LocationRequest.PRIORITY_HIGH_ACCURACY);
+                            } catch (IntentSender.SendIntentException e) {
+                                // Ignore the error.
+                            } catch (ClassCastException e) {
+                                // Ignore, should be an impossible error.
+                            }
+                            break;
+                        case LocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE:
+                            // Location settings are not satisfied. However, we have no way to fix the
+                            // settings so we won't show the dialog.
+                            break;
+                    }
+                }
+            }
+        });
+
 
         String token = MyFirebaseMessagingService.getToken(SignUpScreen.this);
 
@@ -107,7 +297,12 @@ public class SignUpScreen extends AppCompatActivity {
         car_in2 = findViewById(R.id.car_in_image2);
         car_in3 = findViewById(R.id.car_in_image3);
         car_in4 = findViewById(R.id.car_in_image4);
-
+        TextView login_button = findViewById(R.id.login_button);
+        login_button.setOnClickListener(v -> {
+            Intent i = new Intent(this, LoginScreen.class);
+            startActivity(i);
+            finish();
+        });
         car_out1 = findViewById(R.id.car_out_image1);
         car_out2 = findViewById(R.id.car_out_image2);
         car_out3 = findViewById(R.id.car_out_image3);
@@ -116,8 +311,106 @@ public class SignUpScreen extends AppCompatActivity {
         usernameEdt = findViewById(R.id.sign_up_username);
         emailEdt = findViewById(R.id.sign_up_email);
         contactNumberEdt = findViewById(R.id.sign_up_contact_number);
+
+
+        Selection.setSelection(contactNumberEdt.getText(), contactNumberEdt.getText().length());
+        contactNumberEdt.addTextChangedListener(new TextWatcher() {
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before,
+                                      int count) {
+                // TODO Auto-generated method stub
+
+            }
+
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count,
+                                          int after) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+
+
+                if (!s.toString().startsWith("+1")) {
+                    if (!s.toString().equalsIgnoreCase("+"))
+                        contactNumberEdt.setText("+1" + s);
+                    else
+                        contactNumberEdt.setText("+1");
+                    Selection.setSelection(contactNumberEdt.getText(), contactNumberEdt
+                            .getText().length());
+
+
+                }
+
+            }
+
+        });
+
+
         passwordEdt = findViewById(R.id.sign_up_password);
-        carTypeEdt = findViewById(R.id.sign_up_car_type);
+        spinner = (Spinner) findViewById(R.id.car_type);
+        spinner.setPrompt("Car Type");
+        loadCarTypeData();
+
+
+        passwordEdt.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+
+                final int DRAWABLE_RIGHT = 2;
+
+                if (event.getAction() == MotionEvent.ACTION_UP) {
+                    if (event.getRawX() >= (passwordEdt.getRight() - passwordEdt.getCompoundDrawables()[DRAWABLE_RIGHT].getBounds().width())) {
+                        if (isPasswordVisible) {
+                            String pass = passwordEdt.getText().toString();
+                            passwordEdt.setTransformationMethod(PasswordTransformationMethod.getInstance());
+                            passwordEdt.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
+                            passwordEdt.setText(pass);
+                            passwordEdt.setSelection(pass.length());
+                            passwordEdt.setCompoundDrawablesWithIntrinsicBounds(
+                                    0,
+                                    0,
+                                    R.drawable.ic_visibility_off,
+                                    0);
+                        } else {
+                            String pass = passwordEdt.getText().toString();
+                            passwordEdt.setTransformationMethod(HideReturnsTransformationMethod.getInstance());
+                            passwordEdt.setInputType(InputType.TYPE_CLASS_TEXT);
+                            passwordEdt.setText(pass);
+                            passwordEdt.setSelection(pass.length());
+                            passwordEdt.setCompoundDrawablesWithIntrinsicBounds(
+                                    0,
+                                    0,
+                                    R.drawable.ic_eye,
+                                    0);
+
+
+                        }
+                        isPasswordVisible = !isPasswordVisible;
+
+                        return true;
+                    }
+                }
+                return false;
+            }
+        });
+
+        spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+
+                carType = car_list.get(position).getId();
+
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+
+            }
+        });
+
 
         Retrofit retrofit = RetrofitClient.getInstance();
         apiConfig1 = retrofit.create(MyApiConfig.class);
@@ -128,6 +421,7 @@ public class SignUpScreen extends AppCompatActivity {
             requestPermissionWriteGallery();
         }
     }
+
 
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
     public void onClick(View view) {
@@ -154,24 +448,41 @@ public class SignUpScreen extends AppCompatActivity {
 
             case R.id.car_in_image1:
             case R.id.car_in_icon:
-                selectMultipleImage(1);
+
+                isCarInSelection = true;
+
+                FishBun.with(this).setImageAdapter(new GlideAdapter())    .setMaxCount(4) .setMinCount(4)
+                        .setActionBarColor(Color.parseColor("#F8D718"), Color.parseColor("#EDDF65"), false)
+                        .setCamera(true)
+                        .setReachLimitAutomaticClose(true)
+                        .setActionBarTitle("Select Car In Images")
+                        .textOnImagesSelectionLimitReached("Limit Reached!")
+                        .textOnNothingSelected("Nothing Selected")
+                        .setActionBarTitleColor(Color.parseColor("#ffffff"))
+                        .startAlbum();
                 break;
 
             case R.id.car_out_image1:
             case R.id.car_out_icon:
-                selectMultipleImage(2);
+
+                isCarInSelection = false;
+                FishBun.with(this).setImageAdapter(new GlideAdapter())    .setMaxCount(4) .setMinCount(4)
+                        .setActionBarColor(Color.parseColor("#F8D718"), Color.parseColor("#EDDF65"), false)
+                        .setCamera(true)
+                        .setReachLimitAutomaticClose(true)
+                        .setActionBarTitle("Select Car out Images")
+                        .textOnImagesSelectionLimitReached("Limit Reached!")
+                        .textOnNothingSelected("Nothing Selected")
+
+                        .setActionBarTitleColor(Color.parseColor("#ffffff"))
+                        .startAlbum();
+//                selectMultipleImage(2);
                 break;
 
             case R.id.sign_up_btn:
                 if (validate()) {
                     try {
 
-//                        "username": "Rajab",
-//                                "email": "js.mohammadi@gmail.com",
-//                                "phone": "+93767626554",
-//                                "password": "123asd",
-//                                "carType": "600fdcc646bc6409ae97e2ab",
-//                                "fcmToken": "jlkfjdslkfjlkdsjfoiewroijowjfksjfoies",
 
                         uploadUserInfo.put("username", userName);
                         uploadUserInfo.put("email", email);
@@ -189,6 +500,21 @@ public class SignUpScreen extends AppCompatActivity {
                         Log.e("Mahdi: Login error: 1 ", String.valueOf(ex));
                     }
                 }
+                break;
+
+            case R.id.term:
+                Log.i(TAG, "MySignUpScreen: signUp Clicked: ");
+                Intent intent = new Intent(this,
+                        MyTermCondition.class);
+                intent.putExtra("type", "terms");
+                startActivity(intent);
+                break;
+            case R.id.privacy:
+                Log.i(TAG, "MySignUpScreen: signUp Clicked: ");
+                Intent intentp = new Intent(this,
+                        MyTermCondition.class);
+                intentp.putExtra("type", "pravicy");
+                startActivity(intentp);
                 break;
         }
     }
@@ -218,6 +544,108 @@ public class SignUpScreen extends AppCompatActivity {
             return cursor.getString(index);
         }
     }
+
+
+    private void loadCarTypeData() {
+
+
+        final String requestBody = null;
+
+
+        RequestQueue requestQueue = Volley.newRequestQueue(getApplicationContext());
+        String mURL = baseUrl + "/public/carTypes";
+
+        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, mURL,
+                null,
+                new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        try {
+
+
+                            Log.i(TAG, "Mahdi: OTPScreen: Car Type: res 0 " + response);
+                            JSONArray data = response.getJSONArray("data");
+
+                            for (int i = 0; i < data.length(); i++) {
+                                JSONObject jsonObject1 = data.getJSONObject(i);
+                                car_list.add(new CarModel(jsonObject1.getString("_id"), jsonObject1.getString("carTypeName"), jsonObject1.getString("carIcon")));
+                            }
+
+                            CarSpinnerAdapter customAdapter = new CarSpinnerAdapter(getApplicationContext(), car_list);
+                            spinner.setAdapter(customAdapter);
+
+                            p.dismiss();
+
+
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                            p.dismiss();
+                        }
+                    }
+                }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+
+                String body = "";
+                //get status code here
+
+                if (error.networkResponse != null) {
+                    if (error.networkResponse.data != null) {
+                        try {
+                            body = new String(error.networkResponse.data, "UTF-8");
+                        } catch (UnsupportedEncodingException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                    Toast.makeText(getApplicationContext(), body, Toast.LENGTH_SHORT).show();
+                    Log.e(TAG, "error response" + body);
+                    Log.e(TAG, "error " + error);
+                }
+                p.dismiss();
+
+            }
+        }) {
+            @Override
+            public String getBodyContentType() {
+                return "application/json; charset=utf-8";
+            }
+
+            @Override
+            public Map<String, String> getHeaders() {
+                Map<String, String> params = new HashMap<>();
+                params.put("Content-Type", "application/json");
+
+                return params;
+            }
+
+            @Override
+            public byte[] getBody() {
+                try {
+                    return requestBody == null ? null : requestBody.getBytes("utf-8");
+                } catch (UnsupportedEncodingException uee) {
+                    VolleyLog.wtf("Unsupported Encoding while trying to get the bytes of %s using %s", requestBody, "utf-8");
+                    return null;
+                }
+            }
+
+            @Override
+            protected Response parseNetworkResponse(NetworkResponse response) {
+                try {
+                    Log.i(TAG, "Mahdi: OTPScreen: signUp: res 1 " + response.data);
+                    String jsonString = new String(response.data, HttpHeaderParser.parseCharset(response.headers));
+                    return Response.success(new JSONObject(jsonString), HttpHeaderParser.parseCacheHeaders(response));
+                } catch (UnsupportedEncodingException e) {
+                    return Response.error(new ParseError(e));
+                } catch (JSONException je) {
+                    return Response.error(new ParseError(je));
+                }
+            }
+        };
+        requestQueue.add(jsonObjectRequest);
+
+
+    }
+
 
     public int calculateInSampleSize(BitmapFactory.Options options, int reqWidth, int reqHeight) {
         final int height = options.outHeight;
@@ -506,7 +934,6 @@ public class SignUpScreen extends AppCompatActivity {
         email = emailEdt.getText().toString();
         contactNumber = contactNumberEdt.getText().toString();
         password = passwordEdt.getText().toString();
-        carType = carTypeEdt.getText().toString();
 
         if (userName.isEmpty()) {
             usernameEdt.setError("Enter a valid user name address");
@@ -542,12 +969,6 @@ public class SignUpScreen extends AppCompatActivity {
             valid = false;
         } else {
             passwordEdt.setError(null);
-        }
-        if (carType.isEmpty()) {
-            carTypeEdt.setError("Enter a valid car type address");
-            valid = false;
-        } else {
-            carTypeEdt.setError(null);
         }
         if (mCircleImageView.getDrawable().getConstantState() == SignUpScreen.this
                 .getResources().getDrawable(R.drawable.ic_account_circle_black_24dp)
@@ -653,6 +1074,24 @@ public class SignUpScreen extends AppCompatActivity {
                     }
                 }
                 break;
+            case MY_PERMISSIONS_REQUEST_LOCATION: {
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+
+                    // permission was granted, yay! Do the
+                    // location-related task you need to do.
+                    if (ContextCompat.checkSelfPermission(this,
+                            Manifest.permission.ACCESS_FINE_LOCATION)
+                            == PackageManager.PERMISSION_GRANTED) {
+                    }
+
+                } else {
+                    Toast.makeText(getApplicationContext(), "Sorry, you must enable your location!", Toast.LENGTH_SHORT).show();
+                    System.exit(0);
+                }
+                return;
+            }
 
             case PERMISSION_REQUEST_CODE_GALLERY:
                 if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
@@ -718,11 +1157,13 @@ public class SignUpScreen extends AppCompatActivity {
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
     public void selectMultipleImage(int countImage) {
         if (checkPermissionReadGallery()) {
+
             String galleryNum = 3 + "" + countImage;
             Intent intent = new Intent();
             intent.setType("image/*");
             intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
             intent.setAction(Intent.ACTION_GET_CONTENT);
+//            intent.setData(MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
             startActivityForResult(Intent.createChooser(intent, "Select Picture"), Integer.parseInt(galleryNum));
         } else {
             requestPermissionReadGallery();
@@ -763,7 +1204,11 @@ public class SignUpScreen extends AppCompatActivity {
 
         super.onActivityResult(requestCode, resultCode, data);
 
+        Log.i(TAG, "onActivityResult: " + requestCode);
+
         if (resultCode == RESULT_OK) {
+
+            Toast.makeText(this, "The status of select : " + isCarInSelection, Toast.LENGTH_SHORT).show();
             if (requestCode == 11) {
                 Bitmap photo = (Bitmap) Objects.requireNonNull(data.getExtras()).get("data");
                 mCircleImageView.setImageBitmap(photo);
@@ -825,89 +1270,170 @@ public class SignUpScreen extends AppCompatActivity {
             } else if (requestCode == 24) {
                 assert data != null;
                 insurance.setImageURI(data.getData());
-
                 File globalFileName = new File(getRealPathFromURITemp(data.getData()));
                 uploadImage("Insurance", globalFileName);
-            } else if (requestCode == 31 && null != data) {
-
-                ClipData clipData = data.getClipData();
-                int dimensionInDp = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 60, getResources().getDisplayMetrics());
-
-                if (clipData != null && clipData.getItemCount() <= 4) {
-                    car_in1.getLayoutParams().width = dimensionInDp;
-                    car_in1.setVisibility(View.VISIBLE);
-                    car_in2.getLayoutParams().width = dimensionInDp;
-                    car_in2.setVisibility(View.VISIBLE);
-                    car_in3.getLayoutParams().width = dimensionInDp;
-                    car_in3.setVisibility(View.VISIBLE);
-                    car_in4.getLayoutParams().width = dimensionInDp;
-                    car_in4.setVisibility(View.VISIBLE);
-
-                    car_in1.setImageURI(clipData.getItemAt(0).getUri());
-                    car_in2.setImageURI(clipData.getItemAt(1).getUri());
-                    car_in3.setImageURI(clipData.getItemAt(2).getUri());
-                    car_in4.setImageURI(clipData.getItemAt(3).getUri());
-
-
-                    String forDec1 = compressImage(FileUtils.getPath(getApplicationContext(), clipData.getItemAt(0).getUri()));
-                    File file1 = new File(forDec1);
-
-                    String forDec2 = compressImage(FileUtils.getPath(getApplicationContext(), clipData.getItemAt(1).getUri()));
-                    File file2 = new File(forDec2);
-
-                    String forDec3 = compressImage(FileUtils.getPath(getApplicationContext(), clipData.getItemAt(2).getUri()));
-                    File file3 = new File(forDec3);
-
-                    String forDec4 = compressImage(FileUtils.getPath(getApplicationContext(), clipData.getItemAt(2).getUri()));
-                    File file4 = new File(forDec4);
-
-//                    //TODO Something
-                    uploadMultiImages("CarInside", file1, file2, file3, file4);
-
-                } else {
-                    Toast.makeText(getApplicationContext(), "You must choose just four images!", Toast.LENGTH_SHORT).show();
-                }
             }
-            if (requestCode == 32) {
-                ClipData clipData = data.getClipData();
+
+
+            if (requestCode == FishBun.FISHBUN_REQUEST_CODE) {
+                // path = imageData.getStringArrayListExtra(Define.INTENT_PATH);
+                // you can get an image path(ArrayList<String>) on <0.6.2
                 int dimensionInDp = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 60,
                         getResources().getDisplayMetrics());
-
-                if (clipData != null && clipData.getItemCount() <= 4) {
-                    car_out1.getLayoutParams().width = dimensionInDp;
-                    car_out1.setVisibility(View.VISIBLE);
-                    car_out2.getLayoutParams().width = dimensionInDp;
-                    car_out2.setVisibility(View.VISIBLE);
-                    car_out3.getLayoutParams().width = dimensionInDp;
-                    car_out3.setVisibility(View.VISIBLE);
-                    car_out4.getLayoutParams().width = dimensionInDp;
-                    car_out4.setVisibility(View.VISIBLE);
-
-                    car_out1.setImageURI(clipData.getItemAt(0).getUri());
-                    car_out2.setImageURI(clipData.getItemAt(1).getUri());
-                    car_out3.setImageURI(clipData.getItemAt(2).getUri());
-                    car_out4.setImageURI(clipData.getItemAt(3).getUri());
+                ArrayList<Uri> path = data.getParcelableArrayListExtra(FishBun.INTENT_PATH);
+                if (isCarInSelection) {
 
 
-                    String forDec1 = compressImage(FileUtils.getPath(getApplicationContext(), clipData.getItemAt(0).getUri()));
-                    File file1 = new File(forDec1);
+                    if (path != null && path.size() <= 4) {
 
-                    String forDec2 = compressImage(FileUtils.getPath(getApplicationContext(), clipData.getItemAt(1).getUri()));
-                    File file2 = new File(forDec2);
 
-                    String forDec3 = compressImage(FileUtils.getPath(getApplicationContext(), clipData.getItemAt(2).getUri()));
-                    File file3 = new File(forDec3);
+                        car_in1.getLayoutParams().width = dimensionInDp;
+                        car_in1.setVisibility(View.VISIBLE);
+                        car_in2.getLayoutParams().width = dimensionInDp;
+                        car_in2.setVisibility(View.VISIBLE);
+                        car_in3.getLayoutParams().width = dimensionInDp;
+                        car_in3.setVisibility(View.VISIBLE);
+                        car_in4.getLayoutParams().width = dimensionInDp;
+                        car_in4.setVisibility(View.VISIBLE);
 
-                    String forDec4 = compressImage(FileUtils.getPath(getApplicationContext(), clipData.getItemAt(2).getUri()));
-                    File file4 = new File(forDec4);
+                        car_in1.setImageURI(path.get(0));
+                        car_in2.setImageURI(path.get(1));
+                        car_in3.setImageURI(path.get(2));
+                        car_in4.setImageURI(path.get(3));
 
-                    //TODO Something
-                    uploadMultiImages("CarOutside", file1, file2, file3, file4);
+                        String filepath1 = ImageFilePath.getPath(SignUpScreen.this, path.get(0));
+//                   String filepath1=  FileUtils.getPath(getApplicationContext(), clipData.getItemAt(0).getUri());
+//                    String forDec1 = compressImage(filepath1);
+                        File file1 = new File(filepath1);
+                        String filepath2 = ImageFilePath.getPath(SignUpScreen.this, path.get(1));
+//                    String forDec2 = compressImage(FileUtils.getPath(getApplicationContext(), clipData.getItemAt(1).getUri()));
+                        File file2 = new File(filepath2);
+                        String filepath3 = ImageFilePath.getPath(SignUpScreen.this, path.get(2));
+//                     String forDec3 = compressImage(FileUtils.getPath(getApplicationContext(), clipData.getItemAt(2).getUri()));
+                        File file3 = new File(filepath3);
+                        String filepath4 = ImageFilePath.getPath(SignUpScreen.this, path.get(3));
+//                     String forDec4 = compressImage(FileUtils.getPath(getApplicationContext(), clipData.getItemAt(2).getUri()));
+                        File file4 = new File(filepath4);
+
+                        Toast.makeText(this, "File Selected", Toast.LENGTH_SHORT).show();
+                        //TODO Something
+                        //TODO Something
+                        uploadMultiImages("CarInside", file1, file2, file3, file4);
+
+                    } else {
+                        Toast.makeText(getApplicationContext(), "You must chose just four or less than four image!", Toast.LENGTH_SHORT).show();
+                    }
+
+                    Log.i(TAG, "onActivityResult: path" + path.toString());
 
                 } else {
-                    Toast.makeText(getApplicationContext(), "You must chose just four or less than four image!", Toast.LENGTH_SHORT).show();
+
+
+                    if (path != null && path.size() <= 4) {
+
+
+                        car_out1.getLayoutParams().width = dimensionInDp;
+                        car_out1.setVisibility(View.VISIBLE);
+                        car_out2.getLayoutParams().width = dimensionInDp;
+                        car_out2.setVisibility(View.VISIBLE);
+                        car_out3.getLayoutParams().width = dimensionInDp;
+                        car_out3.setVisibility(View.VISIBLE);
+                        car_out4.getLayoutParams().width = dimensionInDp;
+                        car_out4.setVisibility(View.VISIBLE);
+
+                        car_out1.setImageURI(path.get(0));
+                        car_out2.setImageURI(path.get(1));
+                        car_out3.setImageURI(path.get(2));
+                        car_out4.setImageURI(path.get(3));
+
+                        String filepath1 = ImageFilePath.getPath(SignUpScreen.this, path.get(0));
+                        filepath1 =  compressImage(filepath1);
+//                   String filepath1=  FileUtils.getPath(getApplicationContext(), clipData.getItemAt(0).getUri());
+//                    String forDec1 = compressImage(filepath1);
+                        File file1 = new File(filepath1);
+                        String filepath2 = ImageFilePath.getPath(SignUpScreen.this, path.get(1));
+//                    String forDec2 = compressImage(FileUtils.getPath(getApplicationContext(), clipData.getItemAt(1).getUri()));
+                        filepath2 =  compressImage(filepath2);
+                        File file2 = new File(filepath2);
+
+                        String filepath3 = ImageFilePath.getPath(SignUpScreen.this, path.get(2));
+//
+                  filepath3 =  compressImage(filepath3);
+//                 rDec3 = compressImage(FileUtils.getPath(getApplicationContext(), clipData.getItemAt(2).getUri()));
+                        File file3 = new File(filepath3);
+                        String filepath4 = ImageFilePath.getPath(SignUpScreen.this, path.get(3));
+//                     String forDec4 = compressImage(FileUtils.getPath(getApplicationContext(), clipData.getItemAt(2).getUri()));
+                        filepath4 =  compressImage(filepath4);
+                        File file4 = new File(filepath4);
+
+                        Toast.makeText(this, "File Selected", Toast.LENGTH_SHORT).show();
+                        //TODO Something
+                        //TODO Something
+                        uploadMultiImages("CarOutside", file1, file2, file3, file4);
+
+                    } else {
+                        Toast.makeText(getApplicationContext(), "You must chose just four or less than four image!", Toast.LENGTH_SHORT).show();
+                    }
+
+                    Log.i(TAG, "onActivityResult: path" + path.toString());
+
                 }
             }
+
+
+//
+//            if (requestCode == FishBun.FISHBUN_REQUEST_CODE && !)
+//
+//                if (resultCode == RESULT_OK ) {
+//                    // path = imageData.getStringArrayListExtra(Define.INTENT_PATH);
+//                    // you can get an image path(ArrayList<String>) on <0.6.2
+//                    int dimensionInDp = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 60,
+//                            getResources().getDisplayMetrics());
+//
+//
+//                    ArrayList<Uri> path = data.getParcelableArrayListExtra(FishBun.INTENT_PATH);
+//                    // you can get an image path(ArrayList<Uri>) on 0.6.2 and later
+//
+//                    if (path != null && path.size() <= 4) {
+//                        car_out1.getLayoutParams().width = dimensionInDp;
+//                        car_out1.setVisibility(View.VISIBLE);
+//                        car_out2.getLayoutParams().width = dimensionInDp;
+//                        car_out2.setVisibility(View.VISIBLE);
+//                        car_out3.getLayoutParams().width = dimensionInDp;
+//                        car_out3.setVisibility(View.VISIBLE);
+//                        car_out4.getLayoutParams().width = dimensionInDp;
+//                        car_out4.setVisibility(View.VISIBLE);
+//
+//                        car_out1.setImageURI(path.get(0));
+//                        car_out1.setImageURI(path.get(1));
+//                        car_out1.setImageURI(path.get(2));
+//                        car_out1.setImageURI(path.get(3));
+//
+//                        String filepath1 = ImageFilePath.getPath(SignUpScreen.this, path.get(0));
+////                   String filepath1=  FileUtils.getPath(getApplicationContext(), clipData.getItemAt(0).getUri());
+////                    String forDec1 = compressImage(filepath1);
+//                        File file1 = new File(filepath1);
+//                        String filepath2 = ImageFilePath.getPath(SignUpScreen.this, path.get(1));
+////                    String forDec2 = compressImage(FileUtils.getPath(getApplicationContext(), clipData.getItemAt(1).getUri()));
+//                        File file2 = new File(filepath2);
+//                        String filepath3 = ImageFilePath.getPath(SignUpScreen.this, path.get(2));
+////                     String forDec3 = compressImage(FileUtils.getPath(getApplicationContext(), clipData.getItemAt(2).getUri()));
+//                        File file3 = new File(filepath3);
+//                        String filepath4 = ImageFilePath.getPath(SignUpScreen.this, path.get(3));
+////                     String forDec4 = compressImage(FileUtils.getPath(getApplicationContext(), clipData.getItemAt(2).getUri()));
+//                        File file4 = new File(filepath4);
+//
+//                        Toast.makeText(this, "File Selected", Toast.LENGTH_SHORT).show();
+//                        //TODO Something
+//                        uploadMultiImages("CarOutside", file1, file2, file3, file4);
+//
+//                    } else {
+//                        Toast.makeText(getApplicationContext(), "You must chose just four or less than four image!", Toast.LENGTH_SHORT).show();
+//                    }
+//
+//                    Log.i(TAG, "onActivityResult: path"+path.toString());
+//
+//                }
         }
     }
 

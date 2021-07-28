@@ -11,6 +11,8 @@ import android.os.Environment;
 import android.provider.DocumentsContract;
 import android.provider.MediaStore;
 
+import java.io.File;
+
 @SuppressLint("NewApi")
 @TargetApi(Build.VERSION_CODES.KITKAT)
 public class ImageFilePath {
@@ -34,12 +36,20 @@ public class ImageFilePath {
                             + split[1];
                 }
             } else if (isDownloadsDocument(uri)) {
+                String fileName = getFilePath(context, uri);
+                if (fileName != null) {
+                    return Environment.getExternalStorageDirectory().toString() + "/Download/" + fileName;
+                }
 
-                final String id = DocumentsContract.getDocumentId(uri);
-                final Uri contentUri = ContentUris.withAppendedId(
-                        Uri.parse("content://downloads/public_downloads"),
-                        Long.valueOf(id));
+                String id = DocumentsContract.getDocumentId(uri);
+                if (id.startsWith("raw:")) {
+                    id = id.replaceFirst("raw:", "");
+                    File file = new File(id);
+                    if (file.exists())
+                        return id;
+                }
 
+                final Uri contentUri = ContentUris.withAppendedId(Uri.parse("content://downloads/public_downloads"), Long.valueOf(id));
                 return getDataColumn(context, contentUri, null, null);
             } else if (isMediaDocument(uri)) {
                 final String docId = DocumentsContract.getDocumentId(uri);
@@ -74,6 +84,26 @@ public class ImageFilePath {
         }
 
         return nopath;
+    }
+    public static String getFilePath(Context context, Uri uri) {
+
+        Cursor cursor = null;
+        final String[] projection = {
+                MediaStore.MediaColumns.DISPLAY_NAME
+        };
+
+        try {
+            cursor = context.getContentResolver().query(uri, projection, null, null,
+                    null);
+            if (cursor != null && cursor.moveToFirst()) {
+                final int index = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.DISPLAY_NAME);
+                return cursor.getString(index);
+            }
+        } finally {
+            if (cursor != null)
+                cursor.close();
+        }
+        return null;
     }
 
     public static String getDataColumn(Context context, Uri uri,

@@ -11,6 +11,7 @@ import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -21,8 +22,10 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
+import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -35,10 +38,15 @@ import com.android.volley.toolbox.HttpHeaderParser;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 import com.development.taxiappproject.Const.SharedPrefKey;
+import com.development.taxiappproject.Global.GlobalVal;
 import com.development.taxiappproject.Service.MyFirebaseMessagingService;
 import com.development.taxiappproject.adapter.CarAdapter;
 import com.development.taxiappproject.databinding.ActivityMyProfileBinding;
 import com.development.taxiappproject.model.MyRideClass;
+import com.github.nkzawa.engineio.client.transports.WebSocket;
+import com.github.nkzawa.socketio.client.IO;
+import com.github.nkzawa.socketio.client.Socket;
+import com.google.android.gms.location.LocationServices;
 import com.google.firebase.auth.FirebaseAuth;
 import com.squareup.picasso.Picasso;
 
@@ -50,6 +58,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -61,6 +70,7 @@ import javax.xml.parsers.SAXParserFactory;
 import de.hdodenhof.circleimageview.CircleImageView;
 
 import static com.development.taxiappproject.Const.ConstantValue.baseUrl;
+import static com.development.taxiappproject.Const.ConstantValue.socketBaseUrl;
 
 public class MyProfile extends AppCompatActivity implements View.OnClickListener {
     private static final String TAG = "MAHDI";
@@ -70,20 +80,77 @@ public class MyProfile extends AppCompatActivity implements View.OnClickListener
 
     SharedPreferences sharedPreferences;
     private TextView profileTxt;
+    private TextView navMenuGoTxt;
     private CircleImageView circleImageView;
+    ProgressDialog p;
+    private Switch mSwitch;
+    private Socket mSocket;
 
+    {
+        try {
+            IO.Options options = new IO.Options();
+            options.transports = new String[]{WebSocket.NAME};
+            mSocket = IO.socket(socketBaseUrl, options);
+            //mSocket = IO.socket("http://chat.socket.io");
+        } catch (URISyntaxException e) {
+            Log.e("abc", "index=" + e);
+        }
+    }
+    public void sendData(boolean status) {
+
+
+        JSONObject jsonObject = new JSONObject();
+        String userId = sharedPreferences.getString(SharedPrefKey.userId, "defaultValue");
+
+
+        Log.i(TAG, "Mahdi: MyProfile: userId: " + userId);
+
+        try {
+            jsonObject.put("driver", userId);
+            jsonObject.put("status", status);
+            mSocket.emit("online", jsonObject);
+
+        }catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+    }
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        p = GlobalVal.mProgressDialog(this,null,"Loading...");
+        p.dismiss();
+
         profileBinding = DataBindingUtil.setContentView(this, R.layout.activity_my_profile);
 
-        profileBinding.myProfileRelativeLayoutItem.setVisibility(View.GONE);
+//        profileBinding.myProfileRelativeLayoutItem.setVisibility(View.GONE);
         profileBinding.myProfileProgressBar.setVisibility(View.VISIBLE);
+        sharedPreferences = getSharedPreferences(OTPScreen.MyPREFERENCES, Context.MODE_PRIVATE);
 
         View headerLayout = getWindow().findViewById(R.id.header_layout_ride);
+        String switchFlag = sharedPreferences.getString("isOnline", "null");
+        assert switchFlag != null;
+        boolean switchFlagBool = switchFlag.equalsIgnoreCase("value");
+
 
         profileTxt = headerLayout.findViewById(R.id.navHeader_email);
         circleImageView = findViewById(R.id.navHeader_profile_image);
+        mSwitch = findViewById(R.id.navMenu_switch);
+        mSwitch.setChecked(switchFlagBool);
+
+        navMenuGoTxt = findViewById(R.id.navMenu_go_txt);
+
+        navMenuGoTxt.setVisibility(View.GONE);
+        mSwitch.setVisibility(View.GONE);
+
+        LinearLayout favourite_layout = findViewById(R.id.favourite_layout);
+
+        favourite_layout.setVisibility(View.GONE);
+
+
+        View favourite_layout_liner = findViewById(R.id.favourite_layout_liner);
+
+        favourite_layout_liner.setVisibility(View.GONE);
 
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -113,17 +180,22 @@ public class MyProfile extends AppCompatActivity implements View.OnClickListener
         profileBinding.customNavigationDrawer.ridesLayout.setOnClickListener(this);
         profileBinding.customNavigationDrawer.earningLayout.setOnClickListener(this);
         profileBinding.customNavigationDrawer.rateLayout.setOnClickListener(this);
+        profileBinding.customNavigationDrawer.notification.setOnClickListener(this);
+
+        profileBinding.myProfileCircleImage.setImageResource(R.drawable.profile);
 
         profileBinding.customNavigationDrawer.navMenuLogOutBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 FirebaseAuth.getInstance().signOut();
+                sendData(false);
                 SharedPreferences preferences = getSharedPreferences(OTPScreen.MyPREFERENCES, Context.MODE_PRIVATE);
                 String fcmToken = sharedPreferences.getString(MyFirebaseMessagingService.fcmToken, "defaultValue");
                 SharedPreferences.Editor editor = preferences.edit();
                 editor.clear();
                 editor.putString(MyFirebaseMessagingService.fcmToken, fcmToken);
                 editor.apply();
+
                 Intent intent = new Intent(MyProfile.this, LoginScreen.class);
                 startActivity(intent);
                 finish();
@@ -134,7 +206,7 @@ public class MyProfile extends AppCompatActivity implements View.OnClickListener
 //        progressBar.setVisibility(View.VISIBLE);
 
         if (!MyCheckConnection.mCheckConnectivity(MyProfile.this)) {
-            profileBinding.myProfileRelativeLayoutItem.setVisibility(View.VISIBLE);
+//            profileBinding.myProfileRelativeLayoutItem.setVisibility(View.VISIBLE);
             profileBinding.myProfileProgressBar.setVisibility(View.GONE);
             profileBinding.myProfileSwipeRefreshLayout.setRefreshing(false);
             return;
@@ -155,7 +227,15 @@ public class MyProfile extends AppCompatActivity implements View.OnClickListener
         String profilePath = sharedPreferences.getString(SharedPrefKey.profilePath, "defaultValue");
 
         profileTxt.setText(userName);
-        Picasso.get().load(profilePath).into(circleImageView);
+        try {
+            JSONObject jsonProfile = new JSONObject(profilePath);
+            Picasso.get().load(jsonProfile.getString("uriPath")).into(circleImageView);
+
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
 
         profileBinding.myProfileSwipeRefreshLayout.setOnRefreshListener(() -> {
             getProfileItem(userToken, userId);
@@ -177,6 +257,11 @@ public class MyProfile extends AppCompatActivity implements View.OnClickListener
                 startActivity(new Intent(this, HomeScreen.class));
                 finish();
                 checkDrawer();
+                break;
+
+            case R.id.notification:
+                startActivity(new Intent(this, NotificationScreen.class));
+                finish();
                 break;
 
             case R.id.rides_layout:
@@ -215,7 +300,7 @@ public class MyProfile extends AppCompatActivity implements View.OnClickListener
     public void getProfileItem(String userToken, String userId) {
         RequestQueue requestQueue = Volley.newRequestQueue(MyProfile.this);
         String mURL = baseUrl + "/driver/profile/" + userId;
-
+        p.show();
         Log.i(TAG, "Mahdi: MyProfile: getProfileItem: 1 " + userToken);
         Log.i(TAG, "Mahdi: MyProfile: getProfileItem: 10 " + mURL);
 
@@ -232,17 +317,17 @@ public class MyProfile extends AppCompatActivity implements View.OnClickListener
 
                         Picasso.get().load(data.optJSONObject("carType").optString("carIcon"))
                                 .into(profileBinding.myProfileCarIcon);
-                        profileBinding.myProfileCarQuantityTxt.setText(data.optJSONObject("carType").optString("quantityCars"));
+//                        profileBinding.myProfileCarQuantityTxt.setText(data.optJSONObject("carType").optString("quantityCars"));
                         profileBinding.myProfileModelTxt.setText(data.optJSONObject("carType").optString("carTypeName"));
 
-                        profileBinding.myProfileRelativeLayoutItem.setVisibility(View.VISIBLE);
+//                        profileBinding.myProfileRelativeLayoutItem.setVisibility(View.VISIBLE);
                         profileBinding.myProfileRelativeLayoutProgress.setVisibility(View.GONE);
                         profileBinding.myProfileSwipeRefreshLayout.setRefreshing(false);
 
                         String userName = data.optString("username");
                         String carPlateNumber = data.optString("carPlateNumber");
                         String email = data.optString("email");
-                        String profilePhoto = data.optString("profilePhoto");
+                        String profilePhoto = data.optJSONObject("profilePhoto").getString("uriPath");
                         String _id = data.optString("_id");
 
                         profileBinding.myProfileNameTxt.setText(userName);
@@ -252,7 +337,7 @@ public class MyProfile extends AppCompatActivity implements View.OnClickListener
                         userInfo.put("username", userName);
                         userInfo.put("carPlateNumber", carPlateNumber);
                         userInfo.put("email", email);
-                        userInfo.put("profilePhoto", profilePhoto);
+                        userInfo.put("profilePhoto", data.optJSONObject("profilePhoto"));
                         userInfo.put("_id", _id);
 
                         JSONObject dl = data.optJSONObject("DL");
@@ -304,8 +389,11 @@ public class MyProfile extends AppCompatActivity implements View.OnClickListener
                         profileBinding.myProfileRelativeLayoutProgress.setVisibility(View.GONE);
                         profileBinding.myProfileSwipeRefreshLayout.setRefreshing(false);
                         e.printStackTrace();
+                    }finally {
+                        p.dismiss();
                     }
                 }, error -> {
+            p.dismiss();
             profileBinding.myProfileRelativeLayoutProgress.setVisibility(View.GONE);
             profileBinding.myProfileSwipeRefreshLayout.setRefreshing(false);
             Log.e("Mahdi", "Mahdi: MyProfile: getProfileItem: Error " + error.getMessage());
@@ -343,9 +431,13 @@ public class MyProfile extends AppCompatActivity implements View.OnClickListener
         Log.i(TAG, "setMultiImageView: Mahdi: " + mJsonObject);
         try {
             Log.i(TAG, "setMultiImageView: Mahdi: " + mJsonObject);
-            for (int i = 0; i < mJsonObject.length(); i++) {
-                Picasso.get().load(mJsonObject.getString(i)).into(imageViews.get(i));
+
+            if(mJsonObject != null){
+                for (int i = 0; i < mJsonObject.length(); i++) {
+                    Picasso.get().load(mJsonObject.getString(i)).into(imageViews.get(i));
+                }
             }
+
         } catch (JSONException e) {
             Log.i(TAG, "setMultiImageView: Mahdi: Error " + e.getMessage());
             e.printStackTrace();

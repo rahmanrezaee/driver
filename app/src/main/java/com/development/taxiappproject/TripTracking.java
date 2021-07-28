@@ -5,6 +5,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.databinding.DataBindingUtil;
+import info.hoang8f.android.segmented.SegmentedGroup;
 
 import android.Manifest;
 import android.app.ProgressDialog;
@@ -13,6 +14,16 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.PorterDuff;
+import android.graphics.PorterDuffXfermode;
+import android.graphics.Rect;
+import android.graphics.drawable.Drawable;
+import android.location.Location;
+import android.location.LocationManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Looper;
@@ -53,13 +64,16 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
+import com.nightonke.jellytogglebutton.JellyToggleButton;
 import com.squareup.picasso.Picasso;
 import com.squareup.picasso.Target;
 
+import org.jetbrains.annotations.NotNull;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.UnsupportedEncodingException;
+import java.text.DecimalFormat;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -94,6 +108,9 @@ public class TripTracking extends AppCompatActivity implements OnMapReadyCallbac
     private LocationCallback locationCallback;
 
     private boolean paidClicked = false;
+    private String status = "accepted";
+    private String googleDirection = "http://maps.google.com/maps?";
+
 
     @Override
     public void onMapReady(GoogleMap googleMap) {
@@ -110,41 +127,119 @@ public class TripTracking extends AppCompatActivity implements OnMapReadyCallbac
             return;
         }
 
+
         Bundle extras = getIntent().getExtras();
         id = extras.getString("rideId");
         try {
+
+
             notificationData = new JSONObject(extras.getString("Data"));
+
+            status = extras.getString("status","accepted");
+
         } catch (JSONException e) {
             e.printStackTrace();
         }
-        tripTrackingBinding.tripTrackingPassengerNameTxt.setText(notificationData.optString("Data"));
 
         sharedPreferences = getSharedPreferences(MyPREFERENCES, Context.MODE_PRIVATE);
         userToken = sharedPreferences.getString(SharedPrefKey.userToken, "defaultValue");
+
+
+
+        SegmentedGroup paidLayout = tripTrackingBinding.getRoot().findViewById(R.id.payid_layout);
+        SegmentedGroup complateLayout =  tripTrackingBinding.getRoot().findViewById(R.id.complate_layout);
+
+
+//        complateLayout.setTintColor(Color.DKGRAY);
+//
+//        complateLayout.setBackgroundColor(Color.GRAY);
+//        complateLayout.setTintColor(Color.parseColor("#08C181FF"), Color.parseColor("#08C181FF"));
+//        complateLayout.setTintColor(getResources().getColor(R.color.green));
+//
+//        paidLayout.setBackgroundColor(Color.GRAY);
+//        paidLayout.setTintColor(Color.GRAY);
+//        paidLayout.setTintColor(Color.parseColor("#08C181FF"), Color.parseColor("#08C181FF"));
+        paidLayout.setTintColor(getResources().getColor(R.color.green));
+
+
+        if (status.equalsIgnoreCase("paid")){
+            paidLayout.setVisibility(View.GONE);
+            complateLayout.setVisibility(View.VISIBLE);
+        }
+
+
+
+        tripTrackingBinding.paidCheckbox.setOnCheckedChangeListener((buttonView, isChecked) -> {
+
+
+            paidLayout.setVisibility(View.GONE);
+            complateLayout.setVisibility(View.VISIBLE);
+            p =   new ProgressDialog(TripTracking.this);
+            p.setMessage("Loading...");
+            p.setIndeterminate(false);
+            p.setCancelable(false);
+
+            paidAndComp("paid");
+
+
+
+        });
+        tripTrackingBinding.tripTrackingBackBtn.setOnClickListener(v -> {
+            Intent intent = new  Intent(this,HomeScreen.class);
+            startActivity(intent);
+            finish();
+
+        });
+        tripTrackingBinding.googleDirection.setOnClickListener(v -> {
+
+
+            if (!googleDirection.equalsIgnoreCase("")){
+
+            Intent intent = new Intent(android.content.Intent.ACTION_VIEW,
+                    Uri.parse(googleDirection));
+            startActivity(intent);
+
+            }
+
+
+        });
+        tripTrackingBinding.completeCheckbox.setOnCheckedChangeListener((buttonView, isChecked) -> {
+
+
+            tripTrackingBinding.completeCheckbox.setChecked(true);
+
+            p =   new ProgressDialog(TripTracking.this);
+            p.setMessage("Loading...");
+            p.setIndeterminate(false);
+            p.setCancelable(false);
+                  paidAndComp("completed");
+
+
+        });
+
+
 
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
+
+
+
         Log.i(TAG, "Mahdi: TripTracking: onCreate: 1 " + id + " : " + extras);
         getSingleRideItem(userToken, id);
+
+
     }
 
     public void onClick(View view) {
 
         switch (view.getId()) {
-            case R.id.tripTracking_paidAndComp_btn:
-                p = GlobalVal.mProgressDialog(TripTracking.this, p, "Please wait...");
 
-                if (tripTrackingBinding.tripTrackingPaidAndCompBtn.getText().toString().equalsIgnoreCase("Paid and Start Ride")) {
-                    paidAndComp("paid");
-                } else {
-                    paidAndComp("completed");
-                }
-                break;
 
             case R.id.tripTracking_back_btn:
+                Toast.makeText(this, "Back click", Toast.LENGTH_SHORT).show();
                 finish();
                 break;
 
@@ -224,9 +319,38 @@ public class TripTracking extends AppCompatActivity implements OnMapReadyCallbac
                             + " : ");
 
                     assert data != null;
-                    tripTrackingBinding.tripTrackingPriceTxt.setText("$ " + data.optString("actualFareAmount"));
-                    tripTrackingBinding.tripTrackingMilesTxt.setText(data.optString("miles") + " Miles");
-                    tripTrackingBinding.tripTrackingMinutesTxt.setText(data.optString("actualTimePassed") + " Mins");
+
+
+
+                    double miles = data.optDouble("miles");
+                    double showMiles = Double.parseDouble(new DecimalFormat("##.##").format(miles));
+
+
+                    if (data.has("fareAmount") && Double.parseDouble(data.optString("fareAmount")) < Double.parseDouble(data.optString("actualFareAmount"))){
+
+
+                        double value  = data.optDouble("fareAmount");
+                        double showValue = Double.parseDouble(new DecimalFormat("##.##").format(value));
+                        tripTrackingBinding.tripTrackingPriceTxt.setText("$ " + showValue);
+
+                    }else{
+
+                        double value  = data.optDouble("actualFareAmount");
+                        double showValue = Double.parseDouble(new DecimalFormat("##.##").format(value));
+
+
+                        tripTrackingBinding.tripTrackingPriceTxt.setText("$ " + showValue);
+
+
+                    }
+
+                    tripTrackingBinding.tripTrackingMilesTxt.setText("Miles "+ showMiles);
+                    tripTrackingBinding.tripTrackingMinutesTxt.setText(data.optString("eta"));
+                    tripTrackingBinding.tripTrackingUserTimePickedTxt.setText("ETA: "+data.optString("eta"));
+
+                    tripTrackingBinding.tripTrackingPassengerNameTxt.setText("Username : " + data.optJSONObject("userId").optString("username"));
+
+
                     tripTrackingBinding.tripTrackingFromTxt.setText(data.optString("fromLabel"));
                     tripTrackingBinding.tripTrackingToTxt.setText(data.optString("toWhereLabel"));
                     tripTrackingBinding.tripTrackingUserTimePickedTxt.setText(data.optString("eta"));
@@ -243,6 +367,10 @@ public class TripTracking extends AppCompatActivity implements OnMapReadyCallbac
                     double toWhereLat = Double.parseDouble(toWhereJson.substring(0, toWhereJson.indexOf(",")));
                     double toWhereLng = Double.parseDouble(toWhereJson.substring(toWhereJson.indexOf(" ")));
 
+
+                    googleDirection +="saddr="+fromLat+","+fromLng+"&daddr="+toWhereLat+","+toWhereLng;
+
+
                     place1 = new MarkerOptions().position(new LatLng(fromLat, fromLng)).title("Origin");
                     place2 = new MarkerOptions().position(new LatLng(toWhereLat, toWhereLng)).title("Destination");
 
@@ -252,6 +380,9 @@ public class TripTracking extends AppCompatActivity implements OnMapReadyCallbac
                             place1.getPosition().latitude + "," + place1.getPosition().longitude
                             + "&destination=" + place2.getPosition().latitude + "," + place2.getPosition().longitude +
                             "&key=" + GOOGLE_MAP_API_KEY, "driving");
+
+                    makeDirectionDriverToPassenger(new LatLng(fromLat, fromLng));
+
 
                     mMap.addMarker(new MarkerOptions().position(place1.getPosition()).title("Origin")
                             .icon(BitmapDescriptorFactory.fromBitmap(originIcon(getApplicationContext()))));
@@ -265,6 +396,9 @@ public class TripTracking extends AppCompatActivity implements OnMapReadyCallbac
                             image(drawCircle(getApplicationContext())).
                             position(place1.getPosition(), 250 * 2, 250 * 2).
                             transparency(0.4f));
+
+
+
 
                 }, error -> {
 //            ridingBinding.completeRidingProgressBar.setVisibility(View.GONE);
@@ -297,6 +431,103 @@ public class TripTracking extends AppCompatActivity implements OnMapReadyCallbac
             }
         };
         requestQueue.add(jsonObjectRequest);
+    }
+
+
+    private void makeDirectionDriverToPassenger(LatLng place1) {
+
+        String driverName = sharedPreferences.getString(SharedPrefKey.userName, "No Name");
+        String avatarObject = sharedPreferences.getString(SharedPrefKey.profilePath, "");
+        String avatar = "";
+
+        try {
+            avatar = new JSONObject(avatarObject).optString("uriPath");
+            Log.i(TAG, "makeDirectionDriverToPassenger: Driver name"+ driverName +" image "+ avatar );
+        } catch (JSONException e) {
+            e.printStackTrace();
+            avatar = "https://image.flaticon.com/icons/png/512/1077/1077114.png";
+        }
+
+        LocationManager locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
+        if (locationManager != null) {
+            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                return;
+            }
+            Location lastKnownLocationGPS = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+            if (lastKnownLocationGPS != null) {
+
+                makeDirection(lastKnownLocationGPS,place1,driverName,avatar);
+//                return lastKnownLocationGPS;
+            } else {
+                Location loc =  locationManager.getLastKnownLocation(LocationManager.PASSIVE_PROVIDER);
+                makeDirection(loc,place1,driverName,avatar);
+            }
+        } else {
+            Toast.makeText(this, "Please Check you Location Permission", Toast.LENGTH_SHORT).show();
+        }
+
+    }
+    private void makeDirection(
+            Location distication,
+            LatLng firstPlace,String driverName,String avatar){
+
+
+        new FetchURL(TripTracking.this).execute("https://maps.googleapis.com/maps/api/directions/json?origin="
+                + distication.getLatitude() + "," + distication.getLongitude()
+                + "&destination=" + firstPlace.latitude + "," + firstPlace.longitude +
+                "&key=" + GOOGLE_MAP_API_KEY, "driving");
+
+        Picasso.get().load(avatar) .resize(80, 80)
+                .into(new Target() {
+                    @Override
+                    public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
+
+                        mMap.addMarker(new MarkerOptions().position(new LatLng(distication.getLatitude(),distication.getLongitude())).title(""+driverName)
+                                .icon(BitmapDescriptorFactory.fromBitmap(getCircularBitmap(bitmap))));
+                    }
+
+                    @Override
+                    public void onBitmapFailed(Exception e, Drawable errorDrawable) {
+
+                    }
+
+
+                    @Override
+                    public void onPrepareLoad(Drawable placeHolderDrawable) {}
+                });
+
+    }
+
+    public static Bitmap getCircularBitmap(Bitmap bitmap) {
+        Bitmap output;
+
+        if (bitmap.getWidth() > bitmap.getHeight()) {
+            output = Bitmap.createBitmap(bitmap.getHeight(), bitmap.getHeight(), Bitmap.Config.ARGB_8888);
+        } else {
+            output = Bitmap.createBitmap(bitmap.getWidth(), bitmap.getWidth(), Bitmap.Config.ARGB_8888);
+        }
+
+        Canvas canvas = new Canvas(output);
+
+        final int color = 0xff424242;
+        final Paint paint = new Paint();
+        final Rect rect = new Rect(0, 0, bitmap.getWidth(), bitmap.getHeight());
+
+        float r = 0;
+
+        if (bitmap.getWidth() > bitmap.getHeight()) {
+            r = bitmap.getHeight() / 2;
+        } else {
+            r = bitmap.getWidth() / 2;
+        }
+
+        paint.setAntiAlias(true);
+        canvas.drawARGB(0, 0, 0, 0);
+        paint.setColor(color);
+        canvas.drawCircle(r, r, r, paint);
+        paint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC_IN));
+        canvas.drawBitmap(bitmap, rect, rect, paint);
+        return output;
     }
 
     public void paidAndComp(String status) {
@@ -333,10 +564,16 @@ public class TripTracking extends AppCompatActivity implements OnMapReadyCallbac
 
                         paidClicked = true;
 
-                        if (status.equalsIgnoreCase("paid") && serverStatus) {
-                            tripTrackingBinding.tripTrackingPaidAndCompBtn.setText("Complete Trip");
-                        } else if (!status.equalsIgnoreCase("paid") && serverStatus) {
-                            finish();
+
+
+                        if (serverStatus && !status.equalsIgnoreCase("paid")) {
+
+                            Intent i = new Intent(this,CompleteRiding.class);
+                            i.putExtra("id", id);
+                            // set the new task and clear flags
+                            i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                            startActivity(i);
+
                         }
 
                     } catch (JSONException e) {

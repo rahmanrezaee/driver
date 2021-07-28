@@ -5,19 +5,19 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
 import android.util.Log;
-import android.widget.Toast;
 
-import com.development.taxiappproject.Service.TestService;
+import com.development.taxiappproject.Service.LocationService;
 
 public class Restarter extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
         Log.i("Broadcast Listened", "Service tried to stop");
 
+        Log.i("Location BoardCast: ", "onReceive: latutide :"+intent.getStringExtra("latutide"));
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            context.startForegroundService(new Intent(context, TestService.class));
+            context.startForegroundService(new Intent(context, LocationService.class));
         } else {
-            context.startService(new Intent(context, TestService.class));
+            context.startService(new Intent(context, LocationService.class));
         }
     }
 }

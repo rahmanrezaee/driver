@@ -9,6 +9,7 @@ import androidx.core.content.ContextCompat;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -16,13 +17,19 @@ import android.content.IntentSender;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.Selection;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import com.android.volley.VolleyError;
 import com.development.taxiappproject.Const.SharedPrefKey;
+import com.development.taxiappproject.Service.IResult;
+import com.development.taxiappproject.Service.VolleyService;
 import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.common.api.ResolvableApiException;
 import com.google.android.gms.location.LocationRequest;
@@ -32,7 +39,14 @@ import com.google.android.gms.location.LocationSettingsResponse;
 import com.google.android.gms.location.LocationSettingsStatusCodes;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.iid.FirebaseInstanceId;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.Date;
+import java.util.HashMap;
 
 import static com.development.taxiappproject.Service.MyFirebaseMessagingService.fcmToken;
 
@@ -42,12 +56,29 @@ public class LoginScreen extends AppCompatActivity {
     SharedPreferences sharedPreferences;
     public static final int MY_PERMISSIONS_REQUEST_LOCATION = 999;
 
+    FirebaseAuth auth;
+    IResult mResultCallbackCheckPhoneNumber = null;
+    VolleyService mVolleyService;
+    ProgressDialog p;
+
+    String TAG = "Requests";
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login_screen);
-
+        auth = FirebaseAuth.getInstance();
+        if (auth.getCurrentUser() != null){
+            auth.signOut();
+        }
         checkLocationPermission();
+
+
+        p = new ProgressDialog(LoginScreen.this);
+        p.setMessage("Loading...");
+        p.dismiss();
+
 
         LocationRequest locationRequest = LocationRequest.create();
         locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
@@ -94,7 +125,7 @@ public class LoginScreen extends AppCompatActivity {
 
         sharedPreferences = getSharedPreferences(OTPScreen.MyPREFERENCES, Context.MODE_PRIVATE);
         String userToken = sharedPreferences.getString(SharedPrefKey.userToken, "defaultValue");
-
+        String expireDate = sharedPreferences.getString(SharedPrefKey.expireDate, "defaultValue");
         FirebaseInstanceId.getInstance().getInstanceId().addOnSuccessListener(this, instanceIdResult -> {
             String newToken = instanceIdResult.getToken();
             sharedPreferences.edit().putString(fcmToken, newToken).apply();
@@ -102,21 +133,97 @@ public class LoginScreen extends AppCompatActivity {
 
         assert userToken != null;
         if (!userToken.equalsIgnoreCase("defaultValue")) {
-            Intent intent = new Intent(this, HomeScreen.class);
-            startActivity(intent);
-            finish();
+
+            Date d = SharedPrefKey.convertStringToDate(expireDate);
+
+            if (SharedPrefKey.isAfterNow(d)){
+
+
+                startActivity(new Intent(this,HomeScreen.class));
+                finish();
+
+            }else {
+                String getFcmToken = sharedPreferences.getString(fcmToken, "defaultValue");
+                SharedPreferences.Editor editor = sharedPreferences.edit();
+                editor.clear();
+                editor.putString(fcmToken, getFcmToken);
+
+                if (auth.getCurrentUser() != null)
+                    auth.signOut();
+
+                editor.apply();
+
+
+            }
+
+
         }
 
+
         loginEdt = findViewById(R.id.phone_number);
+
+        loginEdt.addTextChangedListener(new TextWatcher() {
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before,
+                                      int count) {
+                // TODO Auto-generated method stub
+
+            }
+
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count,
+                                          int after) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+
+
+                if (!s.toString().startsWith("+1")) {
+                    if(!s.toString().equalsIgnoreCase("+"))
+                        loginEdt.setText("+1"+s);
+                    else
+                        loginEdt.setText("+1");
+                    Selection.setSelection(loginEdt.getText(), loginEdt
+                            .getText().length());
+
+
+                }
+
+            }
+
+        });
+
+
         btnLogin = findViewById(R.id.login_btn);
         btnLogin.setOnClickListener(view -> {
             if (validate()) {
                 try {
                     String email = loginEdt.getText().toString();
-                    Intent intent = new Intent(getBaseContext(), OTPScreen.class);
-                    intent.putExtra("type", "signIn");
-                    intent.putExtra("phone_number", email);
-                    startActivity(intent);
+
+
+                    p.show();
+                    initVolleyCallbackCheckPhoneNumber();
+
+                    mVolleyService = new VolleyService(mResultCallbackCheckPhoneNumber, LoginScreen.this);
+                    HashMap<String, String> header = new HashMap<>();
+
+
+                    JSONObject body = new JSONObject();
+                    body.put("phone",email);
+                    body.put("type","driver");
+                    try {
+
+                        mVolleyService.postDataVolley("POSTCALL", "/check-phone-number", body, header);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+
+
+
+
                 } catch (Exception ex) {
                     Log.e("Mahdi: Login error: 1 ", String.valueOf(ex));
                 }
@@ -188,6 +295,46 @@ public class LoginScreen extends AppCompatActivity {
         }
     }
 
+    void initVolleyCallbackCheckPhoneNumber() {
+
+        mResultCallbackCheckPhoneNumber = new IResult() {
+            @Override
+            public void notifySuccess(String requestType, JSONObject response) {
+
+                Log.d(TAG, "Volley requester " + requestType);
+                Log.d(TAG, "Volley JSON post" + response);
+                p.dismiss();
+
+                try {
+                    if (response.getBoolean("exit")){
+                        String phone = loginEdt.getText().toString();
+                        Log.i("MAHDI: phone number",phone);
+                        Intent intent = new Intent(getBaseContext(), OTPScreen.class);
+                        intent.putExtra("type", "signIn");
+                        intent.putExtra("phone_number", phone);
+                        startActivity(intent);
+
+                    }else{
+                        Toast.makeText(LoginScreen.this, "User Not Exits", Toast.LENGTH_SHORT).show();
+                        Log.d(TAG, "Volley JSON post" + "That didn't work!");
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                    Toast.makeText(LoginScreen.this, "User Not Exits", Toast.LENGTH_SHORT).show();
+                }
+
+
+            }
+
+            @Override
+            public void notifyError(String requestType, VolleyError error) {
+                Log.d(TAG, "Volley requester " + requestType);
+                Log.d(TAG, "Volley JSON post" + "That didn't work!");
+                Log.d(TAG, "Volley JSON post" + error);
+                p.dismiss();
+            }
+        };
+    }
 
     public void onClick(View view) {
         switch (view.getId()) {

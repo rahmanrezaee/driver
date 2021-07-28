@@ -1,27 +1,38 @@
 package com.development.taxiappproject;
 
+import android.Manifest;
 import android.app.ActivityManager;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
+import android.location.Location;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.Switch;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.development.taxiappproject.Const.SharedPrefKey;
+import com.development.taxiappproject.Service.LocationService;
 import com.development.taxiappproject.Service.MyFirebaseMessagingService;
-import com.development.taxiappproject.Service.TestService;
 import com.development.taxiappproject.databinding.ActivityHomeScreenBinding;
 import com.github.nkzawa.emitter.Emitter;
 import com.github.nkzawa.engineio.client.transports.WebSocket;
 import com.github.nkzawa.socketio.client.IO;
 import com.github.nkzawa.socketio.client.Socket;
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.squareup.picasso.Picasso;
 
 import androidx.appcompat.app.ActionBarDrawerToggle;
+import androidx.core.app.ActivityCompat;
 import androidx.core.view.GravityCompat;
 import androidx.databinding.DataBindingUtil;
 import androidx.navigation.NavController;
@@ -35,7 +46,9 @@ import androidx.appcompat.widget.Toolbar;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.IOException;
 import java.net.URISyntaxException;
+import java.util.Date;
 
 import de.hdodenhof.circleimageview.CircleImageView;
 
@@ -52,7 +65,7 @@ public class HomeScreen extends AppCompatActivity implements View.OnClickListene
     ActivityHomeScreenBinding screenBinding;
     SharedPreferences sharedPreferences;
 
-    TestService mYourService;
+    LocationService mYourService;
     Intent mServiceIntent;
 
     private Socket mSocket;
@@ -78,6 +91,24 @@ public class HomeScreen extends AppCompatActivity implements View.OnClickListene
         }
         Log.i("Service status", "Not running");
         return false;
+    }
+    IntentFilter  filter;
+
+
+    @Override
+    protected void onDestroy() {
+
+        Toast.makeText(this, "On Destory Was Called", Toast.LENGTH_SHORT).show();
+        super.onDestroy();
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+
+
+
+
     }
 
     @Override
@@ -125,11 +156,21 @@ public class HomeScreen extends AppCompatActivity implements View.OnClickListene
         String profilePath = sharedPreferences.getString(SharedPrefKey.profilePath, "defaultValue");
 
         String switchFlag = sharedPreferences.getString("isOnline", "null");
-
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
         assert switchFlag != null;
-        boolean switchFlagBool = switchFlag.equalsIgnoreCase("true");
+        boolean switchFlagBool = switchFlag.equalsIgnoreCase("value");
 
         Log.i(TAG, "Mahdi: HomeScreen: 4 " + switchFlagBool + switchFlag);
+
+        if (switchFlagBool){
+            try {
+
+                registerReceiver(broadcastReceiver, new IntentFilter(LocationService.BROADCAST_ACTION));
+            } catch(IllegalArgumentException e) {
+
+                e.printStackTrace();
+            }
+        }
 
         Log.i(TAG, "Mahdi: HomeScreen: 0 " + userToken);
         Log.i(TAG, "Mahdi: HomeScreen: 1 " + MyFirebaseMessagingService.getToken(getApplicationContext()));
@@ -160,9 +201,18 @@ public class HomeScreen extends AppCompatActivity implements View.OnClickListene
         profileTxt = headerLayout.findViewById(R.id.navHeader_email);
         imageProfile = findViewById(R.id.navHeader_profile_image);
 
-        profileTxt.setText(userName);
 
-        Picasso.get().load(profilePath).into(imageProfile);
+        profileTxt.setText(userName);
+        try {
+            JSONObject jsonProfile = new JSONObject(profilePath);
+            Picasso.get().load(jsonProfile.getString("uriPath")).into(imageProfile);
+
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+
 
         if (switchFlagBool) {
             navMenuGoTxt.setText("Go Offline");
@@ -177,22 +227,29 @@ public class HomeScreen extends AppCompatActivity implements View.OnClickListene
                 editor.commit();
                 navMenuGoTxt.setText("Go Offline");
                 sendData(true);
+                try {
 
-                mYourService = new TestService();
-                mServiceIntent = new Intent(this, mYourService.getClass());
-                if (!isMyServiceRunning(mYourService.getClass())) {
-                    startService(mServiceIntent);
+                    registerReceiver(broadcastReceiver, new IntentFilter(LocationService.BROADCAST_ACTION));
+                } catch(IllegalArgumentException e) {
+
+                    e.printStackTrace();
                 }
+
+
             } else {
                 SharedPreferences.Editor editor = sharedPreferences.edit();
                 editor.putString("isOnline", "null");
                 editor.commit();
                 sendData(false);
                 navMenuGoTxt.setText("Go Online");
+                try {
 
-                mYourService = new TestService();
-                mServiceIntent = new Intent(this, mYourService.getClass());
-                stopService(mServiceIntent);
+                    unregisterReceiver(broadcastReceiver);
+                } catch(IllegalArgumentException e) {
+
+                    e.printStackTrace();
+                }
+
             }
         });
 
@@ -218,11 +275,40 @@ public class HomeScreen extends AppCompatActivity implements View.OnClickListene
         screenBinding.customNavigationDrawer.ridesLayout.setOnClickListener(this);
         screenBinding.customNavigationDrawer.earningLayout.setOnClickListener(this);
         screenBinding.customNavigationDrawer.rateLayout.setOnClickListener(this);
+
+        screenBinding.customNavigationDrawer.notification.setOnClickListener(this);
+        Intent intent = new Intent(this, LocationService.class);
+        startService(intent);
     }
 
+    private FusedLocationProviderClient fusedLocationClient;
+
+    private BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+
+            String switchFlag = sharedPreferences.getString("isOnline", "null");
+            boolean switchFlagBool = switchFlag.equalsIgnoreCase("null") ? false : true;
+
+            if (switchFlagBool){
+
+                sendData(true);
+            }
+
+        }
+
+    };
+
+
+
+
+
     public void sendData(boolean status) {
+
+
         JSONObject jsonObject = new JSONObject();
         String userId = sharedPreferences.getString(SharedPrefKey.userId, "defaultValue");
+
 
         Log.i(TAG, "Mahdi: MyProfile: userId: " + userId);
 
@@ -230,27 +316,50 @@ public class HomeScreen extends AppCompatActivity implements View.OnClickListene
             jsonObject.put("driver", userId);
             jsonObject.put("status", status);
             mSocket.emit("online", jsonObject);
+
+
+
+            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                // TODO: Consider calling
+                //    ActivityCompat#requestPermissions
+                // here to request the missing permissions, and then overriding
+                //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                //                                          int[] grantResults)
+                // to handle the case where the user grants the permission. See the documentation
+                // for ActivityCompat#requestPermissions for more details.
+                return;
+            }
+            fusedLocationClient.getLastLocation()
+                    .addOnSuccessListener(this, new OnSuccessListener<Location>() {
+                        @Override
+                        public void onSuccess(Location location) {
+                            // Got last known location. In some rare situations this can be null.
+                            if (location != null) {
+
+                                JSONObject jsonMyLocationObject = new JSONObject();
+                                try {
+                                    jsonMyLocationObject.put("driver", userId);
+                                    jsonMyLocationObject.put("lat",location.getLatitude() );
+                                    jsonMyLocationObject.put("lng", location.getLongitude());
+
+                                    Log.i(TAG, "My Location Request socket" + jsonMyLocationObject.toString());
+                                    mSocket.emit("MyLocation", jsonMyLocationObject);
+
+                                } catch (JSONException e) {
+                                    e.printStackTrace();
+                                }
+
+                            }
+                        }
+                    });
+
+
         } catch (JSONException e) {
             e.printStackTrace();
         }
     }
 
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
 
-        mSocket.disconnect();
-        //stopService(mServiceIntent);
-        String switchFlag = sharedPreferences.getString("isOnline", "null");
-        boolean switchFlagBool = switchFlag.equalsIgnoreCase("null") ? false : true;
-
-        if (switchFlagBool) {
-            Intent broadcastIntent = new Intent();
-            broadcastIntent.setAction("restartservice");
-            broadcastIntent.setClass(this, Restarter.class);
-            this.sendBroadcast(broadcastIntent);
-        }
-    }
 
 //    public void getDashboardItem(String userToken) {
 //        RequestQueue requestQueue = Volley.newRequestQueue(HomeScreen.this);
@@ -328,7 +437,10 @@ public class HomeScreen extends AppCompatActivity implements View.OnClickListene
                 finish();
                 checkDrawer();
                 break;
-
+            case R.id.notification:
+                startActivity(new Intent(this, NotificationScreen.class));
+                finish();
+                break;
             case R.id.rate_layout:
                 startActivity(new Intent(HomeScreen.this, RateCardScreen.class));
                 finish();
@@ -340,6 +452,8 @@ public class HomeScreen extends AppCompatActivity implements View.OnClickListene
                 SharedPreferences preferences = getSharedPreferences(OTPScreen.MyPREFERENCES, Context.MODE_PRIVATE);
                 String getFcmToken = sharedPreferences.getString(fcmToken, "defaultValue");
                 Log.i(TAG, "HomeScreen: LogOut btn: " + getFcmToken);
+
+                sendData(false);
                 SharedPreferences.Editor editor = preferences.edit();
                 editor.clear();
                 editor.putString(fcmToken, getFcmToken);
@@ -347,6 +461,7 @@ public class HomeScreen extends AppCompatActivity implements View.OnClickListene
                 Intent intent = new Intent(HomeScreen.this, LoginScreen.class);
                 startActivity(intent);
                 finish();
+
                 break;
 
 //            case R.id.navMenu_switch:

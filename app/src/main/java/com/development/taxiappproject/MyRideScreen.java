@@ -19,6 +19,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
+import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -36,6 +37,10 @@ import com.development.taxiappproject.Service.MyFirebaseMessagingService;
 import com.development.taxiappproject.adapter.MyRideAdapter;
 import com.development.taxiappproject.databinding.ActivityMyRideScreenBinding;
 import com.development.taxiappproject.model.MyRideClass;
+import com.github.nkzawa.engineio.client.transports.WebSocket;
+import com.github.nkzawa.socketio.client.IO;
+import com.github.nkzawa.socketio.client.Socket;
+import com.google.android.gms.location.LocationServices;
 import com.google.firebase.auth.FirebaseAuth;
 import com.squareup.picasso.Picasso;
 
@@ -45,6 +50,7 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.net.URISyntaxException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -54,6 +60,7 @@ import java.util.Map;
 import de.hdodenhof.circleimageview.CircleImageView;
 
 import static com.development.taxiappproject.Const.ConstantValue.baseUrl;
+import static com.development.taxiappproject.Const.ConstantValue.socketBaseUrl;
 
 public class MyRideScreen extends AppCompatActivity implements View.OnClickListener {
     private static final String TAG = "MAHDI";
@@ -65,10 +72,43 @@ public class MyRideScreen extends AppCompatActivity implements View.OnClickListe
     SharedPreferences sharedPreferences;
     SwipeRefreshLayout swipeRefreshLayout;
 
-    private TextView profileTxt;
+    private Switch mSwitch;
+    private TextView profileTxt,navMenuGoTxt;
     private CircleImageView circleImageView;
 
 //    myRideScreen_swipeRefreshLayout
+private Socket mSocket;
+
+    {
+        try {
+            IO.Options options = new IO.Options();
+            options.transports = new String[]{WebSocket.NAME};
+            mSocket = IO.socket(socketBaseUrl, options);
+            //mSocket = IO.socket("http://chat.socket.io");
+        } catch (URISyntaxException e) {
+            Log.e("abc", "index=" + e);
+        }
+    }
+    public void sendData(boolean status) {
+
+
+        JSONObject jsonObject = new JSONObject();
+        String userId = sharedPreferences.getString(SharedPrefKey.userId, "defaultValue");
+
+
+        Log.i(TAG, "Mahdi: MyProfile: userId: " + userId);
+
+        try {
+            jsonObject.put("driver", userId);
+            jsonObject.put("status", status);
+            mSocket.emit("online", jsonObject);
+
+        }catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+    }
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -83,11 +123,36 @@ public class MyRideScreen extends AppCompatActivity implements View.OnClickListe
         profileTxt = headerLayout.findViewById(R.id.navHeader_email);
         circleImageView = findViewById(R.id.navHeader_profile_image);
 
+        String switchFlag = sharedPreferences.getString("isOnline", "null");
+        assert switchFlag != null;
+        boolean switchFlagBool = switchFlag.equalsIgnoreCase("value");
+
+        mSwitch = findViewById(R.id.navMenu_switch);
+        mSwitch.setChecked(switchFlagBool);
+
+
+        navMenuGoTxt = findViewById(R.id.navMenu_go_txt);
+        LinearLayout favourite_layout = findViewById(R.id.favourite_layout);
+
+        favourite_layout.setVisibility(View.GONE);
+        View favourite_layout_liner = findViewById(R.id.favourite_layout_liner);
+
+        favourite_layout_liner.setVisibility(View.GONE);
+
+
         String userName = sharedPreferences.getString(SharedPrefKey.userName, "defaultValue");
         String profilePath = sharedPreferences.getString(SharedPrefKey.profilePath, "defaultValue");
 
         profileTxt.setText(userName);
-        Picasso.get().load(profilePath).into(circleImageView);
+        try {
+            JSONObject jsonProfile = new JSONObject(profilePath);
+            Picasso.get().load(jsonProfile.getString("uriPath")).into(circleImageView);
+
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
 
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -117,11 +182,13 @@ public class MyRideScreen extends AppCompatActivity implements View.OnClickListe
         screenBinding.customNavigationDrawer.profileLayout.setOnClickListener(this);
         screenBinding.customNavigationDrawer.earningLayout.setOnClickListener(this);
         screenBinding.customNavigationDrawer.rateLayout.setOnClickListener(this);
+        screenBinding.customNavigationDrawer.notification.setOnClickListener(this);
 
         screenBinding.customNavigationDrawer.navMenuLogOutBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 FirebaseAuth.getInstance().signOut();
+                sendData(false);
                 SharedPreferences preferences = getSharedPreferences(OTPScreen.MyPREFERENCES, Context.MODE_PRIVATE);
                 String fcmToken = sharedPreferences.getString(MyFirebaseMessagingService.fcmToken, "defaultValue");
                 SharedPreferences.Editor editor = preferences.edit();
@@ -189,6 +256,11 @@ public class MyRideScreen extends AppCompatActivity implements View.OnClickListe
                 finish();
                 checkDrawer();
                 break;
+            case R.id.notification:
+                startActivity(new Intent(this, NotificationScreen.class));
+                finish();
+                break;
+
 
             case R.id.rate_layout:
                 startActivity(new Intent(this, RateCardScreen.class));
@@ -202,7 +274,7 @@ public class MyRideScreen extends AppCompatActivity implements View.OnClickListe
         RequestQueue requestQueue = Volley.newRequestQueue(MyRideScreen.this);
         String mURL = baseUrl + "/rides";
 
-        Log.i(TAG, "Mahdi: HomeScreen: getDashboard: 1 " + userToken);
+        Log.i(TAG, "Mahdi: HomeScreen: My Ride: 1 " + userToken);
 
         JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, mURL,
                 null,
@@ -265,22 +337,18 @@ public class MyRideScreen extends AppCompatActivity implements View.OnClickListe
             try {
                 JSONObject myData = data.getJSONObject(i);
 
-                String fromJson = myData.optString("from");
-                double fromLat = Double.parseDouble(fromJson.substring(0, fromJson.indexOf(",")));
-                double fromLng = Double.parseDouble(fromJson.substring(fromJson.indexOf(" ")));
-                String fromTxt = GlobalVal.convertLatLng(MyRideScreen.this, fromLat, fromLng);
 
-                String toWhereJson = myData.optString("toWhere");
-                double toWhereLat = Double.parseDouble(toWhereJson.substring(0, toWhereJson.indexOf(",")));
-                double toWhereLng = Double.parseDouble(toWhereJson.substring(toWhereJson.indexOf(" ")));
-                String destination = GlobalVal.convertLatLng(MyRideScreen.this, toWhereLat, toWhereLng);
+                String fromTxt = myData.optString("fromLabel");
+
+
+                String destination = myData.optString("toWhereLabel");
 
                 String value = new DecimalFormat("##.##").format(myData.optDouble("actualFareAmount"));
                 String miles = new DecimalFormat("##.##").format(myData.optDouble("miles"));
 
-                ride = new MyRideClass(myData.getString("eta"), value, miles, myData.getString("actualTimePassed"),
+                ride = new MyRideClass(myData.optString("completedTime"), "$ "+value, miles+" Miles", myData.getString("actualTimePassed")+" Hours",
                         fromTxt, destination, myData.getString("_id"));
-            } catch (JSONException | IOException e) {
+            } catch (JSONException  e) {
                 e.printStackTrace();
             }
 //            MyRideClass ride = new MyRideClass(dateRide, priceRide, distanceRide, timeRide, startLocationRide, endLocationRide);

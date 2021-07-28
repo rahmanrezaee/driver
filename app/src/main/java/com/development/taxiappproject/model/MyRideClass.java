@@ -19,7 +19,12 @@ public class MyRideClass {
         this.endLocationRide = endLocationRide;
         this.id = id;
     }
+    public MyRideClass(String dateRide, String priceRide, String distanceRide) {
+        this.dateRide = dateRide;
+        this.priceRide = priceRide;
+        this.distanceRide = distanceRide;
 
+    }
     public String getDateRide() {
         return dateRide;
     }

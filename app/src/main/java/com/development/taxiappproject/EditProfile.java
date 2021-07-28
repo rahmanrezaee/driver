@@ -95,8 +95,8 @@ public class EditProfile extends AppCompatActivity {
     private final int PERMISSION_REQUEST_CODE_CAMERA = 1;
     private final int PERMISSION_REQUEST_CODE_GALLERY = 2;
     private final int PERMISSION_REQUEST_CODE_WRITE_GALLERY = 3;
-    String userName, email, contactNumber, plateNo, profilePhoto, _id;
-
+    String userName, email, contactNumber, plateNo, _id;
+    JSONObject profilePhoto;
     MyApiConfig apiConfig1;
     CompositeDisposable compositeDisposable = new CompositeDisposable();
     String userToken;
@@ -130,7 +130,12 @@ public class EditProfile extends AppCompatActivity {
             userName = userInfo.optString("username");
             email = userInfo.optString("email");
             plateNo = userInfo.optString("carPlateNumber");
-            profilePhoto = userInfo.getString("profilePhoto");
+            profilePhoto = userInfo.getJSONObject("profilePhoto");
+
+
+
+
+
 
             carTypeId = userInfo.optString("carType");
 
@@ -142,7 +147,7 @@ public class EditProfile extends AppCompatActivity {
             editProfileBinding.editProfileEmailEdt.setText(email);
             editProfileBinding.editProfilePlateNoEdt.setText(plateNo);
 
-            Picasso.get().load(userInfo.optString("profilePhoto")).into(editProfileBinding.editProfileCircleImage);
+            Picasso.get().load(userInfo.optJSONObject("profilePhoto").getString("uriPath")).into(editProfileBinding.editProfileCircleImage);
 
             JSONObject dl = userInfo.optJSONObject("DL");
             JSONObject registration = userInfo.optJSONObject("Registration");
@@ -360,6 +365,12 @@ public class EditProfile extends AppCompatActivity {
                 response -> {
                     try {
                         Log.i(TAG, "Mahdi: EditProfile: sendRequest: res 0 " + response);
+                        SharedPreferences.Editor editor = sharedPreferences.edit();
+
+
+                        editor.putString(SharedPrefKey.userName, userName);
+                        editor.putString(SharedPrefKey.profilePath, profilePhoto.toString());
+                        editor.apply();
                         Toast.makeText(getApplicationContext(), response.getString("message"), Toast.LENGTH_SHORT).show();
                         p.hide();
                         finish();
@@ -416,71 +427,77 @@ public class EditProfile extends AppCompatActivity {
     }
 
     private void uploadImage(String typeDocument, File globalFileNam) {
-        p = GlobalVal.mProgressDialog(EditProfile.this, p, "Uploading image...");
 
-        String forDec = compressImage(FileUtils.getPath(getApplicationContext(),
-                Uri.fromFile(new File(globalFileNam.getPath()))));
+        try {
+            p = GlobalVal.mProgressDialog(EditProfile.this, p, "Uploading image...");
 
-        File file = new File(forDec);
+            String forDec = compressImage(FileUtils.getPath(getApplicationContext(),
+                    Uri.fromFile(new File(globalFileNam.getPath()))));
 
-        Log.i(TAG, "Mahdi: EditProfile: uploadImage: 1 " + file);
-        RequestBody requestBody1 = RequestBody.create(MediaType.parse("multipart/form-data"), file);
+            File file = new File(forDec);
 
-        MultipartBody.Part fileToUpload1 = MultipartBody.Part.createFormData("uploadFile",
-                file.getName(), requestBody1);
+            Log.i(TAG, "Mahdi: EditProfile: uploadImage: 1 " + file);
+            RequestBody requestBody1 = RequestBody.create(MediaType.parse("multipart/form-data"), file);
 
-        RequestBody category = RequestBody.create(MediaType.parse("multipart/form-data"), "documents");
-        RequestBody permission = RequestBody.create(MediaType.parse("multipart/form-data"), "false");
+            MultipartBody.Part fileToUpload1 = MultipartBody.Part.createFormData("uploadFile",
+                    file.getName(), requestBody1);
 
-        RequestBody token = RequestBody.create(MediaType.parse("multipart/form-data"),
-                "7220A3B7F8D2FD2C236092E0918B4EA3");
+            RequestBody category = RequestBody.create(MediaType.parse("multipart/form-data"), "documents");
+            RequestBody permission = RequestBody.create(MediaType.parse("multipart/form-data"), "false");
 
-        Log.i(TAG, "Mahdi: EditProfile: uploadImage: 2 " + fileToUpload1);
-        Log.i(TAG, "Mahdi: EditProfile: uploadImage: 3 " + category);
-        Log.i(TAG, "Mahdi: EditProfile: uploadImage: 4 " + token);
+            RequestBody token = RequestBody.create(MediaType.parse("multipart/form-data"),
+                    "7220A3B7F8D2FD2C236092E0918B4EA3");
 
-        compositeDisposable.add(apiConfig1.uploadSingleImage(fileToUpload1, category, token, permission)
-                        .subscribeOn(Schedulers.io())
-                        .observeOn(AndroidSchedulers.mainThread())
-                        .subscribe(responseBodyResponse -> {
-                            Log.i(TAG, "Mahdi: EditProfile: uploadImage: accept: 1 ");
+            Log.i(TAG, "Mahdi: EditProfile: uploadImage: 2 " + fileToUpload1);
+            Log.i(TAG, "Mahdi: EditProfile: uploadImage: 3 " + category);
+            Log.i(TAG, "Mahdi: EditProfile: uploadImage: 4 " + token);
 
-                            Log.i(TAG, "Mahdi: EditProfile: uploadImage: accept: 3 " + responseBodyResponse);
+            compositeDisposable.add(apiConfig1.uploadSingleImage(fileToUpload1, category, token, permission)
+                            .subscribeOn(Schedulers.io())
+                            .observeOn(AndroidSchedulers.mainThread())
+                            .subscribe(responseBodyResponse -> {
+                                Log.i(TAG, "Mahdi: EditProfile: uploadImage: accept: 1 ");
 
-                            if (responseBodyResponse.isSuccessful()) {
-                                try {
-                                    assert responseBodyResponse.body() != null;
-                                    String remoteResponse = responseBodyResponse.body().string();
-                                    Log.i(TAG, "Mahdi: EditProfile: uploadImage: accept: 2 ");
-                                    JSONObject forecast = new JSONObject(remoteResponse);
-                                    Log.i(TAG, "Mahdi: EditProfile: uploadImage: accept: 3 " +
-                                            forecast.getJSONObject("data").getString("uriPath"));
+                                Log.i(TAG, "Mahdi: EditProfile: uploadImage: accept: 3 " + responseBodyResponse);
 
-                                    JSONObject data = forecast.optJSONObject("data");
+                                if (responseBodyResponse.isSuccessful()) {
+                                    try {
+                                        assert responseBodyResponse.body() != null;
+                                        String remoteResponse = responseBodyResponse.body().string();
+                                        Log.i(TAG, "Mahdi: EditProfile: uploadImage: accept: 2 ");
+                                        JSONObject forecast = new JSONObject(remoteResponse);
+                                        Log.i(TAG, "Mahdi: EditProfile: uploadImage: accept: 3 " +
+                                                forecast.getJSONObject("data").getString("uriPath"));
+
+                                        JSONObject data = forecast.optJSONObject("data");
 
 //                            TODO Image pick
-                                    JSONObject imageBody = new JSONObject();
-                                    imageBody.put("uriPath", data.optString("uriPath"));
-                                    imageBody.put("_id", data.optString("_id"));
-                                    uploadUserInfo.put(typeDocument, imageBody);
+                                        JSONObject imageBody = new JSONObject();
+                                        imageBody.put("uriPath", data.optString("uriPath"));
+                                        imageBody.put("_id", data.optString("_id"));
+                                        uploadUserInfo.put(typeDocument, imageBody);
 
-                                    Log.i(TAG, "Mahdi: EditProfile: uploadImage: accept: 4 " + uploadUserInfo);
+                                        Log.i(TAG, "Mahdi: EditProfile: uploadImage: accept: 4 " + uploadUserInfo);
 
-                                    //TODO for loading image
+                                        //TODO for loading image
 //                            isUploading = false;
-                                } catch (JSONException | IOException e) {
-                                    Log.e(TAG, "Mahdi: EditProfile: uploadImage: accept: error 4 ", e);
-                                    e.printStackTrace();
+                                    } catch (JSONException | IOException e) {
+                                        Log.e(TAG, "Mahdi: EditProfile: uploadImage: accept: error 4 ", e);
+                                        e.printStackTrace();
+                                    }
+                                } else {
+                                    Log.i(TAG, "Mahdi: EditProfile: uploadImage: accept: error 5 " + responseBodyResponse.errorBody());
                                 }
-                            } else {
-                                Log.i(TAG, "Mahdi: EditProfile: uploadImage: accept: error 5 " + responseBodyResponse.errorBody());
-                            }
-                            p.hide();
-                        }, error -> {
-                            Log.i(TAG, "Mahdi: EditProfile: uploadImage: accept: error 3 " + error.getMessage());
-                            p.hide();
-                        })
-        );
+                                p.hide();
+                            }, error -> {
+                                Log.i(TAG, "Mahdi: EditProfile: uploadImage: accept: error 3 " + error.getMessage());
+                                p.hide();
+                            })
+            );
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
     }
 
     private void uploadMultiImages(String typeDocument, File file1, File file2, File file3, File file4) {

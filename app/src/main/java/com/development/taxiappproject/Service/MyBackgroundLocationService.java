@@ -115,6 +115,8 @@ public class MyBackgroundLocationService extends Service implements LocationList
 
     @Override
     public void onLocationChanged(@NonNull Location location) {
+
+        Log.i("hello world","Location Changed");
         intent = new Intent(str_receiver);
         fn_getLocation();
     }

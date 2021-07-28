@@ -40,18 +40,7 @@ public class DashboardAdapter extends RecyclerView.Adapter<DashboardAdapter.MyVi
         holder.dateTxt.setText(myDashboardList.get(position).getDateRide());
         holder.priceTxt.setText(myDashboardList.get(position).getPriceRide());
         holder.distanceTxt.setText(myDashboardList.get(position).getDistanceRide());
-        holder.linearLayout.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent intent = new Intent(view.getContext(), CompleteRiding.class);
-                intent.putExtra("id", myDashboardList.get(position).getId());
-                context.startActivity(intent);
 
-//                Intent intent = new Intent(, CompleteMyRide.class);
-//                intent.putExtra("id", myDashboardList.get(position).getId());
-//                context.startActivity(intent);
-            }
-        });
     }
 
     @Override

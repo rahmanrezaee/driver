@@ -29,7 +29,7 @@ public class CarAdapter extends RecyclerView.Adapter<CarAdapter.MyViewHolder> {
     String carTypeId;
 
     public class MyViewHolder extends RecyclerView.ViewHolder {
-        public TextView carTitle, carQuantity;
+        public TextView carTitle;
         public ImageView carImage;
         public LinearLayout linearLayout_itemCar;
 
@@ -38,7 +38,6 @@ public class CarAdapter extends RecyclerView.Adapter<CarAdapter.MyViewHolder> {
 
             carImage = view.findViewById(R.id.itemCar_carIcon);
             carTitle = view.findViewById(R.id.itemCar_model_txt);
-            carQuantity = view.findViewById(R.id.itemCar_carQuantity_txt);
             linearLayout_itemCar = view.findViewById(R.id.linearLayout_itemCar);
         }
     }
@@ -62,7 +61,6 @@ public class CarAdapter extends RecyclerView.Adapter<CarAdapter.MyViewHolder> {
     public void onBindViewHolder(CarAdapter.MyViewHolder holder, int position) {
         MyRideClass car = myRideList.get(position);
         holder.carTitle.setText(myRideList.get(position).getTimeRide());
-        holder.carQuantity.setText(myRideList.get(position).getDistanceRide());
         Picasso.get().load(myRideList.get(position).getStartLocationRide()).into(holder.carImage);
 
         holder.linearLayout_itemCar.setOnClickListener(new View.OnClickListener() {

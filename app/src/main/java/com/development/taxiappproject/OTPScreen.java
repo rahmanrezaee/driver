@@ -11,6 +11,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.os.SystemClock;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -18,6 +19,7 @@ import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.android.volley.AuthFailureError;
@@ -55,8 +57,12 @@ import org.json.JSONObject;
 import org.json.JSONTokener;
 
 import java.io.UnsupportedEncodingException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
@@ -75,25 +81,34 @@ public class OTPScreen extends AppCompatActivity {
     String phone_number;
     ProgressDialog p;
 
-    private long mLastClickTime = 0;
 
     String type;
     JSONObject jsonObject1;
     public static String MyPREFERENCES = "User info";
 
+    private TextView otp_timer;
+    private TextView otp_resend;
+    CountDownTimer countDownTimer;
+
+    private String phone_code;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_o_t_p_screen);
+
         editText1 = findViewById(R.id.edit1);
         editText2 = findViewById(R.id.edit2);
         editText3 = findViewById(R.id.edit3);
         editText4 = findViewById(R.id.edit4);
         editText5 = findViewById(R.id.edit5);
         editText6 = findViewById(R.id.edit6);
+        otp_timer = findViewById(R.id.otp_timer);
+        otp_resend = findViewById(R.id.otp_resend);
         mAuth = FirebaseAuth.getInstance();
-        mAuth.getFirebaseAuthSettings().setAppVerificationDisabledForTesting(true);
         editTextFocusListener();
+
+        p = GlobalVal.mProgressDialog(OTPScreen.this, p, "Please wait...");
 
         if (!MyCheckConnection.mCheckConnectivity(OTPScreen.this)) {
             return;
@@ -104,6 +119,7 @@ public class OTPScreen extends AppCompatActivity {
         if (type.equalsIgnoreCase("signUp")) {
             try {
                 jsonObject1 = new JSONObject(Objects.requireNonNull(getIntent().getStringExtra("bodyData")));
+//                jsonObject1.put("phone","+93772768220");
                 phone_number = getIntent().getStringExtra("phone_number");
                 Log.i(TAG, "Mahdi: OTP: " + jsonObject1);
             } catch (JSONException e) {
@@ -118,25 +134,52 @@ public class OTPScreen extends AppCompatActivity {
 
         assert phone_number != null;
         initView();
+
+//        phone_number = "+93772768220";
         startPhoneNumberVerification(phone_number);
+
+
     }
 
-//    private void pasteText() {
-//        ClipboardManager clipboardManager = (ClipboardManager)
-//                getSystemService(Context.CLIPBOARD_SERVICE);
-//
-//        if(clipboardManager.hasPrimaryClip()) {
-//            ClipData.Item item = clipboardManager.getPrimaryClip().getItemAt(0);
-//
-//            CharSequence ptext = item.getText();
-//            for(int i = 0 ; i <= ptext.length() ; i++){
-//                editText3.setText(ptext);
-//                // 4 cases and paste to 4 edittexts
-//            }
-//        }
-//    }
+
+    private void startTimer() {
+
+//        Log.i(TAG, "startTimer: Start Timer");
+        otp_timer.setVisibility(View.VISIBLE);
+        otp_resend.setVisibility(View.GONE);
+
+        if (countDownTimer != null) {
+            countDownTimer.cancel();
+        }
+
+        countDownTimer = new CountDownTimer(70000, 1000) {
+
+            public void onTick(long millisUntilFinished) {
+                otp_timer.setText("Active Resend: " + millisUntilFinished / 1000 + " Sec");
+                Log.i(TAG, "onTick: Timer OTP : " + millisUntilFinished / 1000);
+            }
+
+            public void onFinish() {
+                otp_timer.setVisibility(View.GONE);
+                otp_resend.setVisibility(View.VISIBLE);
+
+
+            }
+
+        }.start();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+        if (countDownTimer != null)
+            countDownTimer.cancel();
+
+    }
 
     private void startPhoneNumberVerification(String phoneNumber) {
+
         PhoneAuthOptions options =
                 PhoneAuthOptions.newBuilder(mAuth)
                         .setPhoneNumber(phoneNumber)       // Phone number to verify
@@ -145,6 +188,7 @@ public class OTPScreen extends AppCompatActivity {
                         .setCallbacks(mCallbacks)          // OnVerificationStateChangedCallbacks
                         .build();
         PhoneAuthProvider.verifyPhoneNumber(options);
+
     }
 
     // [START resend_verification]
@@ -153,7 +197,7 @@ public class OTPScreen extends AppCompatActivity {
         PhoneAuthOptions options =
                 PhoneAuthOptions.newBuilder(mAuth)
                         .setPhoneNumber(phoneNumber)       // Phone number to verify
-                        .setTimeout(60L, TimeUnit.SECONDS) // Tximeout and unit
+                        .setTimeout(60L, TimeUnit.SECONDS) // Timeout and unit
                         .setActivity(this)                 // Activity (for callback binding)
                         .setCallbacks(mCallbacks)          // OnVerificationStateChangedCallbacks
                         .setForceResendingToken(token)     // ForceResendingToken from callbacks
@@ -166,6 +210,11 @@ public class OTPScreen extends AppCompatActivity {
             @Override
             public void onCodeAutoRetrievalTimeOut(@NotNull String verificationId) {
                 mVerificationId = verificationId;
+                Toast.makeText(OTPScreen.this, "Time Out Code please try again", Toast.LENGTH_SHORT).show();
+                p.dismiss();
+
+                finish();
+
 //                if (progressDialog != null) {
 //                    dismissProgressDialog(progressDialog);
 //                }
@@ -175,22 +224,36 @@ public class OTPScreen extends AppCompatActivity {
             @Override
             public void onVerificationCompleted(@NotNull PhoneAuthCredential credential) {
                 Log.d("onVerificationCompleted", "onVerificationCompleted:" + credential);
-                signInWithPhoneAuthCredential(credential);
-//                if (progressDialog != null) {
-//                    dismissProgressDialog(progressDialog);
-//                }
-//                signInWithPhoneAuthCredential(credential);
+
+                String code= credential.getSmsCode();
+                if(code!=null)
+                {
+                    p.show();
+                    signInWithPhoneAuthCredential(credential);
+                }
+                else {
+
+                    Toast.makeText(OTPScreen.this, "Please try again", Toast.LENGTH_SHORT).show();
+                    finish();
+                }
+
+
+
+
             }
 
             @Override
             public void onVerificationFailed(@NotNull FirebaseException e) {
                 Log.w("onVerificationFailed", "onVerificationFailed", e);
-
                 if (e instanceof FirebaseAuthInvalidCredentialsException) {
                     Log.e("Exception:", "FirebaseAuthInvalidCredentialsException" + e);
                 } else if (e instanceof FirebaseTooManyRequestsException) {
                     Log.e("Exception:", "FirebaseTooManyRequestsException" + e);
+                    finish();
                 }
+                p.hide();
+                Toast.makeText(OTPScreen.this, e.getMessage(), Toast.LENGTH_LONG).show();
+
             }
 
             @Override
@@ -198,7 +261,8 @@ public class OTPScreen extends AppCompatActivity {
                                    @NotNull PhoneAuthProvider.ForceResendingToken token) {
                 mVerificationId = verificationId;
                 mResendToken = token;
-
+                startTimer();
+                p.hide();
                 Log.d("onCodeSent", "onCodeSent:" + verificationId);
                 Log.i("Verification code:", verificationId);
             }
@@ -214,11 +278,10 @@ public class OTPScreen extends AppCompatActivity {
                 if (phone_number == null || mResendToken == null) {
                     return;
                 }
-                if (SystemClock.elapsedRealtime() - mLastClickTime < 60000) {
-                    return;
-                }
-                mLastClickTime = SystemClock.elapsedRealtime();
+
+                Toast.makeText(this, "Resend clicked, please wait!", Toast.LENGTH_SHORT).show();
                 resendVerificationCode(phone_number, mResendToken);
+                startTimer();
                 break;
 
             case R.id.back:
@@ -227,14 +290,21 @@ public class OTPScreen extends AppCompatActivity {
         }
     }
 
+
     private void verifyPhoneNumberWithCode(String verificationId, String code) {
+
+
+        Log.i(TAG, "verifyPhoneNumberWithCode: Phone and verificationId" + verificationId);
         // [START verify_with_code]
         if (code.isEmpty()) {
             Toast.makeText(getApplicationContext(), "Please enter your code", Toast.LENGTH_SHORT).show();
         } else {
-            p = GlobalVal.mProgressDialog(OTPScreen.this, p, "Please wait...");
+
             try {
+                p.show();
                 PhoneAuthCredential credential = PhoneAuthProvider.getCredential(verificationId, code);
+                phone_code = PhoneAuthProvider.getCredential(verificationId, code).getSmsCode();
+                Log.i(TAG, "OTPScreen: verifyPhoneNumberWithCode: " + phone_code);
                 signInWithPhoneAuthCredential(credential);
             } catch (Exception e) {
                 p.hide();
@@ -298,16 +368,14 @@ public class OTPScreen extends AppCompatActivity {
                     editor.putString(SharedPrefKey.userToken, userToken);
                     editor.putString(SharedPrefKey.userId, userId);
                     editor.putString(SharedPrefKey.isOnline, isOnline);
+                    editor.putString(SharedPrefKey.expireDate, SharedPrefKey.addHoursToJavaUtilDate());
 
                     editor.putString(SharedPrefKey.userName, userName);
                     editor.putString(SharedPrefKey.profilePath, profilePath);
-
+                    Log.i(TAG, "Mahdi: OTPScreen: signUp: timer " + SharedPrefKey.addHoursToJavaUtilDate());
                     editor.apply();
 
-                    if (type.equalsIgnoreCase("signUp")) {
-                        Toast.makeText(getApplicationContext(), "Your profile successfully registered! and must be approved", Toast.LENGTH_SHORT).show();
-                        startActivity(new Intent(getApplicationContext(), LoginScreen.class));
-                    }
+
                     startActivity(new Intent(getApplicationContext(), HomeScreen.class));
 
                     p.hide();
@@ -318,8 +386,17 @@ public class OTPScreen extends AppCompatActivity {
             try {
                 responseBody = new String(error.networkResponse.data, "utf-8");
                 JSONObject data = new JSONObject(responseBody);
+
                 Log.i(TAG, "Mahdi: OTPScreen: signUp: Error 2 " + data);
                 Toast.makeText(getApplicationContext(), data.optString("message"), Toast.LENGTH_LONG).show();
+                if (data.optString("message").equalsIgnoreCase("Pending For Admin Confirm")) {
+                    if (type.equalsIgnoreCase("signUp")) {
+
+                        finishAffinity();
+                        startActivity(new Intent(getApplicationContext(), LoginScreen.class));
+                    }
+                }
+
             } catch (UnsupportedEncodingException | JSONException e) {
                 e.printStackTrace();
                 Toast.makeText(getApplicationContext(), "Something went wrong!", Toast.LENGTH_LONG).show();
@@ -366,47 +443,52 @@ public class OTPScreen extends AppCompatActivity {
     }
 
     private void signInWithPhoneAuthCredential(PhoneAuthCredential credential) {
-        mAuth.signInWithCredential(credential)
-                .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
-                    @Override
-                    public void onComplete(@NonNull Task<AuthResult> task) {
-                        if (task.isSuccessful()) {
-                            // Sign in success, update UI with the signed-in user's information
-//                            Log.d(TAG, "signInWithCredential:success");
-                            FirebaseUser user = Objects.requireNonNull(task.getResult()).getUser();
-                            assert user != null;
+
+        if (mAuth.getCurrentUser() == null)
+
+            mAuth.signInWithCredential(credential)
+                    .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
+                        @Override
+                        public void onComplete(@NonNull Task<AuthResult> task) {
+
+
+                            if (task.isSuccessful()) {
+                                // Sign in success, update UI with the signed-in user's information
+//                              Log.d(TAG, "signInWithCredential:success");
+                                FirebaseUser user = Objects.requireNonNull(task.getResult()).getUser();
+                                assert user != null;
 //                            user.getIdToken();
 
-                            Log.i(TAG, "Hello: Mahdi: onComplete: User " + user);
+                                Log.i(TAG, "Hello: Mahdi: onComplete: User " + user);
 
-                            user.getIdToken(true).addOnSuccessListener(result -> {
-                                String idToken = result.getToken();
+                                user.getIdToken(true).addOnSuccessListener(result -> {
+                                    String idToken = result.getToken();
 
-                                Log.i(TAG, "Hello: Mahdi: onComplete: firebaseToken " + idToken);
+                                    Log.i(TAG, "Hello: Mahdi: onComplete: firebaseToken " + idToken);
 
-                                if (type.equalsIgnoreCase("signUp")) {
-                                    final String requestBody = jsonObject1.toString();
-                                    signUpAndSignInToServer(requestBody, idToken, type);
-                                } else {
-                                    JSONObject jsonObject = new JSONObject();
-                                    try {
-                                        jsonObject.put("fcmToken", MyFirebaseMessagingService.getToken(getApplicationContext()));
-                                    } catch (JSONException e) {
-                                        e.printStackTrace();
+                                    if (type.equalsIgnoreCase("signUp")) {
+                                        final String requestBody = jsonObject1.toString();
+                                        signUpAndSignInToServer(requestBody, idToken, type);
+                                    } else {
+                                        JSONObject jsonObject = new JSONObject();
+                                        try {
+                                            jsonObject.put("fcmToken", MyFirebaseMessagingService.getToken(getApplicationContext()));
+                                        } catch (JSONException e) {
+                                            e.printStackTrace();
+                                        }
+                                        final String requestBody = jsonObject.toString();
+                                        signUpAndSignInToServer(requestBody, idToken, type);
                                     }
-                                    final String requestBody = jsonObject.toString();
-                                    signUpAndSignInToServer(requestBody, idToken, type);
-                                }
-                                Log.d(TAG, "GetTokenResult result = " + idToken);
-                            });
-                        } else {
-                            p.hide();
-                            if (task.getException() instanceof FirebaseAuthInvalidCredentialsException) {
-                                Toast.makeText(getApplicationContext(), "Your code is not correct!", Toast.LENGTH_SHORT).show();
+                                    Log.d(TAG, "GetTokenResult result = " + idToken);
+                                });
+                            } else {
+                                p.hide();
+                                Log.d(TAG, "onComplete() returned: " + task.getException());
+                                Toast.makeText(getApplicationContext(), task.getException().getMessage(), Toast.LENGTH_SHORT).show();
+
                             }
                         }
-                    }
-                });
+                    });
     }
 
     public void editTextFocusListener() {
@@ -556,105 +638,3 @@ public class OTPScreen extends AppCompatActivity {
         });
     }
 }
-
-//                NetworkResponse responseString = null;
-//                JSONObject jsonObject1;
-//                if (response != null) {
-//                    try {
-//                        jsonObject1 = new JSONObject(Objects.requireNonNull(response).toString());
-//                        Log.i(TAG, "Mahdi: OTPScreen: signUp: res 00 " + jsonObject1.toString());
-//                    } catch (JSONException e) {
-//                        e.printStackTrace();
-//                    }
-//                    try {
-//                        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT) {
-//                            JSONArray array = new JSONArray(response);
-//                            Log.i(TAG, "Mahdi: OTPScreen: signUp: res 0 " + array);
-//                        }
-//                    } catch (JSONException e) {
-//                        e.printStackTrace();
-//                    }
-//                    responseString = response;
-//                    Log.i(TAG, "Mahdi: OTPScreen: signUp: res 1 " + Arrays.toString(response.data));
-//                    Log.i(TAG, "Mahdi: OTPScreen: signUp: res 2 " + response);
-//
-//                    // can get more details such as response.headers
-//                }
-//                assert response != null;
-//                return Response.success(responseString.toString(), HttpHeaderParser.parseCacheHeaders(response));
-
-
-//        StringRequest stringRequest = new StringRequest(Request.Method.POST, mURL,
-//                response -> {
-//                    Log.i(TAG, "Mahdi: OTPScreen: signUp: res " + response);
-//                    p.hide();
-//
-//                    startActivity(new Intent(getApplicationContext(), HomeScreen.class));
-//                },
-//                error -> {
-//                    p.hide();
-//                    Toast.makeText(getApplicationContext(), error.getMessage(), Toast.LENGTH_SHORT).show();
-//                    Log.e("Mahdi", "Mahdi: OTPScreen: signUp: Error " + error.getMessage());
-//                }
-//        ) {
-//            @Override
-//            public String getBodyContentType() {
-//                return "application/json; charset=utf-8";
-//            }
-//
-//            @Override
-//            public Map<String, String> getHeaders() throws AuthFailureError {
-//                Map<String, String> params = new HashMap<>();
-//                params.put("Content-Type", "application/json");
-//                params.put("firebaseToken", idToken);
-//                return params;
-//            }
-//
-//            @Override
-//            public byte[] getBody() throws AuthFailureError {
-//                try {
-//                    return requestBody == null ? null : requestBody.getBytes("utf-8");
-//                } catch (UnsupportedEncodingException uee) {
-//                    VolleyLog.wtf("Unsupported Encoding while trying to get the bytes of %s using %s", requestBody, "utf-8");
-//                    return null;
-//                }
-//            }
-//
-//            @Override
-//            protected Response parseNetworkResponse(NetworkResponse response) {
-//                try {
-//                    String jsonString = new String(response.data, HttpHeaderParser.parseCharset(response.headers));
-//                    return Response.success(new JSONObject(jsonString), HttpHeaderParser.parseCacheHeaders(response));
-//                } catch (UnsupportedEncodingException e) {
-//                    return Response.error(new ParseError(e));
-//                } catch (JSONException je) {
-//                    return Response.error(new ParseError(je));
-//                }
-////                NetworkResponse responseString = null;
-////                JSONObject jsonObject1;
-////                if (response != null) {
-////                    try {
-////                        jsonObject1 = new JSONObject(Objects.requireNonNull(response).toString());
-////                        Log.i(TAG, "Mahdi: OTPScreen: signUp: res 00 " + jsonObject1.toString());
-////                    } catch (JSONException e) {
-////                        e.printStackTrace();
-////                    }
-////                    try {
-////                        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT) {
-////                            JSONArray array = new JSONArray(response);
-////                            Log.i(TAG, "Mahdi: OTPScreen: signUp: res 0 " + array);
-////                        }
-////                    } catch (JSONException e) {
-////                        e.printStackTrace();
-////                    }
-////                    responseString = response;
-////                    Log.i(TAG, "Mahdi: OTPScreen: signUp: res 1 " + Arrays.toString(response.data));
-////                    Log.i(TAG, "Mahdi: OTPScreen: signUp: res 2 " + response);
-////
-////                    // can get more details such as response.headers
-////                }
-////                assert response != null;
-////                return Response.success(responseString.toString(), HttpHeaderParser.parseCacheHeaders(response));
-//            }
-//        };
-//        requestQueue.add(stringRequest);

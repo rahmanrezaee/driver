@@ -69,22 +69,72 @@
 
                         </LinearLayout>
                     </androidx.appcompat.widget.Toolbar>
-
-                    <androidx.recyclerview.widget.RecyclerView
-                        android:id="@+id/earning_recycler_view"
+                    <androidx.cardview.widget.CardView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_below="@id/earningScreen_makePaid_btn"
-                        android:layout_marginTop="10dp" />
+                        android:layout_marginRight="10dp"
+                        android:padding="10dp"
+                        android:layout_marginLeft="10dp"
+                        android:layout_marginTop="70dp"
+                        android:layout_marginBottom="10dp"
+                        app:cardCornerRadius="5dp"
+                        android:id="@+id/timer_cart"
+                        app:cardElevation="5dp">
+
+                        <EditText
+                            android:id="@+id/timer"
+                            android:layout_margin="10dp"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:background="@android:color/white"
+                            android:layout_below="@+id/header_layout_appBar"
+                            android:focusable="false"
+                            android:hint="Select Date"
+                            android:drawableRight="@drawable/ic_baseline_calendar_yellow"
+                            android:padding="10dp"
+                            android:textSize="16sp" />
+
+                    </androidx.cardview.widget.CardView>
+                    <TableLayout
+                        android:id="@+id/rateCar_tableLayout"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_margin="15dp"
+                        android:gravity="center"
+                        android:layout_below="@+id/timer_cart"
+                        android:stretchColumns="0,1">
+
+                    </TableLayout>
+
+                    <TableLayout
+                        android:id="@+id/totalEarning_tableLayout"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_margin="25dp"
+
+                        android:gravity="center"
+                        android:layout_below="@+id/rateCar_tableLayout"
+                        android:stretchColumns="0,1">
+
+                    </TableLayout>
+
+
+<!--                    <androidx.recyclerview.widget.RecyclerView-->
+<!--                        android:id="@+id/earning_recycler_view"-->
+<!--                        android:layout_width="match_parent"-->
+<!--                        android:layout_height="wrap_content"-->
+<!--                        android:layout_below="@+id/timer_cart"-->
+<!--                        android:layout_marginTop="10dp" />-->
 
                     <Button
                         android:id="@+id/earningScreen_makePaid_btn"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_below="@+id/header_layout_appBar"
                         android:layout_marginLeft="20dp"
                         android:layout_marginTop="8dp"
                         android:layout_marginRight="20dp"
+
+                        android:layout_below="@+id/totalEarning_tableLayout"
                         android:layout_marginBottom="20dp"
                         android:background="@drawable/button_background"
                         android:text="Mark Paid the Day"
@@ -120,7 +170,6 @@
             </LinearLayout>
 
         </com.google.android.material.navigation.NavigationView>
-
     </androidx.drawerlayout.widget.DrawerLayout>
 
 </layout>

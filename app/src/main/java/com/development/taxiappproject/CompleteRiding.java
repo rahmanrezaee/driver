@@ -5,6 +5,7 @@ import androidx.databinding.DataBinderMapper;
 import androidx.databinding.DataBindingUtil;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
@@ -28,6 +29,15 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.UnsupportedEncodingException;
+import java.text.DateFormat;
+import java.text.DecimalFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -39,6 +49,7 @@ public class CompleteRiding extends AppCompatActivity {
     SharedPreferences sharedPreferences;
 
     @Override
+
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         ridingBinding = DataBindingUtil.setContentView(this, R.layout.activity_complete_riding);
@@ -50,6 +61,15 @@ public class CompleteRiding extends AppCompatActivity {
 
         ridingBinding.completeRidingRelativeLayout.setVisibility(View.GONE);
         ridingBinding.completeRidingRelativeLayoutProgress.setVisibility(View.VISIBLE);
+        ridingBinding.back.setOnClickListener(v -> {
+            Log.i(TAG, "onCreate: Back press");
+            Intent intent = new  Intent(this,HomeScreen.class);
+            startActivity(intent);
+            finish();
+
+            super.onBackPressed();
+
+        });
 
         String sessionId = getIntent().getStringExtra("id");
 
@@ -74,13 +94,53 @@ public class CompleteRiding extends AppCompatActivity {
 
                         Log.i(TAG, "Mahdi: CompleteRiding: getSingleRideItem: res 00 " + data);
 
-                        ridingBinding.completeRidingPriceTxt.setText(singleRide.getString("actualFareAmount"));
-                        ridingBinding.completeRidingMilesTxt.setText(singleRide.getString("miles") + " Miles");
-                        ridingBinding.completeRidingTimeTxt.setText(singleRide.getString("actualTimePassed") + " Mins");
-                        ridingBinding.completeRidingTimeStartTxt.setText(singleRide.getString("paidIn"));
-                        ridingBinding.completeRidingTimeEndTxt.setText(singleRide.getString("updatedAt"));
-                        ridingBinding.completeRidingEndLocationTxt.setText(singleRide.getString("toWhere"));
-                        ridingBinding.completeRidingStartLocationTxt.setText(singleRide.getString("from"));
+                        if (singleRide.has("fareAmount") && Double.parseDouble(singleRide.optString("fareAmount")) < Double.parseDouble(singleRide.optString("actualFareAmount"))){
+
+
+                            double value  = singleRide.optDouble("fareAmount");
+                            double showValue = Double.parseDouble(new DecimalFormat("##.##").format(value));
+
+                            ridingBinding.completeRidingPriceTxt.setText("$ " + showValue);
+                        }else{
+
+                            double value  = singleRide.optDouble("actualFareAmount");
+                            double showValue = Double.parseDouble(new DecimalFormat("##.##").format(value));
+
+
+
+                            ridingBinding.completeRidingPriceTxt.setText("$ " + showValue);
+
+                        }
+
+                        double miles = singleRide.optDouble("miles");
+                        double showMiles = Double.parseDouble(new DecimalFormat("##.##").format(miles));
+
+
+
+
+                        ridingBinding.completeRidingMilesTxt.setText( showMiles+" Miles");
+                        ridingBinding.completeRidingTimeTxt.setText(singleRide.optString("eta"));
+
+
+                        try {
+                            Date startTime =new SimpleDateFormat().parse(singleRide.getString("paidIn"));
+
+                            Date endTime =new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSS'Z'").parse(singleRide.getString("updatedAt"));
+                            DateFormat dateFormat = new SimpleDateFormat("HH:mm a");
+                            Calendar calendarStart = GregorianCalendar.getInstance(); // creates a new calendar instance
+                            calendarStart.setTime(startTime);
+                            Calendar calendarEnd = GregorianCalendar.getInstance(); // creates a new calendar instance
+                            calendarStart.setTime(endTime);
+
+                            ridingBinding.completeRidingTimeStartTxt.setText("Time " +dateFormat.format(calendarStart.getTime()) );
+                            ridingBinding.completeRidingTimeEndTxt.setText("Time " +dateFormat.format(calendarEnd.getTime()));
+                        } catch (ParseException e) {
+                            e.printStackTrace();
+                        }
+
+
+                        ridingBinding.completeRidingEndLocationTxt.setText(singleRide.getString("toWhereLabel"));
+                        ridingBinding.completeRidingStartLocationTxt.setText(singleRide.getString("fromLabel"));
 
 
                         ridingBinding.completeRidingRelativeLayout.setVisibility(View.VISIBLE);
@@ -124,4 +184,13 @@ public class CompleteRiding extends AppCompatActivity {
         requestQueue.add(jsonObjectRequest);
     }
 
+    @Override
+    public void onBackPressed() {
+
+        Intent intent = new  Intent(this,HomeScreen.class);
+        startActivity(intent);
+        finish();
+
+        super.onBackPressed();
+    }
 }

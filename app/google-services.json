@@ -15,27 +15,38 @@
       },
       "oauth_client": [
         {
+          "client_id": "209885936016-7vtfb54rlhr9m6el2g2338dvbhljiet8.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.development.passengerapp",
+            "certificate_hash": "7136bbaca7454f1429d51a1965f97c20a8c491b0"
+          }
+        },
+        {
           "client_id": "209885936016-dej497cg2gkgtcvmklunkctdqrvm1mlb.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyA0prCBSkMhl5LtbmmWMDBuKEHSblJMAKE"
+          "current_key": "AIzaSyDDf1wzvSILFAyZBX-fK5hQ-ZWZhJsPEx0"
+        },
+        {
+          "current_key": "AIzaSyA_ssRbPqWKBTFdSu2-d-L4rwAE5XlgQO4"
         }
       ],
       "services": {
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "209885936016-dej497cg2gkgtcvmklunkctdqrvm1mlb.apps.googleusercontent.com",
+              "client_id": "209885936016-7kp28hupb2t9caknqrejertraem5mi0f.apps.googleusercontent.com",
               "client_type": 3
             },
             {
-              "client_id": "209885936016-tar7vgvo93gqase1rp6btn3pvq3cvj65.apps.googleusercontent.com",
+              "client_id": "209885936016-rjtk9t8f2q7vfukn5lspta1vngk14b2d.apps.googleusercontent.com",
               "client_type": 2,
               "ios_info": {
-                "bundle_id": "com.webfume.passangerApp"
+                "bundle_id": "com.anj.Driver"
               }
             }
           ]
@@ -51,11 +62,11 @@
       },
       "oauth_client": [
         {
-          "client_id": "209885936016-l00nptlav99v55ftrme0t4kj3s479vc6.apps.googleusercontent.com",
+          "client_id": "209885936016-apntlodan30ot2kdf41usak3tb187h88.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.development.taxiappproject",
-            "certificate_hash": "710ae9b1f53f66d5574e6e3b86df748579ba825e"
+            "certificate_hash": "7136bbaca7454f1429d51a1965f97c20a8c491b0"
           }
         },
         {
@@ -65,21 +76,24 @@
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyA0prCBSkMhl5LtbmmWMDBuKEHSblJMAKE"
+          "current_key": "AIzaSyDDf1wzvSILFAyZBX-fK5hQ-ZWZhJsPEx0"
+        },
+        {
+          "current_key": "AIzaSyA_ssRbPqWKBTFdSu2-d-L4rwAE5XlgQO4"
         }
       ],
       "services": {
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "209885936016-dej497cg2gkgtcvmklunkctdqrvm1mlb.apps.googleusercontent.com",
+              "client_id": "209885936016-7kp28hupb2t9caknqrejertraem5mi0f.apps.googleusercontent.com",
               "client_type": 3
             },
             {
-              "client_id": "209885936016-tar7vgvo93gqase1rp6btn3pvq3cvj65.apps.googleusercontent.com",
+              "client_id": "209885936016-rjtk9t8f2q7vfukn5lspta1vngk14b2d.apps.googleusercontent.com",
               "client_type": 2,
               "ios_info": {
-                "bundle_id": "com.webfume.passangerApp"
+                "bundle_id": "com.anj.Driver"
               }
             }
           ]

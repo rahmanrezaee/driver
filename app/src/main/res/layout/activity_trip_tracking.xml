@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:map="http://schemas.android.com/apk/res-auto"
+
     xmlns:tools="http://schemas.android.com/tools">
 
     <LinearLayout
@@ -36,6 +37,7 @@
                 android:textStyle="bold" />
 
             <ImageView
+                android:id="@+id/google_direction"
                 android:layout_width="36dp"
                 android:layout_height="36dp"
                 android:layout_gravity="center_vertical"
@@ -57,35 +59,111 @@
                 tools:context=".TripTracking" />
 
             <LinearLayout
-                android:id="@+id/btn_layout"
+                android:orientation="vertical"
+                android:id="@+id/ver_la"
+
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginLeft="20dp"
-                android:layout_marginTop="20dp"
-                android:layout_marginRight="20dp"
-                android:background="@color/appColorPrimary"
-                android:gravity="center"
-                android:orientation="horizontal"
-                android:weightSum="1">
+                >
 
-                <Button
-                    android:id="@+id/tripTracking_paidAndComp_btn"
-                    android:layout_width="0dp"
+
+                <info.hoang8f.android.segmented.SegmentedGroup
+                    android:id="@+id/payid_layout"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginRight="10dp"
-                    android:layout_weight="1"
-                    android:background="@android:color/transparent"
-                    android:onClick="onClick"
-                    android:text="Paid and Start Ride"
-                    android:textColor="@android:color/black" />
+                    android:layout_margin="10dp"
+                    android:orientation="horizontal"
+
+                    android:weightSum="2"
+                    map:sc_border_width="2dp"
+                    map:sc_corner_radius="10dp">
+
+                    <CheckBox
+                        android:id="@+id/button21"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text=""
+                        android:backgroundTint="@color/green"
+                        android:checked="true"
+                        android:buttonTint="@color/green"
+                        android:layout_weight="1"
+                        style="@style/CheckboxStyle" />
+
+                    <CheckBox
+                        android:id="@+id/paid_checkbox"
+                        style="@style/CheckboxStyle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+
+                        android:backgroundTint="@color/gray"
+                        android:buttonTint="@color/gray"
+                        android:checked="true"
+                        android:text="Paid and Start Ride"
+                        android:textColor="@android:color/white" />
+                </info.hoang8f.android.segmented.SegmentedGroup>
+
+                <info.hoang8f.android.segmented.SegmentedGroup
+                    xmlns:segmentedgroup="http://schemas.android.com/apk/res-auto"
+                    android:id="@+id/complate_layout"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="10dp"
+                    android:orientation="horizontal"
+                    android:weightSum="1"
+                    android:visibility="gone"
+                    segmentedgroup:sc_border_width="2dp"
+                    segmentedgroup:sc_corner_radius="10dp">
+
+                    <CheckBox
+                        android:id="@+id/complete_checkbox"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Complete Trips"
+                        android:backgroundTint="@color/green"
+                        android:checked="true"
+                        android:buttonTint="@color/green"
+                        android:layout_weight="1"
+                        style="@style/RadioButton" />
+
+                </info.hoang8f.android.segmented.SegmentedGroup>
+<!--                <LinearLayout-->
+<!--                    android:id="@+id/btn_layout"-->
+<!--                    android:layout_width="match_parent"-->
+<!--                    android:layout_height="wrap_content"-->
+<!--                    android:layout_marginLeft="20dp"-->
+<!--                    android:layout_marginTop="20dp"-->
+<!--                    android:layout_marginRight="20dp"-->
+<!--                    android:background="@color/appColorPrimary"-->
+<!--                    android:gravity="center"-->
+<!--                    android:orientation="horizontal"-->
+<!--                    android:weightSum="1">-->
+
+
+
+
+
+<!--&lt;!&ndash;                    <Button&ndash;&gt;-->
+<!--&lt;!&ndash;                        android:id="@+id/tripTracking_paidAndComp_btn"&ndash;&gt;-->
+<!--&lt;!&ndash;                        android:layout_width="0dp"&ndash;&gt;-->
+<!--&lt;!&ndash;                        android:layout_height="wrap_content"&ndash;&gt;-->
+<!--&lt;!&ndash;                        android:layout_marginRight="10dp"&ndash;&gt;-->
+<!--&lt;!&ndash;                        android:layout_weight="1"&ndash;&gt;-->
+<!--&lt;!&ndash;                        android:background="@android:color/transparent"&ndash;&gt;-->
+<!--&lt;!&ndash;                        android:onClick="onClick"&ndash;&gt;-->
+<!--&lt;!&ndash;                        android:text="Paid and Start Ride"&ndash;&gt;-->
+<!--&lt;!&ndash;                        android:textColor="@android:color/black" />&ndash;&gt;-->
+
+<!--                </LinearLayout>-->
 
             </LinearLayout>
+
 
             <LinearLayout
                 android:id="@+id/calulate_layout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_below="@id/btn_layout"
+                android:layout_below="@id/ver_la"
                 android:layout_marginLeft="20dp"
                 android:layout_marginTop="20dp"
                 android:layout_marginRight="20dp"
@@ -102,6 +180,7 @@
                     android:gravity="center"
                     android:padding="10dp"
                     android:text="$ 88"
+                    android:drawableLeft="@drawable/ic_monetization"
                     android:textColor="@android:color/black"
                     android:textSize="16sp" />
 
@@ -135,6 +214,8 @@
                     android:layout_weight="0.3"
                     android:gravity="center"
                     android:text="20 Mins"
+                    android:drawableRight="@drawable/ic_access_time"
+
                     android:textColor="@android:color/black"
                     android:textSize="16sp" />
             </LinearLayout>

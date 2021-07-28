@@ -16,6 +16,10 @@ import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.PorterDuff;
+import android.graphics.PorterDuffXfermode;
+import android.graphics.Rect;
+import android.graphics.drawable.Drawable;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.AsyncTask;
@@ -86,6 +90,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.text.DecimalFormat;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -147,7 +152,7 @@ public class NewRideRequest extends FragmentActivity implements OnMapReadyCallba
         } catch (JSONException e) {
             e.printStackTrace();
         }
-        requestBinding.newRideUserName.setText(notificationData.optString("username"));
+        requestBinding.newRideUserName.setText("User Name: " + notificationData.optString("username"));
 
         Log.i(TAG, "Mahdi: NewRideRequest: onCreate: 1 " + id + " : " + extras);
 
@@ -224,6 +229,9 @@ public class NewRideRequest extends FragmentActivity implements OnMapReadyCallba
                             Intent intent = new Intent(NewRideRequest.this, TripTracking.class);
                             intent.putExtra("rideId", id);
                             intent.putExtra("Data", notificationData.toString());
+
+// set the new task and clear flags
+                            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                             startActivity(intent);
                         } else if (!status.equalsIgnoreCase("accepted") && serverStatus) {
                             finish();
@@ -293,15 +301,35 @@ public class NewRideRequest extends FragmentActivity implements OnMapReadyCallba
 
                     Log.i(TAG, "Mahdi: NewRideRequest:  getSingleRideItem: res 00 " + data);
 
-                    requestBinding.newRidePrice.setText("$ " + data.optString("actualFareAmount"));
-                    requestBinding.newRideDistance.setText(data.optString(("miles") + " Miles"));
-                    requestBinding.newRideMinutes.setText(data.optString(("actualTimePassed") + " Mins"));
+
+                    double value = data.optDouble("actualFareAmount");
+                    double showValue = Double.parseDouble(new DecimalFormat("##.##").format(value));
+
+                    double miles = data.optDouble("miles");
+                    double showMiles = Double.parseDouble(new DecimalFormat("##.##").format(miles));
+
+
+                    requestBinding.newRidePrice.setText("$ " + showValue);
+                    requestBinding.newRideDistance.setText("Miles " + showMiles);
+                    requestBinding.newRideMinutes.setText(data.optString("eta"));
+                    requestBinding.newRideTime2.setText(data.optString("eta"));
                     requestBinding.newRideTo.setText(data.optString("fromLabel"));
                     requestBinding.newRideFrom.setText(data.optString("toWhereLabel"));
 //                        requestBinding.completeRidingTimeStartTxt.setText(singleRide.getString("paidIn"));
 //                        ridingBinding.completeRidingTimeEndTxt.setText(singleRide.getString("updatedAt"));
 
                     //************************************************************
+
+
+
+
+                    if (data.optString("timeOn") == null || data.optString("timeOn").equals("0")   ) {
+                        requestBinding.newRideTimer.setText("Time: Now");
+
+                    }else{
+
+                        requestBinding.newRideTimer.setText("Time: " + data.optString("timeOn"));
+                    }
 
                     String fromJson = data.optString("from");
                     double fromLat = Double.parseDouble(fromJson.substring(0, fromJson.indexOf(",")));
@@ -320,6 +348,11 @@ public class NewRideRequest extends FragmentActivity implements OnMapReadyCallba
                             + place1.getPosition().latitude + "," + place1.getPosition().longitude
                             + "&destination=" + place2.getPosition().latitude + "," + place2.getPosition().longitude +
                             "&key=" + GOOGLE_MAP_API_KEY, "driving");
+
+                    Log.i(TAG, "getSingleRideItem: User"+data.optJSONObject("userId"));
+
+                    makeDirectionDriverToPassenger(new LatLng(fromLat, fromLng));
+
 
                     mMap.addMarker(new MarkerOptions().position(place1.getPosition()).title("Origin")
                             .icon(BitmapDescriptorFactory.fromBitmap(originIcon(getApplicationContext()))));
@@ -366,6 +399,101 @@ public class NewRideRequest extends FragmentActivity implements OnMapReadyCallba
         requestQueue.add(jsonObjectRequest);
     }
 
+    private void makeDirectionDriverToPassenger(LatLng place1) {
+
+        String driverName = sharedPreferences.getString(SharedPrefKey.userName, "No Name");
+        String avatarObject = sharedPreferences.getString(SharedPrefKey.profilePath, "");
+        String avatar = "";
+
+        try {
+            avatar = new JSONObject(avatarObject).optString("uriPath");
+            Log.i(TAG, "makeDirectionDriverToPassenger: Driver name"+ driverName +" image "+ avatar );
+        } catch (JSONException e) {
+            e.printStackTrace();
+            avatar = "https://image.flaticon.com/icons/png/512/1077/1077114.png";
+        }
+
+        LocationManager locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
+        if (locationManager != null) {
+            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+             return;
+            }
+            Location lastKnownLocationGPS = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+            if (lastKnownLocationGPS != null) {
+
+                makeDirection(lastKnownLocationGPS,place1,driverName,avatar);
+//                return lastKnownLocationGPS;
+            } else {
+                Location loc =  locationManager.getLastKnownLocation(LocationManager.PASSIVE_PROVIDER);
+                makeDirection(loc,place1,driverName,avatar);
+            }
+        } else {
+            Toast.makeText(this, "Please Check you Location Permission", Toast.LENGTH_SHORT).show();
+        }
+
+    }
+   private void makeDirection(
+           Location distication,
+           LatLng firstPlace,String driverName,String avatar){
+
+
+        new FetchURL(NewRideRequest.this).execute("https://maps.googleapis.com/maps/api/directions/json?origin="
+                + distication.getLatitude() + "," + distication.getLongitude()
+                + "&destination=" + firstPlace.latitude + "," + firstPlace.longitude +
+                "&key=" + GOOGLE_MAP_API_KEY, "driving");
+
+       Picasso.get().load(avatar) .resize(80, 80)
+            .into(new Target() {
+           @Override
+           public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
+
+               mMap.addMarker(new MarkerOptions().position(new LatLng(distication.getLatitude(),distication.getLongitude())).title(""+driverName)
+                       .icon(BitmapDescriptorFactory.fromBitmap(getCircularBitmap(bitmap))));
+           }
+
+           @Override
+           public void onBitmapFailed(Exception e, Drawable errorDrawable) {
+
+           }
+
+
+           @Override
+           public void onPrepareLoad(Drawable placeHolderDrawable) {}
+       });
+
+    }
+
+    public static Bitmap getCircularBitmap(Bitmap bitmap) {
+        Bitmap output;
+
+        if (bitmap.getWidth() > bitmap.getHeight()) {
+            output = Bitmap.createBitmap(bitmap.getHeight(), bitmap.getHeight(), Bitmap.Config.ARGB_8888);
+        } else {
+            output = Bitmap.createBitmap(bitmap.getWidth(), bitmap.getWidth(), Bitmap.Config.ARGB_8888);
+        }
+
+        Canvas canvas = new Canvas(output);
+
+        final int color = 0xff424242;
+        final Paint paint = new Paint();
+        final Rect rect = new Rect(0, 0, bitmap.getWidth(), bitmap.getHeight());
+
+        float r = 0;
+
+        if (bitmap.getWidth() > bitmap.getHeight()) {
+            r = bitmap.getHeight() / 2;
+        } else {
+            r = bitmap.getWidth() / 2;
+        }
+
+        paint.setAntiAlias(true);
+        canvas.drawARGB(0, 0, 0, 0);
+        paint.setColor(color);
+        canvas.drawCircle(r, r, r, paint);
+        paint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC_IN));
+        canvas.drawBitmap(bitmap, rect, rect, paint);
+        return output;
+    }
     @Override
     public void onTaskDone(Object... values) {
         //TODO What is it? I don't know

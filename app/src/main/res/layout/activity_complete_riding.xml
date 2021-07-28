@@ -265,7 +265,7 @@
                         android:layout_weight="1"
                         android:background="@color/appColorPrimary"
                         android:gravity="center"
-                        android:text="@string/my_profile"
+                        android:text="@string/complete_ride"
                         android:textColor="@android:color/black"
                         android:textSize="18sp"
                         android:textStyle="bold" />

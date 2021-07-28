@@ -24,7 +24,9 @@ import android.provider.CalendarContract;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
+import android.widget.Switch;
 import android.widget.TableLayout;
 import android.widget.TableRow;
 import android.widget.TextView;
@@ -43,6 +45,9 @@ import com.development.taxiappproject.adapter.RateCardAdapter;
 import com.development.taxiappproject.databinding.ActivityRateCardBinding;
 import com.development.taxiappproject.model.MyEarningClass;
 import com.development.taxiappproject.model.MyRateCardClass;
+import com.github.nkzawa.engineio.client.transports.WebSocket;
+import com.github.nkzawa.socketio.client.IO;
+import com.github.nkzawa.socketio.client.Socket;
 import com.google.firebase.auth.FirebaseAuth;
 import com.squareup.picasso.Picasso;
 
@@ -52,6 +57,7 @@ import org.json.JSONObject;
 import org.w3c.dom.Text;
 
 import java.io.UnsupportedEncodingException;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -60,6 +66,7 @@ import java.util.Map;
 import de.hdodenhof.circleimageview.CircleImageView;
 
 import static com.development.taxiappproject.Const.ConstantValue.baseUrl;
+import static com.development.taxiappproject.Const.ConstantValue.socketBaseUrl;
 
 public class RateCardScreen extends AppCompatActivity implements View.OnClickListener {
     private static final String TAG = "MAHDI";
@@ -68,12 +75,46 @@ public class RateCardScreen extends AppCompatActivity implements View.OnClickLis
 //    RecyclerView.LayoutManager mLayoutManager;
 //    List<MyRateCardClass> rideList = new ArrayList<>();
 //    RecyclerView recyclerView;
-
+    private Switch mSwitch;
     ProgressBar progressBar;
     SharedPreferences sharedPreferences;
     SwipeRefreshLayout swipeRefreshLayout;
-    private TextView profileTxt;
+    private TextView profileTxt,navMenuGoTxt;
     private CircleImageView circleImageView;
+
+
+    private Socket mSocket;
+
+    {
+        try {
+            IO.Options options = new IO.Options();
+            options.transports = new String[]{WebSocket.NAME};
+            mSocket = IO.socket(socketBaseUrl, options);
+            //mSocket = IO.socket("http://chat.socket.io");
+        } catch (URISyntaxException e) {
+            Log.e("abc", "index=" + e);
+        }
+    }
+    public void sendData(boolean status) {
+
+
+        JSONObject jsonObject = new JSONObject();
+        String userId = sharedPreferences.getString(SharedPrefKey.userId, "defaultValue");
+
+
+        Log.i(TAG, "Mahdi: MyProfile: userId: " + userId);
+
+        try {
+            jsonObject.put("driver", userId);
+            jsonObject.put("status", status);
+            mSocket.emit("online", jsonObject);
+
+        }catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+    }
+
 
     @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
@@ -93,8 +134,35 @@ public class RateCardScreen extends AppCompatActivity implements View.OnClickLis
         String userName = sharedPreferences.getString(SharedPrefKey.userName, "defaultValue");
         String profilePath = sharedPreferences.getString(SharedPrefKey.profilePath, "defaultValue");
 
+        String switchFlag = sharedPreferences.getString("isOnline", "null");
+        assert switchFlag != null;
+        boolean switchFlagBool = switchFlag.equalsIgnoreCase("value");
+
+        mSwitch = findViewById(R.id.navMenu_switch);
+        mSwitch.setChecked(switchFlagBool);
+
+        navMenuGoTxt = findViewById(R.id.navMenu_go_txt);
+
+        navMenuGoTxt.setVisibility(View.GONE);
+        mSwitch.setVisibility(View.GONE);
+
+        LinearLayout favourite_layout = findViewById(R.id.favourite_layout);
+
+        favourite_layout.setVisibility(View.GONE);
+        View favourite_layout_liner = findViewById(R.id.favourite_layout_liner);
+
+        favourite_layout_liner.setVisibility(View.GONE);
         profileTxt.setText(userName);
-        Picasso.get().load(profilePath).into(circleImageView);
+
+        try {
+            JSONObject jsonProfile = new JSONObject(profilePath);
+            Picasso.get().load(jsonProfile.getString("uriPath")).into(circleImageView);
+
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
 
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -124,11 +192,13 @@ public class RateCardScreen extends AppCompatActivity implements View.OnClickLis
         rateCardBinding.customNavigationDrawer.profileLayout.setOnClickListener(this);
         rateCardBinding.customNavigationDrawer.earningLayout.setOnClickListener(this);
         rateCardBinding.customNavigationDrawer.ridesLayout.setOnClickListener(this);
+        rateCardBinding.customNavigationDrawer.notification.setOnClickListener(this);
 
         rateCardBinding.customNavigationDrawer.navMenuLogOutBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 FirebaseAuth.getInstance().signOut();
+                sendData(false);
                 SharedPreferences preferences = getSharedPreferences(OTPScreen.MyPREFERENCES, Context.MODE_PRIVATE);
                 String fcmToken = sharedPreferences.getString(MyFirebaseMessagingService.fcmToken, "defaultValue");
                 SharedPreferences.Editor editor = preferences.edit();
@@ -199,6 +269,11 @@ public class RateCardScreen extends AppCompatActivity implements View.OnClickLis
                 checkDrawer();
                 break;
 
+            case R.id.notification:
+                startActivity(new Intent(this, NotificationScreen.class));
+                finish();
+                break;
+
             case R.id.rides_layout:
                 startActivity(new Intent(this, MyRideScreen.class));
                 finish();
@@ -211,6 +286,8 @@ public class RateCardScreen extends AppCompatActivity implements View.OnClickLis
     @RequiresApi(api = Build.VERSION_CODES.M)
     public void createTable(JSONArray data) {
         TableLayout ll = findViewById(R.id.rateCar_tableLayout);
+
+        ll.removeAllViews();
 
 
 //        if (data.length() == 0) {
@@ -251,8 +328,8 @@ public class RateCardScreen extends AppCompatActivity implements View.OnClickLis
             rate.setLayoutParams(txtParams);
 
             if (i == 0) {
-                zip.setText("Zip/City");
-                rate.setText("Rate/Miles");
+                zip.setText("ZIP/City");
+                rate.setText("Rate/Mile");
 
                 row.removeAllViewsInLayout();
                 row.removeAllViews();

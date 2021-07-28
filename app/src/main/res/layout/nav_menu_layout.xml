@@ -43,6 +43,7 @@
                 android:layout_height="1dp"
                 android:layout_marginTop="15dp"
                 android:background="#FFF964"
+                android:id="@+id/favourite_layout_liner"
                 android:alpha="0.8"/>
 
 
@@ -65,7 +66,33 @@
 
 
             </LinearLayout>
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginTop="15dp"
+                android:background="#FFF964"
+                android:alpha="0.8"/>
 
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="15dp"
+                android:layout_marginLeft="15dp"
+                android:layout_marginRight="15dp"
+                android:orientation="horizontal"
+                android:id="@+id/notification">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_gravity="center_vertical"
+                    android:textColor="@android:color/black"
+                    android:text="Notifications"/>
+
+
+            </LinearLayout>
             <View
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
