@@ -58,7 +58,6 @@ import com.development.taxiappproject.model.MyRideClass;
 import com.github.nkzawa.engineio.client.transports.WebSocket;
 import com.github.nkzawa.socketio.client.IO;
 import com.github.nkzawa.socketio.client.Socket;
-import com.google.firebase.auth.FirebaseAuth;
 import com.google.gson.JsonObject;
 import com.squareup.picasso.Picasso;
 
@@ -523,7 +522,6 @@ public class EarningScreen extends AppCompatActivity implements View.OnClickList
         screenBinding.customNavigationDrawer.navMenuLogOutBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                FirebaseAuth.getInstance().signOut();
                 sendData(false);
                 SharedPreferences preferences = getSharedPreferences(OTPScreen.MyPREFERENCES, Context.MODE_PRIVATE);
                 String fcmToken = sharedPreferences.getString(MyFirebaseMessagingService.fcmToken, "defaultValue");

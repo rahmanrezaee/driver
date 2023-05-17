@@ -35,15 +35,15 @@ import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 import com.development.taxiappproject.Const.SharedPrefKey;
 import com.development.taxiappproject.Global.GlobalVal;
+import com.development.taxiappproject.Service.IResult;
 import com.development.taxiappproject.Service.MyFirebaseMessagingService;
+import com.development.taxiappproject.Service.VolleyService;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.gms.tasks.TaskExecutors;
 import com.google.firebase.FirebaseException;
 import com.google.firebase.FirebaseTooManyRequestsException;
 import com.google.firebase.auth.AuthResult;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.PhoneAuthCredential;
 import com.google.firebase.auth.PhoneAuthOptions;
@@ -72,7 +72,7 @@ import static com.development.taxiappproject.Const.ConstantValue.baseUrl;
 public class OTPScreen extends AppCompatActivity {
     private static final String TAG = "MAHDI";
     EditText editText1, editText2, editText3, editText4, editText5, editText6;
-    private FirebaseAuth mAuth;
+
     StringBuilder sb = new StringBuilder();
 
     private String mVerificationId;
@@ -92,6 +92,37 @@ public class OTPScreen extends AppCompatActivity {
 
     private String phone_code;
 
+
+    IResult mResultCallback = null;
+    VolleyService mVolleyService;
+
+    void initVolleyCallbackVerfiyPhoneNumber() {
+
+
+        mResultCallback = new IResult() {
+            @Override
+            public void notifySuccess(String requestType, JSONObject response) {
+                p.dismiss();
+
+
+                Log.i(TAG, "initVolleyCallbackVerfiyPhoneNumber: response "+response.toString());
+                String message = response.optString("message");
+                Toast.makeText(OTPScreen.this, message, Toast.LENGTH_SHORT).show();
+                startTimer();
+            }
+
+            @Override
+            public void notifyError(String requestType, VolleyError error) {
+
+//                Toast.makeText(OTPScreen.this, "", Toast.LENGTH_SHORT).show();
+                Log.d(TAG, "Volley requester " + requestType);
+                Log.d(TAG, "Volley JSON post" + "That didn't work!");p.dismiss();
+                Toast.makeText(OTPScreen.this, "Please try again", Toast.LENGTH_SHORT).show();
+            }
+        };
+    }
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -105,10 +136,10 @@ public class OTPScreen extends AppCompatActivity {
         editText6 = findViewById(R.id.edit6);
         otp_timer = findViewById(R.id.otp_timer);
         otp_resend = findViewById(R.id.otp_resend);
-        mAuth = FirebaseAuth.getInstance();
         editTextFocusListener();
 
         p = GlobalVal.mProgressDialog(OTPScreen.this, p, "Please wait...");
+
 
         if (!MyCheckConnection.mCheckConnectivity(OTPScreen.this)) {
             return;
@@ -133,10 +164,11 @@ public class OTPScreen extends AppCompatActivity {
         Log.i(TAG, "Mahdi: OTP: " + phone_number);
 
         assert phone_number != null;
-        initView();
+        otp_timer.setVisibility(View.GONE);
+        otp_resend.setVisibility(View.VISIBLE);
 
 //        phone_number = "+93772768220";
-        startPhoneNumberVerification(phone_number);
+        startPhoneNumberVerification();
 
 
     }
@@ -178,110 +210,72 @@ public class OTPScreen extends AppCompatActivity {
 
     }
 
-    private void startPhoneNumberVerification(String phoneNumber) {
+    private void startPhoneNumberVerification() {
+//
+//        PhoneAuthOptions options =
+//                PhoneAuthOptions.newBuilder(mAuth)
+//                        .setPhoneNumber(phoneNumber)       // Phone number to verify
+//                        .setTimeout(60L, TimeUnit.SECONDS) // Timeout and unit
+//                        .setActivity(this)                 // Activity (for callback binding)
+//                        .setCallbacks(mCallbacks)          // OnVerificationStateChangedCallbacks
+//                        .build();
+//        PhoneAuthProvider.verifyPhoneNumber(options);
 
-        PhoneAuthOptions options =
-                PhoneAuthOptions.newBuilder(mAuth)
-                        .setPhoneNumber(phoneNumber)       // Phone number to verify
-                        .setTimeout(60L, TimeUnit.SECONDS) // Timeout and unit
-                        .setActivity(this)                 // Activity (for callback binding)
-                        .setCallbacks(mCallbacks)          // OnVerificationStateChangedCallbacks
-                        .build();
-        PhoneAuthProvider.verifyPhoneNumber(options);
+
+        p.show();
+        initVolleyCallbackVerfiyPhoneNumber();
+        mVolleyService = new VolleyService(mResultCallback, OTPScreen.this);
+
+
+        try {
+            JSONObject body = new JSONObject();
+            HashMap<String, String> header = new HashMap<>();
+            body.put("phoneNumber",this.phone_number);
+            mVolleyService.postDataVolley("Verfiy Phone","/send-code",body,header);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
     }
 
-    // [START resend_verification]
-    private void resendVerificationCode(String phoneNumber,
-                                        PhoneAuthProvider.ForceResendingToken token) {
-        PhoneAuthOptions options =
-                PhoneAuthOptions.newBuilder(mAuth)
-                        .setPhoneNumber(phoneNumber)       // Phone number to verify
-                        .setTimeout(60L, TimeUnit.SECONDS) // Timeout and unit
-                        .setActivity(this)                 // Activity (for callback binding)
-                        .setCallbacks(mCallbacks)          // OnVerificationStateChangedCallbacks
-                        .setForceResendingToken(token)     // ForceResendingToken from callbacks
-                        .build();
-        PhoneAuthProvider.verifyPhoneNumber(options);
-    }
-
-    private void initView() {
-        mCallbacks = new PhoneAuthProvider.OnVerificationStateChangedCallbacks() {
-            @Override
-            public void onCodeAutoRetrievalTimeOut(@NotNull String verificationId) {
-                mVerificationId = verificationId;
-                Toast.makeText(OTPScreen.this, "Time Out Code please try again", Toast.LENGTH_SHORT).show();
-                p.dismiss();
-
-                finish();
-
-//                if (progressDialog != null) {
-//                    dismissProgressDialog(progressDialog);
-//                }
-//                notifyUserAndRetry("Your Phone Number Verification is failed.Retry again!");
-            }
-
-            @Override
-            public void onVerificationCompleted(@NotNull PhoneAuthCredential credential) {
-                Log.d("onVerificationCompleted", "onVerificationCompleted:" + credential);
-
-                String code= credential.getSmsCode();
-                if(code!=null)
-                {
-                    p.show();
-                    signInWithPhoneAuthCredential(credential);
-                }
-                else {
-
-                    Toast.makeText(OTPScreen.this, "Please try again", Toast.LENGTH_SHORT).show();
-                    finish();
-                }
 
 
-
-
-            }
-
-            @Override
-            public void onVerificationFailed(@NotNull FirebaseException e) {
-                Log.w("onVerificationFailed", "onVerificationFailed", e);
-                if (e instanceof FirebaseAuthInvalidCredentialsException) {
-                    Log.e("Exception:", "FirebaseAuthInvalidCredentialsException" + e);
-                } else if (e instanceof FirebaseTooManyRequestsException) {
-                    Log.e("Exception:", "FirebaseTooManyRequestsException" + e);
-                    finish();
-                }
-                p.hide();
-                Toast.makeText(OTPScreen.this, e.getMessage(), Toast.LENGTH_LONG).show();
-
-            }
-
-            @Override
-            public void onCodeSent(@NotNull String verificationId,
-                                   @NotNull PhoneAuthProvider.ForceResendingToken token) {
-                mVerificationId = verificationId;
-                mResendToken = token;
-                startTimer();
-                p.hide();
-                Log.d("onCodeSent", "onCodeSent:" + verificationId);
-                Log.i("Verification code:", verificationId);
-            }
-        };
-    }
 
     public void onClick(View view) {
         switch (view.getId()) {
-            case R.id.verify_button:
-                verifyPhoneNumberWithCode(mVerificationId, sb.toString());
+            case R.id.verify_button:;
+
+                if (type.equalsIgnoreCase("signUp")) {
+                    try {
+                        jsonObject1.put("code",sb.toString());
+                        final String requestBody = jsonObject1.toString();
+                        signUpAndSignInToServer(requestBody, type);
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+
+                } else {
+                    JSONObject jsonObject = new JSONObject();
+                    try {
+                        jsonObject.put("code",sb.toString());
+                        jsonObject.put("phone",phone_number);
+                        jsonObject.put("fcmToken", MyFirebaseMessagingService.getToken(getApplicationContext()));
+                        final String requestBody = jsonObject.toString();
+                        signUpAndSignInToServer(requestBody, type);
+
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                }
                 break;
             case R.id.otp_resend:
-                if (phone_number == null || mResendToken == null) {
+                if (phone_number == null) {
                     return;
                 }
 
                 Toast.makeText(this, "Resend clicked, please wait!", Toast.LENGTH_SHORT).show();
-                resendVerificationCode(phone_number, mResendToken);
-                startTimer();
+                startPhoneNumberVerification();
+
                 break;
 
             case R.id.back:
@@ -291,31 +285,8 @@ public class OTPScreen extends AppCompatActivity {
     }
 
 
-    private void verifyPhoneNumberWithCode(String verificationId, String code) {
 
-
-        Log.i(TAG, "verifyPhoneNumberWithCode: Phone and verificationId" + verificationId);
-        // [START verify_with_code]
-        if (code.isEmpty()) {
-            Toast.makeText(getApplicationContext(), "Please enter your code", Toast.LENGTH_SHORT).show();
-        } else {
-
-            try {
-                p.show();
-                PhoneAuthCredential credential = PhoneAuthProvider.getCredential(verificationId, code);
-                phone_code = PhoneAuthProvider.getCredential(verificationId, code).getSmsCode();
-                Log.i(TAG, "OTPScreen: verifyPhoneNumberWithCode: " + phone_code);
-                signInWithPhoneAuthCredential(credential);
-            } catch (Exception e) {
-                p.hide();
-                Toast toast = Toast.makeText(this, "Verification Code is wrong", Toast.LENGTH_SHORT);
-                toast.setGravity(Gravity.CENTER, 0, 0);
-                toast.show();
-            }
-        }
-    }
-
-    public void signUpAndSignInToServer(String jsonBody, String idToken, String type) {
+    public void signUpAndSignInToServer(String jsonBody, String type) {
 
         final String requestBody = jsonBody;
 
@@ -329,7 +300,6 @@ public class OTPScreen extends AppCompatActivity {
         }
 
         Log.i(TAG, "Mahdi: OTPScreen: signUp: 1 " + jsonBody);
-        Log.i(TAG, "Mahdi: OTPScreen: signUp: 2 " + idToken);
 
         JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.POST, mURL,
                 null,
@@ -337,6 +307,11 @@ public class OTPScreen extends AppCompatActivity {
                     SharedPreferences sharedpreferences = getSharedPreferences(MyPREFERENCES, Context.MODE_PRIVATE);
                     String message = response.optString("message");
 
+                    if (type.equalsIgnoreCase("signIn") && message.equalsIgnoreCase("New user")) {
+                        Toast.makeText(getApplicationContext(), "Your account not found!", Toast.LENGTH_SHORT).show();
+                        p.hide();
+                        return;
+                    }
                     if (type.equalsIgnoreCase("signIn") && message.equalsIgnoreCase("New user")) {
                         Toast.makeText(getApplicationContext(), "Your account not found!", Toast.LENGTH_SHORT).show();
                         p.hide();
@@ -390,11 +365,10 @@ public class OTPScreen extends AppCompatActivity {
                 Log.i(TAG, "Mahdi: OTPScreen: signUp: Error 2 " + data);
                 Toast.makeText(getApplicationContext(), data.optString("message"), Toast.LENGTH_LONG).show();
                 if (data.optString("message").equalsIgnoreCase("Pending For Admin Confirm")) {
-                    if (type.equalsIgnoreCase("signUp")) {
+
 
                         finishAffinity();
                         startActivity(new Intent(getApplicationContext(), LoginScreen.class));
-                    }
                 }
 
             } catch (UnsupportedEncodingException | JSONException e) {
@@ -412,7 +386,7 @@ public class OTPScreen extends AppCompatActivity {
             public Map<String, String> getHeaders() {
                 Map<String, String> params = new HashMap<>();
                 params.put("Content-Type", "application/json");
-                params.put("firebaseToken", idToken);
+
                 return params;
             }
 
@@ -442,54 +416,6 @@ public class OTPScreen extends AppCompatActivity {
         requestQueue.add(jsonObjectRequest);
     }
 
-    private void signInWithPhoneAuthCredential(PhoneAuthCredential credential) {
-
-        if (mAuth.getCurrentUser() == null)
-
-            mAuth.signInWithCredential(credential)
-                    .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
-                        @Override
-                        public void onComplete(@NonNull Task<AuthResult> task) {
-
-
-                            if (task.isSuccessful()) {
-                                // Sign in success, update UI with the signed-in user's information
-//                              Log.d(TAG, "signInWithCredential:success");
-                                FirebaseUser user = Objects.requireNonNull(task.getResult()).getUser();
-                                assert user != null;
-//                            user.getIdToken();
-
-                                Log.i(TAG, "Hello: Mahdi: onComplete: User " + user);
-
-                                user.getIdToken(true).addOnSuccessListener(result -> {
-                                    String idToken = result.getToken();
-
-                                    Log.i(TAG, "Hello: Mahdi: onComplete: firebaseToken " + idToken);
-
-                                    if (type.equalsIgnoreCase("signUp")) {
-                                        final String requestBody = jsonObject1.toString();
-                                        signUpAndSignInToServer(requestBody, idToken, type);
-                                    } else {
-                                        JSONObject jsonObject = new JSONObject();
-                                        try {
-                                            jsonObject.put("fcmToken", MyFirebaseMessagingService.getToken(getApplicationContext()));
-                                        } catch (JSONException e) {
-                                            e.printStackTrace();
-                                        }
-                                        final String requestBody = jsonObject.toString();
-                                        signUpAndSignInToServer(requestBody, idToken, type);
-                                    }
-                                    Log.d(TAG, "GetTokenResult result = " + idToken);
-                                });
-                            } else {
-                                p.hide();
-                                Log.d(TAG, "onComplete() returned: " + task.getException());
-                                Toast.makeText(getApplicationContext(), task.getException().getMessage(), Toast.LENGTH_SHORT).show();
-
-                            }
-                        }
-                    });
-    }
 
     public void editTextFocusListener() {
         editText1.addTextChangedListener(new TextWatcher() {

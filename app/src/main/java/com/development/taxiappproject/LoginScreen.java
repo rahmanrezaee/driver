@@ -39,7 +39,6 @@ import com.google.android.gms.location.LocationSettingsResponse;
 import com.google.android.gms.location.LocationSettingsStatusCodes;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
-import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.iid.FirebaseInstanceId;
 
 import org.json.JSONException;
@@ -56,7 +55,6 @@ public class LoginScreen extends AppCompatActivity {
     SharedPreferences sharedPreferences;
     public static final int MY_PERMISSIONS_REQUEST_LOCATION = 999;
 
-    FirebaseAuth auth;
     IResult mResultCallbackCheckPhoneNumber = null;
     VolleyService mVolleyService;
     ProgressDialog p;
@@ -68,10 +66,7 @@ public class LoginScreen extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login_screen);
-        auth = FirebaseAuth.getInstance();
-        if (auth.getCurrentUser() != null){
-            auth.signOut();
-        }
+
         checkLocationPermission();
 
 
@@ -148,8 +143,7 @@ public class LoginScreen extends AppCompatActivity {
                 editor.clear();
                 editor.putString(fcmToken, getFcmToken);
 
-                if (auth.getCurrentUser() != null)
-                    auth.signOut();
+
 
                 editor.apply();
 

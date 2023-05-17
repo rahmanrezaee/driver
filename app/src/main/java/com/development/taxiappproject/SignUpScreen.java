@@ -81,7 +81,6 @@ import com.google.android.gms.location.LocationSettingsResponse;
 import com.google.android.gms.location.LocationSettingsStatusCodes;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
-import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.iid.FirebaseInstanceId;
 import com.sangcomz.fishbun.FishBun;
 import com.sangcomz.fishbun.adapter.image.impl.GlideAdapter;
@@ -139,7 +138,6 @@ public class SignUpScreen extends AppCompatActivity {
     MyApiConfig apiConfig1;
     JSONObject uploadUserInfo = new JSONObject();
     boolean isPasswordVisible = false;
-    FirebaseAuth auth;
 
     ArrayList<CarModel> car_list = new ArrayList();
 
@@ -193,7 +191,6 @@ public class SignUpScreen extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_sign_up_screen);
 
-        auth = FirebaseAuth.getInstance();
 
 
         p = new ProgressDialog(SignUpScreen.this);
@@ -227,8 +224,6 @@ public class SignUpScreen extends AppCompatActivity {
                 editor.clear();
                 editor.putString(fcmToken, getFcmToken);
 
-                if (auth.getCurrentUser() != null)
-                    auth.signOut();
 
                 editor.apply();
 

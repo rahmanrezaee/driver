@@ -28,7 +28,6 @@ import com.github.nkzawa.socketio.client.Socket;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.firebase.auth.FirebaseAuth;
 import com.squareup.picasso.Picasso;
 
 import androidx.appcompat.app.ActionBarDrawerToggle;
@@ -448,7 +447,6 @@ public class HomeScreen extends AppCompatActivity implements View.OnClickListene
                 break;
 
             case R.id.navMenu_logOut_btn:
-                FirebaseAuth.getInstance().signOut();
                 SharedPreferences preferences = getSharedPreferences(OTPScreen.MyPREFERENCES, Context.MODE_PRIVATE);
                 String getFcmToken = sharedPreferences.getString(fcmToken, "defaultValue");
                 Log.i(TAG, "HomeScreen: LogOut btn: " + getFcmToken);
